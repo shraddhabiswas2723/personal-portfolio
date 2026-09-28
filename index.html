@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shraddha Biswas</title>
+<meta name="description" content="Shraddha Biswas: compliance, risk and AI governance profile with a Hyderabad role matcher.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!--PAGE-START-->
+<div class="page">
+  <header class="hero" id="top">
+    <div class="hero-main">
+      <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span>Open to roles in Hyderabad</p>
+      <h1 id="name">Shraddha Biswas</h1>
+      <p class="headline" id="headline"></p>
+      <p class="summary" id="summary"></p>
+      <ul class="contact" id="contact"></ul>
+    </div>
+    <dl class="highlights" id="highlights"></dl>
+  </header>
+
+  <nav class="nav" aria-label="Sections">
+    <a href="#matcher">Role matcher</a>
+    <a href="#skills">Skills</a>
+    <a href="#experience">Experience</a>
+    <a href="#learning">Learning</a>
+    <a href="#education">Education</a>
+    <a href="#personal">Personal</a>
+  </nav>
+
+  <main>
+    <section id="matcher" class="section">
+      <div class="section-head">
+        <h2>Which Hyderabad roles fit best</h2>
+        <p class="lede">Each role gets a match score from your experience, your skills and how many openings Hyderabad has for it. Change your skills below and the scores update.</p>
+      </div>
+      <div class="top-picks" id="topPicks"></div>
+      <ol class="roles" id="roles"></ol>
+      <aside class="next-skills">
+        <h3>Skills that would raise your scores most</h3>
+        <p class="muted">Ranked by total points gained across every role. Tap one once you've learned it.</p>
+        <ol id="nextSkills"></ol>
+      </aside>
+      <details class="method">
+        <summary>How the score is calculated</summary>
+        <div class="method-body">
+          <p><strong>Experience fit</strong> (45%): how directly your work history maps to the day-to-day job. <strong>Skill coverage</strong> (31.5%): the share of the role's core and supporting skills you have, weighted by importance. <strong>Hyderabad demand</strong> (13.5%): how many openings the city usually has for the role.</p>
+          <p>That adds up to 90. The last 10 points depend on things a profile can't predict, such as interviews, timing and referrals, so no role scores above 90%.</p>
+          <p>Treat the numbers as a way to rank where to apply first. They are estimates based on typical job descriptions and the Hyderabad market in 2026, not guarantees. Experience fit and demand values are set in <code>data.js</code>.</p>
+        </div>
+      </details>
+    </section>
+
+    <section id="skills" class="section">
+      <div class="section-head">
+        <h2>Skills</h2>
+        <p class="lede">Filled chips are skills on your profile. Outlined chips are gaps the role matcher looks for. Tap a chip to switch it.</p>
+      </div>
+      <form class="add-skill" id="addSkillForm" autocomplete="off">
+        <label for="skillInput">Add a skill you've learned</label>
+        <div class="field-row">
+          <input id="skillInput" list="skillOptions" placeholder="e.g. Python, Tableau, NIST AI RMF" required>
+          <datalist id="skillOptions"></datalist>
+          <button type="submit" class="btn">Add skill</button>
+        </div>
+        <p class="form-msg" id="skillMsg" role="status"></p>
+      </form>
+      <div class="skill-groups" id="skillGroups"></div>
+    </section>
+
+    <section id="experience" class="section">
+      <div class="section-head">
+        <h2>Experience</h2>
+        <p class="lede" id="tenure"></p>
+      </div>
+      <ol class="timeline" id="timeline"></ol>
+      <article class="project" id="project"></article>
+    </section>
+
+    <section id="learning" class="section">
+      <div class="section-head">
+        <h2>Learning log</h2>
+        <p class="lede">Courses, certifications and self-study. Adding an entry here also adds its skills to your profile.</p>
+      </div>
+      <form class="learn-form" id="learnForm" autocomplete="off">
+        <div class="grid-2">
+          <div class="field"><label for="learnTitle">What did you learn?</label><input id="learnTitle" required placeholder="e.g. ISO 42001 Foundations"></div>
+          <div class="field"><label for="learnSource">Where from?</label><input id="learnSource" placeholder="e.g. Coursera, YouTube, book"></div>
+          <div class="field"><label for="learnDate">When?</label><input id="learnDate" placeholder="e.g. Oct 2026"></div>
+          <div class="field"><label for="learnNote">Notes</label><input id="learnNote" placeholder="One line on what it covered"></div>
+        </div>
+        <fieldset class="learn-skills">
+          <legend>Skills it gave you</legend>
+          <div id="learnSkillPicker" class="picker"></div>
+        </fieldset>
+        <button type="submit" class="btn">Add to learning log</button>
+        <p class="form-msg" id="learnMsg" role="status"></p>
+      </form>
+      <ul class="learning" id="learningList"></ul>
+    </section>
+
+    <section id="education" class="section">
+      <div class="section-head"><h2>Education</h2></div>
+      <ul class="education" id="educationList"></ul>
+    </section>
+
+    <section id="personal" class="section">
+      <div class="section-head">
+        <h2>Personal details</h2>
+        <p class="lede">Your own reference card for applications. Everything you type here saves in this browser automatically.</p>
+      </div>
+      <form id="personalForm" class="personal-grid" autocomplete="off"></form>
+      <div class="backup">
+        <h3>Backup and restore</h3>
+        <p class="muted">Browser storage can be cleared. Copy your backup now and then, and paste it back here to restore it on any device.</p>
+        <div class="backup-actions">
+          <button type="button" class="btn" id="copyBackup">Copy backup</button>
+          <button type="button" class="btn btn-quiet" id="showRestore">Restore from backup</button>
+          <button type="button" class="btn btn-quiet" id="resetBtn">Reset page changes</button>
+        </div>
+        <div id="restoreBox" class="restore" hidden>
+          <label for="restoreInput">Paste a backup</label>
+          <textarea id="restoreInput" rows="4"></textarea>
+          <button type="button" class="btn" id="doRestore">Restore</button>
+        </div>
+        <div id="resetConfirm" class="confirm" hidden>
+          <p>This removes skills, learning entries and personal details you added on this page. Content in <code>data.js</code> stays.</p>
+          <button type="button" class="btn btn-danger" id="confirmReset">Reset</button>
+          <button type="button" class="btn btn-quiet" id="cancelReset">Cancel</button>
+        </div>
+        <textarea id="backupFallback" class="backup-fallback" rows="4" readonly hidden aria-label="Backup text"></textarea>
+        <p class="form-msg" id="backupMsg" role="status"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built with Claude. Content comes from <code>data.js</code> plus anything added on this page.</p>
+  </footer>
+</div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+<!--PAGE-END-->
+</body>
+</html>
