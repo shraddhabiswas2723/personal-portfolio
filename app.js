@@ -2,16 +2,17 @@
   "use strict";
 
   var DATA = window.PROFILE_DATA;
-  var STORAGE_KEY = "shraddha-portfolio-v1";
-  var UI_KEY = "shraddha-portfolio-ui-v1";
+  var STORAGE_KEY = "shraddha-portfolio-v2";
+  var UI_KEY = "shraddha-portfolio-ui-v2";
   var MAX_SCORE = 90;
   var TIERS = [
-    { min: 75, key: "now", label: "Apply now" },
-    { min: 60, key: "prep", label: "Apply with prep" },
-    { min: 45, key: "build", label: "Build toward" },
-    { min: 0, key: "long", label: "Long-term goal" },
+    { min: 75, key: "now", label: "Apply now", note: "75% and above" },
+    { min: 60, key: "prep", label: "Apply with prep", note: "60–74%" },
+    { min: 45, key: "build", label: "Build toward", note: "45–59%" },
+    { min: 0, key: "long", label: "Long-term goal", note: "below 45%" },
   ];
   var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  var VIEWS = ["dashboard", "roles", "companies", "resume", "skills", "learning", "profile"];
 
   // Stroke icons drawn in the Tabler style that Homarr uses.
   var ICONS = {
@@ -24,9 +25,9 @@
     bolt: '<path d="M13 3v7h6l-8 11v-7H5l8-11"/>',
     briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 12v.01"/><path d="M3 13a20 20 0 0 0 18 0"/>',
     book: '<path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 6v13"/><path d="M12 6v13"/><path d="M21 6v13"/>',
-    school: '<path d="M22 9 12 5 2 9l10 4 10-4v6"/><path d="M6 10.6V16a6 3 0 0 0 12 0v-5.4"/>',
     user: '<circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',
     chevron: '<path d="m6 9 6 6 6-6"/>',
+    arrow: '<path d="M5 12h14"/><path d="m13 18 6-6"/><path d="m13 6 6 6"/>',
     pin: '<circle cx="12" cy="11" r="3"/><path d="M17.657 16.657 13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/>',
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
     phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
@@ -36,9 +37,15 @@
     check: '<path d="m5 12 5 5L20 7"/>',
     plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
     x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-    trending: '<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+    alert: '<path d="M12 9v4"/><path d="M10.363 3.591 2.257 17.125a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87L13.637 3.59a1.914 1.914 0 0 0-3.274 0z"/><path d="M12 16h.01"/>',
     building: '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>',
+    file: '<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 9h1"/><path d="M9 13h6"/><path d="M9 17h6"/>',
+    sparkles: '<path d="M16 18a2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1-2-2 2 2 0 0 1-2 2zm0-12a2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1-2-2 2 2 0 0 1-2 2zM9 18a6 6 0 0 1 6-6 6 6 0 0 1-6-6 6 6 0 0 1-6 6 6 6 0 0 1 6 6z"/>',
+    download: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="m7 11 5 5 5-5"/><path d="M12 4v12"/>',
+    printer: '<path d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4"/><rect x="7" y="13" width="10" height="8" rx="2"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v4h1"/>',
     flask: '<path d="M9 3h6"/><path d="M10 9V3h4v6l5 10a1 1 0 0 1-.9 1.5H5.9A1 1 0 0 1 5 19z"/>',
+    rupee: '<path d="M18 5H6h3a4 4 0 0 1 0 8H6l7 6"/><path d="M6 9h12"/>',
   };
 
   function icon(name) {
@@ -53,24 +60,28 @@
 
   var skillById = {};
   DATA.skills.forEach(function (s) { skillById[s.id] = s; });
+  var roleById = {};
+  DATA.roles.forEach(function (r) { roleById[r.id] = r; });
 
   // ---------- Saved state ----------
 
   function emptyState() {
-    return { added: [], removed: [], custom: [], learning: [], personal: {} };
+    return { added: [], removed: [], custom: [], learning: [], projects: [], personal: {}, steps: {} };
   }
 
   function normalizeState(obj) {
     var s = emptyState();
     if (!obj || typeof obj !== "object") return s;
-    ["added", "removed", "custom", "learning"].forEach(function (k) {
+    ["added", "removed", "custom", "learning", "projects"].forEach(function (k) {
       if (Array.isArray(obj[k])) s[k] = obj[k];
     });
     if (obj.personal && typeof obj.personal === "object") s.personal = obj.personal;
+    if (obj.steps && typeof obj.steps === "object") s.steps = obj.steps;
     s.added = s.added.filter(function (id) { return skillById[id]; });
     s.removed = s.removed.filter(function (id) { return skillById[id]; });
     s.custom = s.custom.filter(function (c) { return typeof c === "string"; });
     s.learning = s.learning.filter(function (l) { return l && typeof l.title === "string"; });
+    s.projects = s.projects.filter(function (p) { return p && typeof p.title === "string"; });
     return s;
   }
 
@@ -89,7 +100,6 @@
 
   var state = normalizeState(readJSON(STORAGE_KEY));
   var ui = readJSON(UI_KEY) || {};
-  if (!ui.collapsed || typeof ui.collapsed !== "object") ui.collapsed = {};
 
   function saveState() { writeJSON(STORAGE_KEY, state); }
   function saveUi() { writeJSON(UI_KEY, ui); }
@@ -116,7 +126,7 @@
     return set;
   }
 
-  // ---------- Scoring ----------
+  // ---------- Role scoring ----------
 
   function scoreRole(role, have) {
     var total = 0, got = 0;
@@ -142,8 +152,12 @@
 
   function rankedRoles(have) {
     return DATA.roles
-      .map(function (r) { return { role: r, score: scoreRole(r, have) }; })
+      .map(function (r) { return { role: r, score: scoreRole(r, have), pct: Math.round(scoreRole(r, have).value) }; })
       .sort(function (a, b) { return b.score.value - a.score.value; });
+  }
+
+  function salaryText(role) {
+    return role.salary ? "₹" + role.salary.low + "–" + role.salary.high + " LPA" : "Not available";
   }
 
   // ---------- Helpers ----------
@@ -207,22 +221,185 @@
     })[0] || null;
   }
 
-  function ring(pct) {
+  function ring(pct, label) {
     var r = 34, c = 2 * Math.PI * r;
-    var off = c * (1 - pct / 100);
-    return '<div class="ring" role="img" aria-label="Match ' + pct + ' percent">' +
+    var off = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
+    return '<div class="ring" role="img" aria-label="' + esc(label || pct + " percent") + '">' +
       '<svg viewBox="0 0 84 84"><circle class="ring-track" cx="42" cy="42" r="' + r + '"/>' +
       '<circle class="ring-value" cx="42" cy="42" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/></svg>' +
-      '<span class="ring-label">' + pct + '%</span></div>';
+      '<span class="ring-label">' + pct + (label ? "" : "%") + '</span></div>';
   }
 
-  // ---------- Overview ----------
+  function areaLabel(area) {
+    return area === "nanakramguda" ? "Nanakramguda" : "Gachibowli";
+  }
 
-  function renderProfile() {
+  // ---------- Projects ----------
+
+  function allProjects() {
+    return DATA.projects.concat(state.projects);
+  }
+
+  // ---------- Resume text & ATS scoring ----------
+
+  var ACTION_VERBS = ["audited", "investigated", "performed", "conducted", "evaluated", "resolved", "diagnosed", "compiled", "programmed", "supported", "led", "ran", "built", "designed", "created", "analysed", "analyzed", "reviewed", "documented", "identified", "reduced", "improved", "managed", "delivered", "developed", "automated", "tested", "assessed", "recommended", "wrote", "partnered", "collaborated", "translated", "mapped", "scored", "drafted", "monitored", "detected", "enforced", "applied", "cleaned", "validated", "achieved", "decreased", "handled", "examined"];
+
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+  // Matches a term at the start of a word, so "SLA" doesn't match inside "translating"
+  // but "investigat" still matches "investigated".
+  function keywordFound(text, kw) {
+    var hay = text.toLowerCase();
+    return [kw.term].concat(kw.alt || []).some(function (t) {
+      return new RegExp("(^|[^a-z0-9])" + escRe(t.toLowerCase())).test(hay);
+    });
+  }
+
+  function sectionText(text, heading) {
+    var lines = text.split("\n");
+    var out = [], inside = false;
+    lines.forEach(function (l) {
+      var isHeading = /^[A-Z][A-Z &]{3,}$/.test(l.trim());
+      if (isHeading) inside = l.toUpperCase().indexOf(heading) !== -1;
+      else if (inside) out.push(l);
+    });
+    return out.join("\n");
+  }
+
+  function hasKeyword(kw) {
+    if (kw.skill) return owns(kw.skill);
+    return !!kw.has;
+  }
+
+  function bulletsOf(text) {
+    return text.split("\n").map(function (l) { return l.trim(); })
+      .filter(function (l) { return /^[•\-*]\s+/.test(l); })
+      .map(function (l) { return l.replace(/^[•\-*]\s+/, ""); })
+      .filter(function (l) { return l.length > 70; });
+  }
+
+  function atsScore(text, role) {
+    var lower = text.toLowerCase();
+    var checks = [];
+
+    var kws = role.keywords;
+    var matched = kws.filter(function (k) { return keywordFound(text, k); });
+    var kwPts = 30 * matched.length / kws.length;
+    checks.push({ label: "Keyword match", detail: matched.length + " of " + kws.length + " role keywords found", pts: kwPts, max: 30 });
+
+    checks.push({ label: "Parse-safe layout", detail: "Single column, no tables, icons or text boxes", pts: 12, max: 12 });
+
+    var top = lower.slice(0, 700);
+    var titleHits = role.titleTerms.filter(function (t) { return top.indexOf(t.toLowerCase()) !== -1; }).length;
+    var titlePts = 10 * Math.min(1, titleHits / Math.min(2, role.titleTerms.length));
+    checks.push({ label: "Target title near the top", detail: titleHits ? "Role title appears in headline or summary" : "Headline and summary don't name this role", pts: titlePts, max: 10 });
+
+    var bullets = bulletsOf(text);
+    var quant = bullets.filter(function (b) { return /\d/.test(b); }).length;
+    var qRatio = bullets.length ? quant / bullets.length : 0;
+    checks.push({ label: "Quantified bullets", detail: quant + " of " + bullets.length + " bullets have a number", pts: 10 * Math.min(1, qRatio / 0.5), max: 10 });
+
+    var headings = [/summary/, /skills/, /experience/, /education/, /certification/, /project/];
+    var found = headings.filter(function (h) { return h.test(lower); }).length;
+    checks.push({ label: "Standard section headings", detail: found + " of 6 standard headings", pts: 8 * found / 6, max: 8 });
+
+    var contact = [/@/, /\+?\d[\d\s]{9,}/, /linkedin/, /hyderabad/].filter(function (re) { return re.test(lower); }).length;
+    checks.push({ label: "Contact details in body", detail: contact + " of 4 (email, phone, LinkedIn, city)", pts: 5 * contact / 4, max: 5 });
+
+    var verbStart = bullets.filter(function (b) {
+      var w = b.split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g, "");
+      return ACTION_VERBS.indexOf(w) !== -1;
+    }).length;
+    var noPronoun = !/(^|\s)(i|my|me)\s/.test(bullets.join(" ").toLowerCase());
+    var verbRatio = bullets.length ? verbStart / bullets.length : 0;
+    checks.push({ label: "Action-verb bullets", detail: verbStart + " of " + bullets.length + " start with an action verb", pts: 5 * verbRatio * (noPronoun ? 1 : 0.6), max: 5 });
+
+    var hasGapLine = /present/.test(lower);
+    checks.push({ label: "Dates and career gap", detail: hasGapLine ? "Dates consistent and the 2026 break is explained" : "Explain the break since Mar 2026", pts: hasGapLine ? 5 : 2.5, max: 5 });
+
+    var words = text.split(/\s+/).filter(Boolean).length;
+    var lenPts = words >= 380 && words <= 800 ? 5 : words <= 1000 ? 3 : 1;
+    checks.push({ label: "Length", detail: words + " words (aim for 400–800, one page)", pts: lenPts, max: 5 });
+
+    checks.push({ label: "File and fonts", detail: "Text-based file with a standard font", pts: 5, max: 5 });
+
+    var certText = sectionText(text, "CERTIFICATION").toLowerCase();
+    var certHit = (role.certTerms || []).some(function (t) { return certText.indexOf(t.toLowerCase()) !== -1; });
+    var degree = /bachelor|bca/.test(lower);
+    checks.push({ label: "Education and certifications", detail: (degree ? "Degree listed" : "Degree missing") + (certHit ? ", relevant certificate listed" : ", no certificate this role asks for"), pts: (degree ? 2.5 : 0) + (certHit ? 2.5 : 0), max: 5 });
+
+    var total = checks.reduce(function (s, c) { return s + c.pts; }, 0);
+    return { total: Math.round(total), checks: checks, matched: matched };
+  }
+
+  // Builds an ATS resume for one role from real experience only.
+  function buildResume(role) {
     var p = DATA.person;
-    $("name").textContent = p.name;
+    var have = ownedSet();
+    var lines = [];
+    lines.push(p.name.toUpperCase());
+    lines.push(role.resumeHeadline);
+    lines.push(p.location + " | " + p.phone + " | " + p.email + " | " + p.linkedin.replace(/^https?:\/\//, ""));
+    lines.push("");
+
+    lines.push("PROFESSIONAL SUMMARY");
+    lines.push(role.resumeSummary);
+    lines.push("");
+
+    lines.push("SKILLS");
+    var roleTerms = role.keywords.filter(hasKeyword).map(function (k) { return k.term; });
+    var seen = {};
+    var core = roleTerms.filter(function (t) { var k = t.toLowerCase(); if (seen[k]) return false; seen[k] = true; return true; });
+    var tools = DATA.skills.filter(function (s) { return have[s.id] && s.group === "data"; }).map(function (s) { return s.resume || s.label; });
+    var ai = DATA.skills.filter(function (s) { return have[s.id] && s.group === "ai"; }).map(function (s) { return s.resume || s.label; });
+    lines.push("Core: " + core.join(", "));
+    if (tools.length) lines.push("Tools: " + tools.join(", "));
+    if (ai.length) lines.push("AI: " + ai.join(", "));
+    lines.push("");
+
+    lines.push("WORK EXPERIENCE");
+    DATA.experience.forEach(function (job) {
+      lines.push(job.role + " | " + job.company + ", " + job.place + " | " + job.start + " – " + job.end);
+      var pts = job.points.slice();
+      var focus = role.bulletFocus || [];
+      pts.sort(function (a, b) {
+        function hits(t) { var l = t.toLowerCase(); return focus.filter(function (f) { return l.indexOf(f) !== -1; }).length; }
+        return hits(b) - hits(a);
+      });
+      pts.forEach(function (pt) { lines.push("• " + pt); });
+      lines.push("");
+    });
+    lines.push("Career break: Upskilling in " + DATA.careerBreak + " | Mar 2026 – Present");
+    lines.push("");
+
+    var projects = allProjects();
+    if (projects.length) {
+      lines.push("PROJECTS");
+      projects.forEach(function (pr) {
+        lines.push(pr.title + (pr.tools ? " | " + pr.tools : ""));
+        (pr.points || []).forEach(function (pt) { lines.push("• " + pt); });
+      });
+      lines.push("");
+    }
+
+    var certs = DATA.learning.filter(function (l) { return l.useful === "yes" && l.onResume; }).map(function (l) { return l.title + " – " + l.source; });
+    state.learning.forEach(function (l) { certs.push(l.title + (l.source ? " – " + l.source : "")); });
+    if (certs.length) {
+      lines.push("CERTIFICATIONS");
+      certs.forEach(function (c) { lines.push("• " + c); });
+      lines.push("");
+    }
+
+    lines.push("EDUCATION");
+    DATA.education.forEach(function (e) { lines.push(e.title + " | " + e.place + " | " + e.year); });
+    return lines.join("\n");
+  }
+
+  // ---------- Dashboard ----------
+
+  function renderDashboard(ranked) {
+    var p = DATA.person;
     $("headline").textContent = p.headline;
-    $("summary").textContent = p.summary;
 
     function copyItem(iconName, value) {
       return '<span class="contact-item">' + icon(iconName) + '<span class="value">' + esc(value) + '</span>' +
@@ -232,171 +409,243 @@
       copyItem("mail", p.email) +
       copyItem("phone", p.phone) +
       '<span class="contact-item">' + icon("link") +
-      '<a class="value" href="' + esc(p.linkedin) + '" target="_blank" rel="noopener">LinkedIn' + icon("external") + '</a></span>';
+      '<a class="value" href="' + esc(p.linkedin) + '" target="_blank" rel="noopener">LinkedIn' + icon("external") + '</a></span>' +
+      '<span class="contact-item">' + icon("pin") + '<span class="value">' + esc(p.location) + '</span></span>';
 
-    $("highlights").innerHTML = DATA.highlights.map(function (h) {
-      return '<div class="stat"><dt>' + esc(h.value) + '</dt><dd>' + esc(h.label) + '</dd></div>';
+    var best = ranked[0];
+    var applyNow = ranked.filter(function (r) { return r.pct >= 75; });
+    var ats = atsScore(DATA.resumeText, best.role);
+    var projects = allProjects().length;
+    $("kpis").innerHTML =
+      '<a class="kpi" href="#roles"><dd>' + best.pct + '%</dd><dt>Best match</dt><span class="kpi-note">' + esc(best.role.short) + '</span></a>' +
+      '<a class="kpi" href="#roles"><dd>' + applyNow.length + '</dd><dt>Roles to apply for now</dt><span class="kpi-note">Out of ' + DATA.roles.length + ' matched roles</span></a>' +
+      '<a class="kpi" href="#resume"><dd>' + ats.total + '<span class="dimmed" style="font-size:var(--fs-sm)">/100</span></dd><dt>ATS score of current resume</dt><span class="kpi-note">For ' + esc(best.role.short) + '</span></a>' +
+      '<a class="kpi" href="#resume"><dd>' + projects + '<span class="dimmed" style="font-size:var(--fs-sm)"> of ' + best.role.projectsNeeded + '</span></dd><dt>Projects</dt><span class="kpi-note">Recommended for ' + esc(best.role.short) + '</span></a>';
+
+    $("topRoles").innerHTML = ranked.slice(0, 3).map(function (r) {
+      var t = tierFor(r.pct);
+      return '<li class="top-role tier-' + t.key + '">' + ring(r.pct) +
+        '<div class="top-role-text"><a href="#roles" data-open-role="' + r.role.id + '">' + esc(r.role.title) + '</a>' +
+        '<span class="salary">' + salaryText(r.role) + '</span>' +
+        '<span><span class="badge">' + t.label + '</span></span></div></li>';
     }).join("");
-  }
 
-  // ---------- Experience ----------
-
-  function renderExperience() {
-    var total = 0;
-    $("timeline").innerHTML = DATA.experience.map(function (job, i) {
-      var months = monthsBetween(job.start, job.end);
-      total += months;
-      return '<li class="job' + (i === 0 ? " is-latest" : "") + '">' +
-        '<span class="job-bullet">' + icon("briefcase") + '</span>' +
-        '<div class="job-head"><h3>' + esc(job.role) + '</h3><span class="job-org">' + esc(job.company) + ', ' + esc(job.place) + '</span></div>' +
-        '<div class="job-dates"><span>' + esc(job.start) + ' – ' + esc(job.end) + '</span>' +
-        '<span class="badge badge-gray">' + esc(formatDuration(months)) + '</span></div>' +
-        '<ul>' + job.points.map(function (pt) { return '<li>' + esc(pt) + '</li>'; }).join("") + '</ul></li>';
+    var steps = DATA.steps;
+    var done = steps.filter(function (s) { return state.steps[s.id]; }).length;
+    $("stepsProgress").textContent = done + " of " + steps.length + " done";
+    $("steps").innerHTML = steps.map(function (s) {
+      var isDone = !!state.steps[s.id];
+      return '<li class="step' + (isDone ? " is-done" : "") + '"><label for="step-' + s.id + '">' +
+        '<input type="checkbox" id="step-' + s.id + '" data-step="' + s.id + '"' + (isDone ? " checked" : "") + '>' +
+        '<span class="step-text"><strong>' + esc(s.title) + '</strong><span class="dimmed">' + esc(s.detail) + '</span></span></label></li>';
     }).join("");
-    $("tenure").textContent = formatDuration(total) + " of full-time work across compliance, audit and technical support, all in Hyderabad.";
-    $("experienceCount").textContent = DATA.experience.length + " roles";
-
-    var pr = DATA.project;
-    $("project").innerHTML = '<div class="project-head">' + icon("flask") + '<h3 class="item-title">' + esc(pr.title) + '</h3>' +
-      '<span class="badge badge-blue">' + esc(pr.tag) + '</span></div>' +
-      '<ul>' + pr.points.map(function (pt) { return '<li>' + esc(pt) + '</li>'; }).join("") + '</ul>';
-  }
-
-  function renderEducation() {
-    $("educationList").innerHTML = DATA.education.map(function (e) {
-      return '<tr><td>' + esc(e.year) + '</td><td>' + esc(e.title) + '</td><td>' + esc(e.place) + '</td></tr>';
-    }).join("");
-    $("educationCount").textContent = DATA.education.length;
   }
 
   // ---------- Role matcher ----------
 
-  var openRoles = null;
+  var openRoles = [];
 
-  function renderMatcher() {
-    var have = ownedSet();
-    var ranked = rankedRoles(have);
-    if (openRoles === null) openRoles = [ranked[0].role.id];
-
-    var applyNow = ranked.filter(function (r) { return r.score.value >= 75 && !r.role.fallback; }).length;
-    $("matcherCount").textContent = applyNow + " to apply now";
-    $("navMatcherBadge").textContent = DATA.roles.length;
-
-    var picks = ranked.filter(function (r) { return !r.role.fallback; }).slice(0, 3);
-    $("topPicks").innerHTML = picks.map(function (r, i) {
-      var pct = Math.round(r.score.value);
-      var t = tierFor(pct);
-      return '<div class="pick tier-' + t.key + '">' + ring(pct) +
-        '<div class="pick-text"><span class="pick-rank">Best fit #' + (i + 1) + '</span>' +
-        '<span class="pick-title">' + esc(r.role.title) + '</span>' +
-        '<span class="badge">' + t.label + '</span></div></div>';
+  function renderRoles(ranked, have) {
+    $("tierLegend").innerHTML = TIERS.map(function (t) {
+      return '<span class="tier-' + t.key + '"><span class="badge">' + t.label + '</span>' + t.note + '</span>';
     }).join("");
 
-    $("roles").innerHTML = ranked.map(function (r, i) {
-      var role = r.role, sc = r.score;
-      var pct = Math.round(sc.value);
+    $("roleList").innerHTML = ranked.map(function (r, i) {
+      var role = r.role, sc = r.score, pct = r.pct;
       var t = tierFor(pct);
       var ids = Object.keys(role.skills).sort(function (a, b) { return role.skills[b] - role.skills[a]; });
       var got = ids.filter(function (id) { return have[id]; });
       var gaps = ids.filter(function (id) { return !have[id]; });
       var weightLabel = function (id) { return ["", "nice to have", "important", "core"][role.skills[id]]; };
+      var companies = DATA.companies.filter(function (c) { return c.roles.indexOf(role.id) !== -1; });
       var isOpen = openRoles.indexOf(role.id) !== -1;
 
       return '<li><details class="role tier-' + t.key + '" id="role-' + role.id + '" data-role="' + role.id + '"' + (isOpen ? " open" : "") + '>' +
         '<summary>' +
           '<span class="role-rank">' + (i + 1) + '</span>' +
-          '<span class="role-name">' + esc(role.title) +
-            '<span class="badge">' + t.label + '</span>' +
-            (role.fallback ? '<span class="badge badge-outline">Backup option</span>' : '') +
-          '</span>' +
-          '<span class="progress" role="img" aria-label="Match ' + pct + ' percent"><span style="width:' + pct + '%"></span></span>' +
-          '<span class="role-pct">' + pct + '%</span>' +
-          '<span class="chevron">' + icon("chevron") + '</span>' +
+          '<span class="role-title">' + esc(role.title) + '</span>' +
+          '<span class="role-meta"><span class="badge">' + t.label + '</span>' +
+            '<span class="salary">' + salaryText(role) + '</span>' +
+            '<span class="dimmed small">' + companies.length + ' employers in your areas</span></span>' +
+          '<span class="role-score"><strong>' + pct + '%</strong><span class="progress" role="img" aria-label="Match ' + pct + ' percent"><span style="width:' + pct + '%"></span></span></span>' +
+          '<span class="role-chev">' + icon("chevron") + '</span>' +
         '</summary>' +
         '<div class="role-body">' +
           '<p class="role-why">' + esc(role.why) + '</p>' +
-          '<dl class="breakdown">' +
+          '<dl class="facts">' +
+            '<div><dt>Expected salary</dt><dd>' + salaryText(role) + '</dd></div>' +
             '<div><dt>Experience fit</dt><dd>' + sc.exp.toFixed(1) + ' / 45</dd></div>' +
             '<div><dt>Skill coverage</dt><dd>' + sc.skills.toFixed(1) + ' / 31.5</dd></div>' +
             '<div><dt>Hyderabad demand</dt><dd>' + sc.demand.toFixed(1) + ' / 13.5</dd></div>' +
           '</dl>' +
+          (role.salary && role.salary.note ? '<p class="dimmed small">' + icon("rupee") + ' ' + esc(role.salary.note) + '</p>' : '') +
           '<div class="role-cols">' +
-            '<div><h4>Skills you have</h4><ul class="pills">' +
-              (got.length ? got.map(function (id) {
-                return '<li class="pill pill-have">' + icon("check") + esc(skillById[id].label) + '</li>';
-              }).join("") : '<li class="dimmed">None yet</li>') +
+            '<div><h3>Hiring in Gachibowli &amp; Nanakramguda</h3><ul class="pills">' +
+              (companies.length ? companies.map(function (c) {
+                return '<li class="pill">' + icon("building") + esc(c.name) + ' <span class="dimmed">· ' + areaLabel(c.area) + '</span></li>';
+              }).join("") : '<li class="dimmed small">No confirmed employers in these two areas yet</li>') +
             '</ul></div>' +
-            '<div><h4>Gaps to close</h4><ul class="pills">' +
-              (gaps.length ? gaps.map(function (id) {
-                return '<li><button type="button" class="pill pill-gap" data-learn="' + id + '" title="Mark as learned">' + icon("plus") +
-                  esc(skillById[id].label) + ' <span class="weight">· ' + weightLabel(id) + '</span></button></li>';
-              }).join("") : '<li class="dimmed">No gaps. You cover every skill this role asks for.</li>') +
-            '</ul></div>' +
-            '<div><h4>Hiring in Hyderabad</h4><ul class="pills">' +
-              role.employers.map(function (e) { return '<li class="pill">' + icon("building") + esc(e) + '</li>'; }).join("") +
-            '</ul></div>' +
-            '<div><h4>Search these job titles</h4><ul class="pills">' +
+            '<div><h3>Search these job titles</h3><ul class="pills">' +
               role.search.map(function (s) { return '<li class="pill">' + icon("search") + esc(s) + '</li>'; }).join("") +
             '</ul></div>' +
+            '<div><h3>Skills you have</h3><ul class="pills">' +
+              (got.length ? got.map(function (id) {
+                return '<li class="pill pill-have">' + icon("check") + esc(skillById[id].label) + '</li>';
+              }).join("") : '<li class="dimmed small">None yet</li>') +
+            '</ul></div>' +
+            '<div><h3>Gaps to close</h3><ul class="pills">' +
+              (gaps.length ? gaps.map(function (id) {
+                return '<li><button type="button" class="pill pill-gap" data-learn="' + id + '" title="Mark as learned">' + icon("plus") +
+                  esc(skillById[id].label) + ' <span class="dimmed">· ' + weightLabel(id) + '</span></button></li>';
+              }).join("") : '<li class="dimmed small">No gaps for this role.</li>') +
+            '</ul></div>' +
           '</div>' +
+          '<div class="button-row"><a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">' + icon("file") + 'Check resume for this role</a></div>' +
         '</div></details></li>';
     }).join("");
 
-    renderNextSkills(have);
+    $("methodBody").innerHTML =
+      '<p><strong>Match score.</strong> Experience fit (45%) is how directly your work history maps to the job, including whether employers want the exact title on paper. Skill coverage (31.5%) is the weighted share of the role\'s skills you have. Hyderabad demand (13.5%) is how many openings the city usually has. The maximum is 90%, because interviews, timing and referrals can\'t be predicted from a profile.</p>' +
+      '<p><strong>Salary.</strong> Annual CTC for about 3 years\' experience in Hyderabad, from ' + esc(DATA.salarySources) + '. Amazon, Microsoft and Google usually pay at the top of each range; outsourcing firms pay at the bottom.</p>' +
+      '<p><strong>Removed:</strong> ' + esc(DATA.removedRoles) + '</p>';
   }
 
-  function renderNextSkills(have) {
-    var gains = DATA.skills.filter(function (s) { return !have[s.id]; }).map(function (s) {
+  // ---------- Companies ----------
+
+  var companyFilter = { area: "all", role: "all" };
+
+  function renderCompanies() {
+    var areas = [["all", "Both areas"], ["nanakramguda", "Nanakramguda"], ["gachibowli", "Gachibowli"]];
+    $("areaFilter").innerHTML = areas.map(function (a) {
+      var n = a[0] === "all" ? DATA.companies.length : DATA.companies.filter(function (c) { return c.area === a[0]; }).length;
+      return '<button type="button" data-area="' + a[0] + '" aria-pressed="' + (companyFilter.area === a[0]) + '">' + a[1] + ' (' + n + ')</button>';
+    }).join("");
+    $("roleFilter").innerHTML = '<option value="all">All target roles</option>' + DATA.roles.map(function (r) {
+      return '<option value="' + r.id + '"' + (companyFilter.role === r.id ? " selected" : "") + '>' + esc(r.short) + '</option>';
+    }).join("");
+
+    var list = DATA.companies.filter(function (c) {
+      if (companyFilter.area !== "all" && c.area !== companyFilter.area) return false;
+      if (companyFilter.role !== "all" && c.roles.indexOf(companyFilter.role) === -1) return false;
+      return true;
+    });
+    $("companyRows").innerHTML = list.length ? list.map(function (c) {
+      return '<tr id="company-' + c.id + '"><td><div class="company-name">' + esc(c.name) +
+        (c.confirmed ? '' : ' <span class="badge badge-yellow" title="Only secondary sources place this office here">Verify</span>') + '</div>' +
+        '<div class="company-campus">' + esc(c.campus) + '</div>' +
+        '<div class="company-area-inline company-campus">' + areaLabel(c.area) + '</div></td>' +
+        '<td>' + areaLabel(c.area) + '</td>' +
+        '<td><ul class="pills">' + c.roles.map(function (id) { return roleById[id] ? '<li class="pill">' + esc(roleById[id].short) + '</li>' : ''; }).join("") + '</ul></td>' +
+        '<td><a class="button button-default button-sm" href="' + esc(c.careers) + '" target="_blank" rel="noopener">Careers' + icon("external") + '</a></td></tr>';
+    }).join("") : '<tr><td colspan="4" class="dimmed">No companies match these filters.</td></tr>';
+    $("companyNote").textContent = DATA.companyNote;
+  }
+
+  // ---------- Resume & ATS ----------
+
+  function atsRoleId(ranked) {
+    if (ui.atsRole && roleById[ui.atsRole]) return ui.atsRole;
+    return ranked[0].role.id;
+  }
+
+  function renderResume(ranked) {
+    var roleId = atsRoleId(ranked);
+    var role = roleById[roleId];
+    $("atsRole").innerHTML = ranked.map(function (r) {
+      return '<option value="' + r.role.id + '"' + (r.role.id === roleId ? " selected" : "") + '>' + esc(r.role.title) + ' (' + r.pct + '%)</option>';
+    }).join("");
+
+    var current = atsScore(DATA.resumeText, role);
+    var generatedText = buildResume(role);
+    var generated = atsScore(generatedText, role);
+    function box(score, title, note) {
+      var tier = score >= 80 ? "now" : score >= 65 ? "prep" : score >= 50 ? "build" : "long";
+      return '<div class="ats-box tier-' + tier + '">' + ring(score, score + " out of 100") +
+        '<div class="ats-box-text"><strong>' + title + '</strong><span class="dimmed">' + note + '</span></div></div>';
+    }
+    $("atsCompare").innerHTML =
+      box(current.total, "Current resume", "Your PDF resume as it is today") +
+      box(generated.total, "Generated resume", "After you press Generate below");
+
+    $("atsChecks").innerHTML = current.checks.map(function (c) {
+      var ratio = c.pts / c.max;
+      var cls = ratio >= 0.9 ? "ok" : ratio >= 0.5 ? "warn" : "bad";
+      return '<li class="check ' + cls + '">' + icon(cls === "ok" ? "check" : cls === "warn" ? "alert" : "x") +
+        '<span class="check-text">' + esc(c.label) + '<span class="dimmed">' + esc(c.detail) + '</span></span>' +
+        '<span class="check-pts">' + (Math.round(c.pts * 10) / 10) + ' / ' + c.max + '</span></li>';
+    }).join("");
+
+    var projects = allProjects();
+    var need = role.projectsNeeded;
+    var enough = projects.length >= need;
+    $("projectBadge").className = "badge " + (enough ? "badge-green" : "badge-yellow");
+    $("projectBadge").textContent = enough ? "Enough" : (need - projects.length) + " more needed";
+    $("projectCount").innerHTML = '<strong>' + projects.length + '</strong> of <strong>' + need + '</strong> projects recommended for ' + esc(role.short) + '. ' + esc(role.projectNote || "");
+    $("projectList").innerHTML = projects.map(function (pr, i) {
+      var userIdx = i - DATA.projects.length;
+      return '<li>' + icon("check") + '<span><strong>' + esc(pr.title) + '</strong>' + (pr.tools ? ' <span class="dimmed">· ' + esc(pr.tools) + '</span>' : '') +
+        (userIdx >= 0 ? ' <button type="button" class="button button-subtle button-sm" data-remove-project="' + userIdx + '">Remove</button>' : '') + '</span></li>';
+    }).join("");
+    $("projectIdeas").innerHTML = role.projectIdeas.map(function (idea, i) {
+      return '<li><strong>' + esc(idea.title) + '</strong><span class="dimmed">' + esc(idea.detail) + '</span>' +
+        '<span><button type="button" class="button button-subtle button-sm" data-add-project="' + role.id + ':' + i + '">' + icon("check") + 'I\'ve built this</button></span></li>';
+    }).join("");
+
+    var inResume = 0, canAdd = 0, missing = 0;
+    $("keywordList").innerHTML = role.keywords.map(function (k) {
+      if (keywordFound(DATA.resumeText, k)) { inResume++; return '<li class="pill pill-have">' + icon("check") + esc(k.term) + '</li>'; }
+      if (hasKeyword(k)) { canAdd++; return '<li class="pill">' + icon("plus") + esc(k.term) + '</li>'; }
+      missing++;
+      return '<li class="pill pill-gap">' + esc(k.term) + '</li>';
+    }).join("");
+    $("keywordSummary").textContent = inResume + " in resume · " + canAdd + " to add · " + missing + " to learn";
+    $("generateHint").textContent = "Tailored for " + role.title;
+  }
+
+  // ---------- Skills ----------
+
+  function renderSkills(ranked) {
+    var have = ownedSet();
+    var ownedCount = Object.keys(have).length + state.custom.length;
+    $("haveCount").textContent = ownedCount;
+
+    var groups = DATA.skillGroups.map(function (g) {
+      var skills = DATA.skills.filter(function (s) { return s.group === g.id && owns(s.id); });
+      if (!skills.length) return "";
+      return '<div class="skill-group"><h3>' + esc(g.label) + '</h3><div class="chips">' +
+        skills.map(function (s) {
+          return '<button type="button" class="chip" id="skill-' + s.id + '" data-toggle="' + s.id + '" title="Remove from your profile">' + icon("check") + esc(s.label) + '</button>';
+        }).join("") + '</div></div>';
+    }).join("");
+    if (state.custom.length) {
+      groups += '<div class="skill-group"><h3>Other (not scored)</h3><div class="chips">' +
+        state.custom.map(function (c, i) {
+          return '<span class="chip is-custom">' + esc(c) +
+            '<button type="button" class="chip-remove" data-remove-custom="' + i + '" aria-label="Remove ' + esc(c) + '">' + icon("x") + '</button></span>';
+        }).join("") + '</div></div>';
+    }
+    $("haveSkills").innerHTML = groups;
+
+    var gaps = DATA.skills.filter(function (s) { return !have[s.id]; }).map(function (s) {
       var withSkill = Object.assign({}, have);
       withSkill[s.id] = true;
       var total = 0, roles = [];
       DATA.roles.forEach(function (r) {
         if (!r.skills[s.id]) return;
         var d = scoreRole(r, withSkill).value - scoreRole(r, have).value;
-        if (d > 0) { total += d; roles.push(r.title.split(" / ")[0]); }
+        if (d > 0) { total += d; roles.push(r.short); }
       });
       return { skill: s, gain: total, roles: roles };
-    }).filter(function (g) { return g.gain > 0; })
-      .sort(function (a, b) { return b.gain - a.gain; })
-      .slice(0, 5);
-
-    $("nextSkills").innerHTML = gains.length ? gains.map(function (g) {
-      return '<li><span class="gain">+' + g.gain.toFixed(1) + ' pts</span>' +
-        '<button type="button" class="button button-default button-sm" data-learn="' + g.skill.id + '" title="Mark as learned">' + icon("plus") + esc(g.skill.label) + '</button>' +
-        '<span class="affects">' + esc(g.roles.join(", ")) + '</span></li>';
+    }).filter(function (g) { return g.gain > 0; }).sort(function (a, b) { return b.gain - a.gain; });
+    $("gapCount").textContent = gaps.length;
+    $("gapSkills").innerHTML = gaps.length ? gaps.map(function (g) {
+      return '<li class="gap-item" id="skill-' + g.skill.id + '"><strong>' + esc(g.skill.label) + '</strong>' +
+        '<span class="gain">+' + g.gain.toFixed(1) + ' pts</span>' +
+        '<span class="dimmed">' + (g.skill.how ? esc(g.skill.how) + ' · ' : '') + 'Helps ' + esc(g.roles.join(", ")) + '</span>' +
+        '<span><button type="button" class="button button-default button-sm" data-learn="' + g.skill.id + '">' + icon("check") + 'I\'ve learned this</button></span></li>';
     }).join("") : '<li class="dimmed">You cover every skill the matcher tracks.</li>';
-  }
 
-  // ---------- Skills ----------
-
-  function renderSkills() {
-    var ownedCount = DATA.skills.filter(function (s) { return owns(s.id); }).length + state.custom.length;
-    $("skillsCount").textContent = ownedCount + " on profile";
-    $("navSkillsBadge").textContent = ownedCount;
-
-    var groups = DATA.skillGroups.map(function (g) {
-      var skills = DATA.skills.filter(function (s) { return s.group === g.id; });
-      skills.sort(function (a, b) { return (owns(b.id) ? 1 : 0) - (owns(a.id) ? 1 : 0); });
-      var have = skills.filter(function (s) { return owns(s.id); }).length;
-      return '<div class="item skill-group"><div class="skill-group-head"><h3 class="item-title">' + esc(g.label) + '</h3>' +
-        '<span class="dimmed">' + have + ' of ' + skills.length + '</span></div><div class="chips">' +
-        skills.map(function (s) {
-          var on = owns(s.id);
-          return '<button type="button" class="chip ' + (on ? "is-on" : "is-gap") + '" id="skill-' + s.id + '" data-toggle="' + s.id + '" aria-pressed="' + on + '">' +
-            icon(on ? "check" : "plus") + esc(s.label) + '</button>';
-        }).join("") + '</div></div>';
-    });
-    if (state.custom.length) {
-      groups.push('<div class="item skill-group"><div class="skill-group-head"><h3 class="item-title">Other skills</h3>' +
-        '<span class="dimmed">Not scored</span></div><div class="chips">' +
-        state.custom.map(function (c, i) {
-          return '<span class="chip is-custom">' + esc(c) +
-            '<button type="button" class="chip-remove" data-remove-custom="' + i + '" aria-label="Remove ' + esc(c) + '">' + icon("x") + '</button></span>';
-        }).join("") + '</div></div>');
-    }
-    $("skillGroups").innerHTML = groups.join("");
-
-    $("skillOptions").innerHTML = DATA.skills.filter(function (s) { return !owns(s.id); })
+    $("skillOptions").innerHTML = DATA.skills.filter(function (s) { return !have[s.id]; })
       .map(function (s) { return '<option value="' + esc(s.label) + '"></option>'; }).join("");
   }
 
@@ -408,83 +657,95 @@
 
   // ---------- Learning ----------
 
-  function renderLearning() {
-    var userItems = state.learning.map(function (l, i) { return { item: l, userIndex: i }; }).reverse();
-    var baseItems = DATA.learning.map(function (l, i) { return { item: l, featured: i === 0 }; });
-    var all = userItems.concat(baseItems);
-    $("learningCount").textContent = all.length;
-    $("navLearningBadge").textContent = all.length;
+  var USE = {
+    yes: { cls: "use-yes", label: "Useful" },
+    no: { cls: "use-no", label: "Not useful" },
+  };
 
+  function renderLearning() {
+    $("learnLegend").innerHTML =
+      '<span class="use-yes"><span class="badge">Useful</span>Put it on your resume and mention it in interviews</span>' +
+      '<span class="use-no"><span class="badge">Not useful</span>Leave it off your resume; it won\'t move a Hyderabad recruiter</span>';
+
+    var userItems = state.learning.map(function (l, i) { return { item: l, userIndex: i }; }).reverse();
+    var all = userItems.concat(DATA.learning.map(function (l) { return { item: l }; }));
     $("learningList").innerHTML = all.map(function (entry) {
       var l = entry.item;
+      var use = USE[l.useful] || null;
       var title = l.url
         ? '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.title) + icon("external") + '</a>'
         : esc(l.title);
       var skills = (l.skills || []).filter(function (id) { return skillById[id]; });
-      var meta = '';
-      if (entry.featured) meta += '<span class="badge badge-green">Latest</span>';
-      if (entry.userIndex !== undefined) meta += '<span class="badge badge-blue">Added by you</span>';
-      if (l.source) meta += '<span class="badge badge-gray">' + esc(l.source) + '</span>';
-      if (l.date) meta += '<span class="dimmed" style="font-size:var(--fs-xs)">' + esc(l.date) + '</span>';
-      return '<li class="item learn' + (entry.featured ? " is-featured" : "") + '">' +
-        (meta ? '<div class="learn-meta">' + meta + '</div>' : '') +
-        '<span class="learn-title">' + title + '</span>' +
-        (l.note ? '<p class="dimmed">' + esc(l.note) + '</p>' : '') +
-        (skills.length ? '<ul class="pills">' + skills.map(function (id) {
-          return '<li class="pill">' + esc(skillById[id].label) + '</li>';
-        }).join("") + '</ul>' : '') +
-        (entry.userIndex !== undefined
-          ? '<button type="button" class="button button-subtle button-sm learn-remove" data-remove-learning="' + entry.userIndex + '">' + icon("x") + 'Remove entry</button>'
-          : '') +
-        '</li>';
+      return '<li class="learn' + (use ? " " + use.cls : "") + '">' +
+        '<div class="learn-main">' +
+          '<span class="learn-title">' + title + '</span>' +
+          '<span class="learn-source">' + esc([l.source, l.date].filter(Boolean).join(" · ")) + '</span>' +
+          (l.why ? '<p class="learn-why">' + esc(l.why) + '</p>' : (l.note ? '<p class="learn-why">' + esc(l.note) + '</p>' : '')) +
+          (l.action ? '<p class="learn-action">' + icon("arrow") + '<span>' + esc(l.action) + '</span></p>' : '') +
+          (skills.length ? '<ul class="pills">' + skills.map(function (id) { return '<li class="pill">' + esc(skillById[id].label) + '</li>'; }).join("") + '</ul>' : '') +
+        '</div>' +
+        '<div class="learn-side">' +
+          (use ? '<span class="badge">' + use.label + '</span>' : '<span class="badge badge-blue">Added by you</span>') +
+          (entry.userIndex !== undefined ? '<button type="button" class="button button-subtle button-sm" data-remove-learning="' + entry.userIndex + '">' + icon("x") + 'Remove</button>' : '') +
+        '</div></li>';
     }).join("");
   }
 
-  // ---------- Personal ----------
+  // ---------- Profile ----------
 
-  function renderPersonal() {
+  function renderProfile() {
+    $("summary").textContent = DATA.person.summary;
+    var total = 0;
+    $("timeline").innerHTML = DATA.experience.map(function (job, i) {
+      var months = monthsBetween(job.start, job.end);
+      total += months;
+      return '<li class="job' + (i === 0 ? " is-latest" : "") + '">' +
+        '<span class="job-bullet">' + icon("briefcase") + '</span>' +
+        '<h3>' + esc(job.role) + '</h3><div class="job-org">' + esc(job.company) + ', ' + esc(job.place) + '</div>' +
+        '<div class="job-dates"><span>' + esc(job.start) + ' – ' + esc(job.end) + '</span><span class="badge">' + esc(formatDuration(months)) + '</span></div>' +
+        '<ul>' + job.points.map(function (pt) { return '<li>' + esc(pt) + '</li>'; }).join("") + '</ul></li>';
+    }).join("");
+    $("tenure").textContent = formatDuration(total) + " of relevant experience in Hyderabad. Upskilling in AI governance and prompt engineering since March 2026.";
+
+    $("education").innerHTML = DATA.education.map(function (e) {
+      return '<div class="edu"><strong>' + esc(e.title) + '</strong><span class="dimmed">' + esc(e.place) + ' · ' + esc(e.year) + '</span></div>';
+    }).join("");
+    $("results").innerHTML = DATA.results.map(function (h) {
+      return '<div><dt>' + esc(h.value) + '</dt><dd>' + esc(h.label) + '</dd></div>';
+    }).join("");
+
     $("personalForm").innerHTML = DATA.personalFields.map(function (f) {
       var val = Object.prototype.hasOwnProperty.call(state.personal, f.id) ? state.personal[f.id] : f.value;
       var input = f.long
-        ? '<textarea class="input" id="pf-' + f.id + '" data-field="' + f.id + '" rows="3">' + esc(val) + '</textarea>'
-        : '<input class="input" id="pf-' + f.id + '" data-field="' + f.id + '" value="' + esc(val) + '">';
+        ? '<textarea class="input" id="pf-' + f.id + '" data-field="' + f.id + '" rows="3" placeholder="' + esc(f.placeholder || "") + '">' + esc(val) + '</textarea>'
+        : '<input class="input" id="pf-' + f.id + '" data-field="' + f.id + '" value="' + esc(val) + '" placeholder="' + esc(f.placeholder || "") + '">';
       return '<div class="field' + (f.long ? " long" : "") + '"><label class="label" for="pf-' + f.id + '">' + esc(f.label) + '</label>' + input + '</div>';
     }).join("");
   }
 
-  // ---------- Collapsible categories ----------
+  // ---------- Render ----------
 
-  function setCollapsed(section, collapsed) {
-    var btn = section.querySelector(".category-toggle");
-    var body = section.querySelector(".category-body");
-    if (!btn || !body) return;
-    btn.setAttribute("aria-expanded", String(!collapsed));
-    body.hidden = collapsed;
+  function renderScored() {
+    var have = ownedSet();
+    var ranked = rankedRoles(have);
+    renderDashboard(ranked);
+    renderRoles(ranked, have);
+    renderResume(ranked);
+    renderSkills(ranked);
+    document.querySelector('[data-count="roles"]').textContent = DATA.roles.length;
+    document.querySelector('[data-count="companies"]').textContent = DATA.companies.length;
+    document.querySelector('[data-count="skills"]').textContent = Object.keys(have).length + state.custom.length;
   }
 
-  function initCategories() {
-    document.querySelectorAll(".category").forEach(function (section) {
-      setCollapsed(section, !!ui.collapsed[section.id]);
-      section.querySelector(".category-toggle").addEventListener("click", function () {
-        var collapsed = this.getAttribute("aria-expanded") === "true";
-        setCollapsed(section, collapsed);
-        ui.collapsed[section.id] = collapsed;
-        saveUi();
-      });
-    });
+  function renderAll() {
+    renderScored();
+    renderCompanies();
+    renderLearning();
+    renderProfile();
+    document.querySelector('[data-count="learning"]').textContent = DATA.learning.length + state.learning.length;
   }
 
-  function revealSection(id) {
-    var section = $(id);
-    if (section && section.classList.contains("category") && ui.collapsed[id]) {
-      setCollapsed(section, false);
-      ui.collapsed[id] = false;
-      saveUi();
-    }
-    return section;
-  }
-
-  // ---------- Navigation ----------
+  // ---------- Views ----------
 
   var navbar = $("navbar");
   var burger = $("burger");
@@ -496,33 +757,39 @@
     overlay.hidden = !open;
   }
 
+  function showView(name, focusEl) {
+    if (VIEWS.indexOf(name) === -1) name = "dashboard";
+    document.querySelectorAll(".view").forEach(function (v) { v.hidden = v.getAttribute("data-view") !== name; });
+    document.querySelectorAll(".nav-link").forEach(function (l) {
+      var active = l.getAttribute("data-view") === name;
+      l.classList.toggle("is-active", active);
+      if (active) l.setAttribute("aria-current", "page"); else l.removeAttribute("aria-current");
+    });
+    setNav(false);
+    if (focusEl) {
+      focusEl.scrollIntoView({ block: "center" });
+      focusEl.classList.remove("flash");
+      void focusEl.offsetWidth;
+      focusEl.classList.add("flash");
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function viewFromHash() {
+    var h = (location.hash || "").replace("#", "");
+    return VIEWS.indexOf(h) !== -1 ? h : "dashboard";
+  }
+
+  window.addEventListener("hashchange", function () { showView(viewFromHash()); });
   burger.addEventListener("click", function () { setNav(!navbar.classList.contains("is-open")); });
   overlay.addEventListener("click", function () { setNav(false); });
 
-  document.querySelectorAll(".nav-link").forEach(function (link) {
-    link.addEventListener("click", function () {
-      revealSection(link.getAttribute("data-nav"));
-      setNav(false);
-    });
-  });
-
-  function initActiveNav() {
-    var links = {};
-    document.querySelectorAll(".nav-link").forEach(function (l) { links[l.getAttribute("data-nav")] = l; });
-    var ids = Object.keys(links);
-    function update() {
-      var current = ids[0];
-      var line = window.innerHeight * 0.3;
-      ids.forEach(function (id) {
-        var el = $(id);
-        if (el && el.getBoundingClientRect().top <= line) current = id;
-      });
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = ids[ids.length - 1];
-      ids.forEach(function (id) { links[id].classList.toggle("is-active", id === current); });
-    }
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    update();
+  function openRole(id) {
+    if (openRoles.indexOf(id) === -1) openRoles.push(id);
+    var el = $("role-" + id);
+    if (el) el.open = true;
+    return el;
   }
 
   // ---------- Theme ----------
@@ -545,7 +812,7 @@
     saveUi();
   });
 
-  // ---------- Search (spotlight) ----------
+  // ---------- Search ----------
 
   var searchInput = $("searchInput");
   var results = $("searchResults");
@@ -557,13 +824,16 @@
     var have = ownedSet();
     var items = [];
     document.querySelectorAll(".nav-link").forEach(function (l) {
-      items.push({ group: "Sections", label: l.textContent.trim().replace(/\d+$/, ""), icon: l.querySelector("[data-icon]").getAttribute("data-icon"), go: { section: l.getAttribute("data-nav") } });
+      items.push({ group: "Pages", label: l.childNodes[1].textContent.trim(), icon: l.querySelector("[data-icon]").getAttribute("data-icon"), go: { view: l.getAttribute("data-view") } });
     });
     rankedRoles(have).forEach(function (r) {
-      items.push({ group: "Roles", label: r.role.title, extra: Math.round(r.score.value) + "%", icon: "target", keywords: r.role.search.join(" ") + " " + r.role.employers.join(" "), go: { role: r.role.id } });
+      items.push({ group: "Roles", label: r.role.title, extra: r.pct + "% · " + salaryText(r.role), icon: "target", keywords: r.role.search.join(" "), go: { role: r.role.id } });
+    });
+    DATA.companies.forEach(function (c) {
+      items.push({ group: "Companies", label: c.name, extra: areaLabel(c.area), icon: "building", keywords: c.campus, go: { company: c.id } });
     });
     DATA.skills.forEach(function (s) {
-      items.push({ group: "Skills", label: s.label, extra: owns(s.id) ? "On profile" : "Gap", icon: owns(s.id) ? "check" : "plus", keywords: (s.aliases || []).join(" "), go: { skill: s.id } });
+      items.push({ group: "Skills", label: s.label, extra: owns(s.id) ? "You have" : "To learn", icon: owns(s.id) ? "check" : "plus", keywords: (s.aliases || []).join(" "), go: { skill: s.id } });
     });
     return items;
   }
@@ -575,7 +845,7 @@
     currentOptions = searchIndex().filter(function (it) {
       var hay = (it.label + " " + (it.keywords || "")).toLowerCase();
       return words.every(function (w) { return hay.indexOf(w) !== -1; });
-    }).slice(0, 12);
+    }).slice(0, 14);
     activeIndex = 0;
     if (!currentOptions.length) {
       results.innerHTML = '<div class="search-empty">Nothing found for “' + esc(searchInput.value.trim()) + '”</div>';
@@ -607,31 +877,27 @@
     searchInput.setAttribute("aria-activedescendant", "opt-" + activeIndex);
   }
 
+  function go(view, el) {
+    if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+    showView(view, el);
+  }
+
   function choose(i) {
     var it = currentOptions[i];
     if (!it) return;
-    var target;
-    if (it.go.section) {
-      target = revealSection(it.go.section);
-    } else if (it.go.role) {
-      revealSection("matcher");
-      if (openRoles.indexOf(it.go.role) === -1) openRoles.push(it.go.role);
-      target = $("role-" + it.go.role);
-      if (target) target.open = true;
-    } else if (it.go.skill) {
-      revealSection("skills");
-      target = $("skill-" + it.go.skill);
-    }
     searchInput.value = "";
     closeResults();
     header.classList.remove("is-searching");
     searchInput.blur();
-    if (target) {
-      target.scrollIntoView({ block: "center" });
-      target.classList.remove("flash");
-      void target.offsetWidth;
-      target.classList.add("flash");
+    if (it.go.view) { go(it.go.view); return; }
+    if (it.go.role) { go("roles"); go("roles", openRole(it.go.role)); return; }
+    if (it.go.company) {
+      companyFilter = { area: "all", role: "all" };
+      renderCompanies();
+      go("companies", $("company-" + it.go.company));
+      return;
     }
+    if (it.go.skill) { go("skills"); go("skills", $("skill-" + it.go.skill)); }
   }
 
   searchInput.addEventListener("input", renderResults);
@@ -648,10 +914,7 @@
     if (opt) choose(parseInt(opt.getAttribute("data-index"), 10));
   });
   searchInput.addEventListener("blur", function () {
-    setTimeout(function () {
-      closeResults();
-      header.classList.remove("is-searching");
-    }, 100);
+    setTimeout(function () { closeResults(); header.classList.remove("is-searching"); }, 100);
   });
   document.addEventListener("keydown", function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -666,14 +929,98 @@
   });
   if (/Mac|iPhone|iPad/.test(navigator.platform || "")) document.querySelector(".kbd").textContent = "⌘ K";
 
-  // ---------- Actions ----------
+  // ---------- Resume actions ----------
 
-  function refreshScores() {
-    renderMatcher();
-    renderSkills();
+  var lastResume = "";
+
+  function resumeFileName(ext) {
+    var role = roleById[ui.atsRole] || DATA.roles[0];
+    return "Shraddha_Biswas_" + role.short.replace(/[^A-Za-z0-9]+/g, "_") + "_Resume." + ext;
   }
 
+  function resumeHtml(text) {
+    var body = esc(text).split("\n").map(function (line, i) {
+      if (i === 0) return '<h1 style="font-size:18pt;margin:0">' + line + '</h1>';
+      if (/^[A-Z][A-Z &]+$/.test(line)) return '<h2 style="font-size:12pt;margin:14pt 0 4pt;border-bottom:1px solid #999">' + line + '</h2>';
+      if (/^• /.test(line)) return '<p style="margin:0 0 2pt 14pt;text-indent:-10pt">' + line + '</p>';
+      if (!line) return '';
+      return '<p style="margin:0 0 2pt">' + line + '</p>';
+    }).join("\n");
+    return '<!doctype html><html><head><meta charset="utf-8"><title>Shraddha Biswas Resume</title></head>' +
+      '<body style="font-family:Calibri,Arial,sans-serif;font-size:10.5pt;line-height:1.35;max-width:7.5in;margin:0.6in auto;color:#000">' + body + '</body></html>';
+  }
+
+  function download(name, type, content) {
+    try {
+      var blob = new Blob([content], { type: type });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      flash($("resumeMsg"), "Downloaded " + name + ".");
+    } catch (e) {
+      flash($("resumeMsg"), "This browser blocked the download. Use Copy text instead.", true);
+    }
+  }
+
+  $("generateBtn").addEventListener("click", function () {
+    var role = roleById[$("atsRole").value];
+    lastResume = buildResume(role);
+    $("resumePreview").textContent = lastResume;
+    $("resumeOutput").hidden = false;
+    var score = atsScore(lastResume, role).total;
+    flash($("resumeMsg"), "Generated for " + role.title + ". Estimated ATS score " + score + "/100. Read it through before sending.");
+    $("resumePreview").focus();
+  });
+  $("copyResume").addEventListener("click", function () {
+    copyText(lastResume, function (ok) {
+      if (ok) { flash($("resumeMsg"), "Resume copied. Paste it into Word or Google Docs and save as .docx or PDF."); return; }
+      var range = document.createRange();
+      range.selectNodeContents($("resumePreview"));
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      flash($("resumeMsg"), "Your browser blocked copying. The resume is selected; copy it with Ctrl+C or Cmd+C.", true);
+    });
+  });
+  $("downloadTxt").addEventListener("click", function () { download(resumeFileName("txt"), "text/plain;charset=utf-8", lastResume); });
+  $("downloadDoc").addEventListener("click", function () { download(resumeFileName("doc"), "application/msword", resumeHtml(lastResume)); });
+  $("printResume").addEventListener("click", function () {
+    var w = window.open("", "_blank");
+    if (!w) { flash($("resumeMsg"), "Pop-ups are blocked. Allow pop-ups for this site, or use Download Word.", true); return; }
+    w.document.write(resumeHtml(lastResume));
+    w.document.close();
+    w.focus();
+    w.print();
+  });
+
+  $("atsRole").addEventListener("change", function () {
+    ui.atsRole = this.value;
+    saveUi();
+    $("resumeOutput").hidden = true;
+    renderScored();
+  });
+
+  // ---------- Click actions ----------
+
   document.addEventListener("click", function (e) {
+    var link = e.target.closest("[data-open-role]");
+    if (link) {
+      e.preventDefault();
+      go("roles");
+      go("roles", openRole(link.getAttribute("data-open-role")));
+      return;
+    }
+    var atsLink = e.target.closest("[data-ats-role]");
+    if (atsLink) {
+      ui.atsRole = atsLink.getAttribute("data-ats-role");
+      saveUi();
+      renderScored();
+      return;
+    }
+
     var t = e.target.closest("button");
     if (!t) return;
 
@@ -681,31 +1028,60 @@
       copyText(t.dataset.copy, function (ok) {
         t.innerHTML = icon(ok ? "check" : "x");
         t.classList.toggle("is-done", ok);
-        t.title = ok ? "Copied" : "Select the text to copy it";
-        setTimeout(function () { t.innerHTML = icon("copy"); t.classList.remove("is-done"); t.title = ""; }, 1400);
+        setTimeout(function () { t.innerHTML = icon("copy"); t.classList.remove("is-done"); }, 1400);
       });
     } else if (t.dataset.toggle) {
       setOwned(t.dataset.toggle, !owns(t.dataset.toggle));
       saveState();
-      refreshScores();
-      var again = $("skill-" + t.dataset.toggle);
-      if (again) again.focus();
+      renderScored();
     } else if (t.dataset.learn) {
       setOwned(t.dataset.learn, true);
       saveState();
-      refreshScores();
+      renderScored();
+    } else if (t.dataset.area) {
+      companyFilter.area = t.dataset.area;
+      renderCompanies();
+    } else if (t.dataset.addProject) {
+      var parts = t.dataset.addProject.split(":");
+      var idea = roleById[parts[0]].projectIdeas[parseInt(parts[1], 10)];
+      if (!state.projects.some(function (p) { return p.title === idea.title; })) {
+        state.projects.push({ title: idea.title, tools: idea.tools || "", points: idea.resumePoints || [] });
+        saveState();
+      }
+      renderScored();
+    } else if (t.dataset.removeProject !== undefined) {
+      state.projects.splice(parseInt(t.dataset.removeProject, 10), 1);
+      saveState();
+      renderScored();
     } else if (t.dataset.removeCustom !== undefined) {
       state.custom.splice(parseInt(t.dataset.removeCustom, 10), 1);
       saveState();
-      renderSkills();
+      renderScored();
     } else if (t.dataset.removeLearning !== undefined) {
       state.learning.splice(parseInt(t.dataset.removeLearning, 10), 1);
       saveState();
       renderLearning();
+      renderScored();
     }
   });
 
-  $("roles").addEventListener("toggle", function (e) {
+  document.addEventListener("change", function (e) {
+    var step = e.target.dataset && e.target.dataset.step;
+    if (step) {
+      state.steps[step] = e.target.checked;
+      saveState();
+      e.target.closest(".step").classList.toggle("is-done", e.target.checked);
+      var done = DATA.steps.filter(function (s) { return state.steps[s.id]; }).length;
+      $("stepsProgress").textContent = done + " of " + DATA.steps.length + " done";
+    }
+  });
+
+  $("roleFilter").addEventListener("change", function () {
+    companyFilter.role = this.value;
+    renderCompanies();
+  });
+
+  $("roleList").addEventListener("toggle", function (e) {
     var d = e.target;
     if (!d.dataset || !d.dataset.role) return;
     openRoles = openRoles.filter(function (id) { return id !== d.dataset.role; });
@@ -725,16 +1101,16 @@
       } else {
         setOwned(match.id, true);
         saveState();
-        refreshScores();
+        renderScored();
         flash(msg, "Added " + match.label + ". Role scores updated.");
       }
     } else if (state.custom.some(function (c) { return c.toLowerCase() === q.toLowerCase(); })) {
-      flash(msg, q + " is already under Other skills.");
+      flash(msg, q + " is already on your list.");
     } else {
       state.custom.push(q);
       saveState();
-      renderSkills();
-      flash(msg, "Added " + q + " under Other skills. The role matcher doesn't track it, so scores stay the same.");
+      renderScored();
+      flash(msg, "Added " + q + ". The role matcher doesn't track it, so scores stay the same.");
     }
     input.value = "";
   });
@@ -743,21 +1119,15 @@
     e.preventDefault();
     var title = $("learnTitle").value.trim();
     if (!title) return;
-    var skills = Array.prototype.slice.call(document.querySelectorAll("#learnSkillPicker input:checked"))
-      .map(function (c) { return c.value; });
-    state.learning.push({
-      title: title,
-      source: $("learnSource").value.trim(),
-      date: $("learnDate").value.trim(),
-      note: $("learnNote").value.trim(),
-      skills: skills,
-    });
+    var skills = Array.prototype.slice.call(document.querySelectorAll("#learnSkillPicker input:checked")).map(function (c) { return c.value; });
+    state.learning.push({ title: title, source: $("learnSource").value.trim(), date: $("learnDate").value.trim(), note: $("learnNote").value.trim(), skills: skills });
     skills.forEach(function (id) { setOwned(id, true); });
     saveState();
     e.target.reset();
     renderLearning();
-    refreshScores();
-    flash($("learnMsg"), "Added " + title + (skills.length ? ". Its skills are now on your profile and scores are updated." : "."));
+    renderScored();
+    document.querySelector('[data-count="learning"]').textContent = DATA.learning.length + state.learning.length;
+    flash($("learnMsg"), "Added " + title + (skills.length ? ". Its skills are on your profile and scores are updated." : "."));
   });
 
   $("personalForm").addEventListener("input", function (e) {
@@ -784,12 +1154,10 @@
       }
     });
   });
-
   $("showRestore").addEventListener("click", function () {
     $("restoreBox").hidden = !$("restoreBox").hidden;
     $("resetConfirm").hidden = true;
   });
-
   $("doRestore").addEventListener("click", function () {
     try {
       state = normalizeState(JSON.parse($("restoreInput").value));
@@ -802,7 +1170,6 @@
       flash($("backupMsg"), "That text isn't a valid backup. Paste the full text you copied with Copy backup.", true);
     }
   });
-
   $("resetBtn").addEventListener("click", function () {
     $("resetConfirm").hidden = false;
     $("restoreBox").hidden = true;
@@ -816,19 +1183,8 @@
     flash($("backupMsg"), "Page changes cleared.");
   });
 
-  function renderAll() {
-    renderProfile();
-    renderExperience();
-    renderEducation();
-    renderMatcher();
-    renderSkills();
-    renderLearning();
-    renderPersonal();
-  }
-
   fillIcons();
   renderPicker();
   renderAll();
-  initCategories();
-  initActiveNav();
+  showView(viewFromHash());
 })();

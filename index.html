@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Shraddha Biswas</title>
-<meta name="description" content="Shraddha Biswas: compliance, risk and AI governance profile with a Hyderabad role matcher.">
+<meta name="description" content="Shraddha Biswas: job-search hub for compliance, risk and AI roles in Gachibowli and Nanakramguda, Hyderabad.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -16,7 +16,7 @@
   <header class="shell-header">
     <div class="header-side">
       <button type="button" class="action-icon burger" id="burger" aria-label="Open navigation" aria-expanded="false" aria-controls="navbar"><span data-icon="menu"></span></button>
-      <a class="brand" href="#overview">
+      <a class="brand" href="#dashboard">
         <span class="brand-mark" aria-hidden="true">SB</span>
         <span class="brand-name">Shraddha Biswas</span>
       </a>
@@ -24,7 +24,7 @@
     <div class="search" id="search">
       <label class="search-box" for="searchInput">
         <span data-icon="search"></span>
-        <input id="searchInput" type="search" placeholder="Search roles, skills, sections" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list">
+        <input id="searchInput" type="search" placeholder="Search roles, companies, skills" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list">
         <kbd class="kbd">Ctrl K</kbd>
       </label>
       <div class="search-results" id="searchResults" role="listbox" hidden></div>
@@ -35,125 +35,191 @@
     </div>
   </header>
 
-  <nav class="shell-navbar" id="navbar" aria-label="Sections">
+  <nav class="shell-navbar" id="navbar" aria-label="Pages">
     <div class="nav-links">
-      <a class="nav-link" href="#overview" data-nav="overview"><span data-icon="home"></span>Overview</a>
-      <a class="nav-link" href="#matcher" data-nav="matcher"><span data-icon="target"></span>Role matcher<span class="nav-badge" id="navMatcherBadge"></span></a>
-      <a class="nav-link" href="#skills" data-nav="skills"><span data-icon="bolt"></span>Skills<span class="nav-badge" id="navSkillsBadge"></span></a>
-      <a class="nav-link" href="#experience" data-nav="experience"><span data-icon="briefcase"></span>Experience</a>
-      <a class="nav-link" href="#learning" data-nav="learning"><span data-icon="book"></span>Learning log<span class="nav-badge" id="navLearningBadge"></span></a>
-      <a class="nav-link" href="#education" data-nav="education"><span data-icon="school"></span>Education</a>
-      <a class="nav-link" href="#personal" data-nav="personal"><span data-icon="user"></span>Personal details</a>
+      <p class="nav-label">Job search</p>
+      <a class="nav-link" href="#dashboard" data-view="dashboard"><span data-icon="home"></span>Dashboard</a>
+      <a class="nav-link" href="#roles" data-view="roles"><span data-icon="target"></span>Role matcher<span class="nav-badge" data-count="roles"></span></a>
+      <a class="nav-link" href="#companies" data-view="companies"><span data-icon="building"></span>Companies<span class="nav-badge" data-count="companies"></span></a>
+      <a class="nav-link" href="#resume" data-view="resume"><span data-icon="file"></span>Resume &amp; ATS</a>
+      <p class="nav-label">About me</p>
+      <a class="nav-link" href="#skills" data-view="skills"><span data-icon="bolt"></span>Skills<span class="nav-badge" data-count="skills"></span></a>
+      <a class="nav-link" href="#learning" data-view="learning"><span data-icon="book"></span>Learning log<span class="nav-badge" data-count="learning"></span></a>
+      <a class="nav-link" href="#profile" data-view="profile"><span data-icon="user"></span>Profile</a>
     </div>
     <div class="nav-status">
       <span class="dot" aria-hidden="true"></span>
       <div>
         <strong>Open to roles</strong>
-        <span class="dimmed">Hyderabad, Telangana</span>
+        <span class="dimmed">Gachibowli · Nanakramguda</span>
       </div>
     </div>
   </nav>
   <div class="nav-overlay" id="navOverlay" hidden></div>
 
-  <main class="shell-main">
-    <section class="hero" id="overview" aria-labelledby="name">
-      <div class="hero-main">
-        <div class="hero-id">
-          <span class="avatar" aria-hidden="true">SB</span>
-          <div class="hero-titles">
-            <div class="badge-row">
-              <span class="badge badge-green"><span class="badge-dot"></span>Open to roles</span>
-              <span class="badge badge-gray"><span data-icon="pin"></span>Hyderabad</span>
-            </div>
-            <h1 id="name">Shraddha Biswas</h1>
-            <p class="headline" id="headline"></p>
-          </div>
+  <main class="shell-main" id="main">
+
+    <!-- Dashboard -->
+    <section class="view" id="view-dashboard" data-view="dashboard" aria-labelledby="h-dashboard">
+      <div class="profile-card">
+        <span class="avatar" aria-hidden="true">SB</span>
+        <div class="profile-text">
+          <h1 id="h-dashboard">Shraddha Biswas</h1>
+          <p class="headline" id="headline"></p>
+          <div class="contact" id="contact"></div>
         </div>
-        <p class="summary" id="summary"></p>
-        <div class="contact" id="contact"></div>
       </div>
-      <dl class="stats" id="highlights"></dl>
+      <dl class="kpis" id="kpis"></dl>
+      <div class="two-col">
+        <section class="card">
+          <header class="card-head">
+            <h2 class="card-title">Apply to these first</h2>
+            <a class="link-more" href="#roles">All roles<span data-icon="arrow"></span></a>
+          </header>
+          <ol class="top-roles" id="topRoles"></ol>
+        </section>
+        <section class="card">
+          <header class="card-head">
+            <h2 class="card-title">Next steps</h2>
+            <span class="dimmed small" id="stepsProgress"></span>
+          </header>
+          <ul class="steps" id="steps"></ul>
+        </section>
+      </div>
     </section>
 
-    <section class="category" id="matcher">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="matcher-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Which Hyderabad roles fit best</span>
-          <span class="count-badge" id="matcherCount"></span>
-        </button>
-      </h2>
-      <div class="category-body" id="matcher-body">
-        <p class="lede">Each role gets a match score from your experience, your skills and how many openings Hyderabad has for it. Change your skills and the scores update.</p>
-        <div class="picks" id="topPicks"></div>
-        <ol class="roles" id="roles"></ol>
-        <aside class="alert">
-          <div class="alert-head"><span data-icon="trending"></span><h3>Skills that would raise your scores most</h3></div>
-          <p class="dimmed">Ranked by total points gained across every role. Tap one once you've learned it.</p>
-          <ol class="next-skills" id="nextSkills"></ol>
-        </aside>
-        <details class="method">
-          <summary><span data-icon="chevron" class="chevron"></span>How the score is calculated</summary>
-          <div class="method-body">
-            <p><strong>Experience fit</strong> (45%): how directly your work history maps to the day-to-day job. <strong>Skill coverage</strong> (31.5%): the share of the role's core and supporting skills you have, weighted by importance. <strong>Hyderabad demand</strong> (13.5%): how many openings the city usually has for the role.</p>
-            <p>That adds up to 90. The last 10 points depend on things a profile can't predict, such as interviews, timing and referrals, so no role scores above 90%.</p>
-            <p>Treat the numbers as a way to rank where to apply first. They are estimates based on typical job descriptions and the Hyderabad market in 2026, not guarantees. Experience fit and demand values are set in <code>data.js</code>.</p>
+    <!-- Role matcher -->
+    <section class="view" id="view-roles" data-view="roles" aria-labelledby="h-roles" hidden>
+      <header class="view-head">
+        <h1 id="h-roles">Role matcher</h1>
+        <p class="lede">Roles ranked by how likely you are to be shortlisted in Hyderabad, with the salary you can expect at around 3 years' experience. Open a role for companies in Gachibowli and Nanakramguda, the skills you have, and what's missing.</p>
+      </header>
+      <div class="legend" id="tierLegend"></div>
+      <ol class="role-list" id="roleList"></ol>
+      <details class="card method">
+        <summary><span data-icon="info"></span>How the match score and salary are worked out</summary>
+        <div class="method-body" id="methodBody"></div>
+      </details>
+    </section>
+
+    <!-- Companies -->
+    <section class="view" id="view-companies" data-view="companies" aria-labelledby="h-companies" hidden>
+      <header class="view-head">
+        <h1 id="h-companies">Companies in Gachibowli &amp; Nanakramguda</h1>
+        <p class="lede">Employers with offices in your two priority areas that hire for your target roles. Use the filters to narrow the list, then open the careers page.</p>
+      </header>
+      <div class="filters" role="group" aria-label="Filter companies">
+        <div class="segmented" id="areaFilter"></div>
+        <select class="input select" id="roleFilter" aria-label="Filter by role"></select>
+      </div>
+      <div class="table-wrap">
+        <table class="table companies-table">
+          <thead><tr><th scope="col">Company</th><th scope="col">Area</th><th scope="col">Hires for</th><th scope="col"><span class="sr-only">Careers</span></th></tr></thead>
+          <tbody id="companyRows"></tbody>
+        </table>
+      </div>
+      <p class="dimmed small" id="companyNote"></p>
+    </section>
+
+    <!-- Resume & ATS -->
+    <section class="view" id="view-resume" data-view="resume" aria-labelledby="h-resume" hidden>
+      <header class="view-head">
+        <h1 id="h-resume">Resume &amp; ATS</h1>
+        <p class="lede">See how well your current resume passes applicant tracking systems for each role, how many projects recruiters expect, and generate a version tailored to one role.</p>
+      </header>
+
+      <div class="field role-picker">
+        <label class="label" for="atsRole">Target role</label>
+        <select class="input select" id="atsRole"></select>
+      </div>
+
+      <div class="ats-grid">
+        <section class="card ats-score" aria-labelledby="h-ats">
+          <h2 class="card-title" id="h-ats">ATS score</h2>
+          <div class="ats-compare" id="atsCompare"></div>
+          <ul class="checks" id="atsChecks"></ul>
+        </section>
+        <section class="card" aria-labelledby="h-projects">
+          <header class="card-head">
+            <h2 class="card-title" id="h-projects">Projects</h2>
+            <span class="badge" id="projectBadge"></span>
+          </header>
+          <p class="project-count" id="projectCount"></p>
+          <ul class="project-list" id="projectList"></ul>
+          <h3 class="sub-title">Project ideas for this role</h3>
+          <ul class="idea-list" id="projectIdeas"></ul>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-keywords">
+        <header class="card-head">
+          <h2 class="card-title" id="h-keywords">Keywords recruiters search for</h2>
+          <span class="dimmed small" id="keywordSummary"></span>
+        </header>
+        <ul class="pills" id="keywordList"></ul>
+        <p class="dimmed small">Green keywords are already in your resume. Grey ones are skills you have that your resume doesn't mention yet; the generated resume adds them. Dashed ones are skills you don't have yet, so leave them out until they're true.</p>
+      </section>
+
+      <section class="card generator" aria-labelledby="h-generate">
+        <header class="card-head">
+          <h2 class="card-title" id="h-generate">Generate an ATS resume</h2>
+        </header>
+        <p class="dimmed">Builds a single-column, plain-text resume for the selected role from your real experience, with the role's keywords placed where ATS tools look for them.</p>
+        <div class="generate-row">
+          <button type="button" class="button button-generate" id="generateBtn"><span data-icon="sparkles"></span>Generate</button>
+          <span class="dimmed small" id="generateHint"></span>
+        </div>
+        <div class="resume-output" id="resumeOutput" hidden>
+          <div class="button-row">
+            <button type="button" class="button button-default" id="copyResume"><span data-icon="copy"></span>Copy text</button>
+            <button type="button" class="button button-default file-only" id="downloadDoc"><span data-icon="download"></span>Download Word</button>
+            <button type="button" class="button button-default file-only" id="downloadTxt"><span data-icon="download"></span>Download .txt</button>
+            <button type="button" class="button button-default file-only" id="printResume"><span data-icon="printer"></span>Save as PDF</button>
           </div>
-        </details>
+          <p class="form-msg" id="resumeMsg" role="status"></p>
+          <pre class="resume-preview" id="resumePreview" tabindex="0" aria-label="Generated resume"></pre>
+        </div>
+      </section>
+    </section>
+
+    <!-- Skills -->
+    <section class="view" id="view-skills" data-view="skills" aria-labelledby="h-skills" hidden>
+      <header class="view-head">
+        <h1 id="h-skills">Skills</h1>
+        <p class="lede">Only skills that Hyderabad recruiters ask for in your target roles. Tap a skill to move it between the two lists; the role scores update.</p>
+      </header>
+      <form class="inline-form" id="addSkillForm" autocomplete="off">
+        <label class="label" for="skillInput">Learned something new?</label>
+        <div class="input-row">
+          <input class="input" id="skillInput" list="skillOptions" placeholder="e.g. Python, CAMS, NIST AI RMF" required>
+          <datalist id="skillOptions"></datalist>
+          <button type="submit" class="button"><span data-icon="plus"></span>Add skill</button>
+        </div>
+        <p class="form-msg" id="skillMsg" role="status"></p>
+      </form>
+      <div class="two-col">
+        <section class="card">
+          <header class="card-head"><h2 class="card-title">You have</h2><span class="badge badge-green" id="haveCount"></span></header>
+          <div id="haveSkills" class="skill-groups"></div>
+        </section>
+        <section class="card">
+          <header class="card-head"><h2 class="card-title">Worth learning next</h2><span class="badge badge-yellow" id="gapCount"></span></header>
+          <ol class="gap-list" id="gapSkills"></ol>
+        </section>
       </div>
     </section>
 
-    <section class="category" id="skills">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="skills-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Skills</span>
-          <span class="count-badge" id="skillsCount"></span>
-        </button>
-      </h2>
-      <div class="category-body" id="skills-body">
-        <p class="lede">Filled chips are skills on your profile. Outlined chips are gaps the role matcher looks for. Tap a chip to switch it.</p>
-        <form class="inline-form" id="addSkillForm" autocomplete="off">
-          <label class="label" for="skillInput">Add a skill you've learned</label>
-          <div class="input-row">
-            <input class="input" id="skillInput" list="skillOptions" placeholder="e.g. Python, Tableau, NIST AI RMF" required>
-            <datalist id="skillOptions"></datalist>
-            <button type="submit" class="button"><span data-icon="plus"></span>Add skill</button>
-          </div>
-          <p class="form-msg" id="skillMsg" role="status"></p>
-        </form>
-        <div class="item-grid two" id="skillGroups"></div>
-      </div>
-    </section>
-
-    <section class="category" id="experience">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="experience-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Experience</span>
-          <span class="count-badge" id="experienceCount"></span>
-        </button>
-      </h2>
-      <div class="category-body" id="experience-body">
-        <p class="lede" id="tenure"></p>
-        <ol class="timeline" id="timeline"></ol>
-        <article class="item project" id="project"></article>
-      </div>
-    </section>
-
-    <section class="category" id="learning">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="learning-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Learning log</span>
-          <span class="count-badge" id="learningCount"></span>
-        </button>
-      </h2>
-      <div class="category-body" id="learning-body">
-        <p class="lede">Courses, certifications and self-study. Adding an entry here also adds its skills to your profile.</p>
-        <ul class="item-grid two" id="learningList"></ul>
-        <form class="item learn-form" id="learnForm" autocomplete="off">
-          <h3 class="item-title">Add a learning entry</h3>
+    <!-- Learning -->
+    <section class="view" id="view-learning" data-view="learning" aria-labelledby="h-learning" hidden>
+      <header class="view-head">
+        <h1 id="h-learning">Learning log</h1>
+        <p class="lede">Every course and certificate, marked by whether it helps your job search in Hyderabad right now and what to do with it.</p>
+      </header>
+      <div class="legend" id="learnLegend"></div>
+      <ul class="learn-list" id="learningList"></ul>
+      <details class="card add-learning">
+        <summary><span data-icon="plus"></span>Add a learning entry</summary>
+        <form class="learn-form" id="learnForm" autocomplete="off">
           <div class="form-grid">
             <div class="field"><label class="label" for="learnTitle">What did you learn?</label><input class="input" id="learnTitle" required placeholder="e.g. ISO 42001 Foundations"></div>
             <div class="field"><label class="label" for="learnSource">Where from?</label><input class="input" id="learnSource" placeholder="e.g. Coursera, YouTube, book"></div>
@@ -167,64 +233,63 @@
           <div><button type="submit" class="button"><span data-icon="plus"></span>Add to learning log</button></div>
           <p class="form-msg" id="learnMsg" role="status"></p>
         </form>
-      </div>
+      </details>
     </section>
 
-    <section class="category" id="education">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="education-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Education</span>
-          <span class="count-badge" id="educationCount"></span>
-        </button>
-      </h2>
-      <div class="category-body" id="education-body">
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th scope="col">Year</th><th scope="col">Qualification</th><th scope="col">Institution</th></tr></thead>
-            <tbody id="educationList"></tbody>
-          </table>
-        </div>
+    <!-- Profile -->
+    <section class="view" id="view-profile" data-view="profile" aria-labelledby="h-profile" hidden>
+      <header class="view-head">
+        <h1 id="h-profile">Profile</h1>
+        <p class="lede" id="tenure"></p>
+      </header>
+      <section class="card">
+        <header class="card-head"><h2 class="card-title">Summary</h2></header>
+        <p id="summary"></p>
+      </section>
+      <section class="card">
+        <header class="card-head"><h2 class="card-title">Experience</h2></header>
+        <ol class="timeline" id="timeline"></ol>
+      </section>
+      <div class="two-col">
+        <section class="card">
+          <header class="card-head"><h2 class="card-title">Education</h2></header>
+          <div id="education"></div>
+        </section>
+        <section class="card">
+          <header class="card-head"><h2 class="card-title">Key results</h2></header>
+          <dl class="results" id="results"></dl>
+        </section>
       </div>
-    </section>
-
-    <section class="category" id="personal">
-      <h2 class="category-head">
-        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="personal-body">
-          <span data-icon="chevron" class="chevron"></span>
-          <span class="category-title">Personal details</span>
-        </button>
-      </h2>
-      <div class="category-body" id="personal-body">
-        <p class="lede">Your own reference card for applications. Everything you type here saves in this browser automatically.</p>
+      <section class="card">
+        <header class="card-head"><h2 class="card-title">Application details</h2><span class="dimmed small">Saved in this browser</span></header>
         <form id="personalForm" class="form-grid three" autocomplete="off"></form>
-        <div class="item backup">
-          <h3 class="item-title">Backup and restore</h3>
-          <p class="dimmed">Browser storage can be cleared. Copy your backup now and then, and paste it back here to restore it on any device.</p>
-          <div class="button-row">
-            <button type="button" class="button" id="copyBackup"><span data-icon="copy"></span>Copy backup</button>
-            <button type="button" class="button button-default" id="showRestore">Restore from backup</button>
-            <button type="button" class="button button-subtle" id="resetBtn">Reset page changes</button>
-          </div>
-          <div id="restoreBox" class="stack" hidden>
-            <label class="label" for="restoreInput">Paste a backup</label>
-            <textarea class="input" id="restoreInput" rows="4"></textarea>
-            <div><button type="button" class="button" id="doRestore">Restore</button></div>
-          </div>
-          <div id="resetConfirm" class="confirm" hidden>
-            <p>This removes skills, learning entries and personal details you added on this page. Content in <code>data.js</code> stays.</p>
-            <div class="button-row">
-              <button type="button" class="button button-danger" id="confirmReset">Reset</button>
-              <button type="button" class="button button-default" id="cancelReset">Cancel</button>
-            </div>
-          </div>
-          <textarea id="backupFallback" class="input mono" rows="4" readonly hidden aria-label="Backup text"></textarea>
-          <p class="form-msg" id="backupMsg" role="status"></p>
+      </section>
+      <section class="card backup">
+        <header class="card-head"><h2 class="card-title">Backup and restore</h2></header>
+        <p class="dimmed">Skills, learning entries and details you add here live in this browser only. Copy a backup now and then, and paste it back to restore it on any device.</p>
+        <div class="button-row">
+          <button type="button" class="button" id="copyBackup"><span data-icon="copy"></span>Copy backup</button>
+          <button type="button" class="button button-default" id="showRestore">Restore from backup</button>
+          <button type="button" class="button button-subtle" id="resetBtn">Reset page changes</button>
         </div>
-      </div>
+        <div id="restoreBox" class="stack" hidden>
+          <label class="label" for="restoreInput">Paste a backup</label>
+          <textarea class="input" id="restoreInput" rows="4"></textarea>
+          <div><button type="button" class="button" id="doRestore">Restore</button></div>
+        </div>
+        <div id="resetConfirm" class="confirm" hidden>
+          <p>This removes skills, learning entries and details you added on this page. Content in <code>data.js</code> stays.</p>
+          <div class="button-row">
+            <button type="button" class="button button-danger" id="confirmReset">Reset</button>
+            <button type="button" class="button button-default" id="cancelReset">Cancel</button>
+          </div>
+        </div>
+        <textarea id="backupFallback" class="input mono" rows="4" readonly hidden aria-label="Backup text"></textarea>
+        <p class="form-msg" id="backupMsg" role="status"></p>
+      </section>
     </section>
 
-    <footer class="footer">Built with Claude. Design inspired by Homarr. Content comes from <code>data.js</code> plus anything added on this page.</footer>
+    <footer class="footer">Built with Claude. Design inspired by Homarr. Salary and company data researched October 2026; check each listing before applying.</footer>
   </main>
 </div>
 <script src="data.js"></script>
