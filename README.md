@@ -3,6 +3,11 @@
 A static personal site: profile, experience, skills, learning log, personal details,
 and a role matcher that ranks which Hyderabad roles fit best.
 
+The look follows the design of [Homarr](https://github.com/homarr-labs/homarr) (Apache-2.0):
+its Mantine colour palette and red accent, Inter type, app-shell header and sidebar,
+collapsible category cards, ring progress charts and a dark/light switch.
+No Homarr code or logo is included; the styles are rewritten in plain CSS.
+
 ## Open it
 
 Double-click `index.html`. No install or build step is needed.
@@ -10,6 +15,13 @@ Double-click `index.html`. No install or build step is needed.
 To put it online for free, enable **GitHub Pages** for this repository
 (Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`). The site will then live at
 https://shraddhabiswas2723.github.io/personal-portfolio/
+
+## Use it
+
+- **Search:** press Ctrl K (⌘ K on Mac) to jump to any section, role or skill.
+- **Sidebar:** jump between sections; on a phone, open it with the menu button.
+- **Sections:** click a section title to collapse or expand it. The page remembers your choice.
+- **Colour scheme:** the sun/moon button switches between light and dark.
 
 ## Update it
 

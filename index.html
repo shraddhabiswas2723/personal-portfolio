@@ -7,141 +7,225 @@
 <meta name="description" content="Shraddha Biswas: compliance, risk and AI governance profile with a Hyderabad role matcher.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <!--PAGE-START-->
-<div class="page">
-  <header class="hero" id="top">
-    <div class="hero-main">
-      <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span>Open to roles in Hyderabad</p>
-      <h1 id="name">Shraddha Biswas</h1>
-      <p class="headline" id="headline"></p>
-      <p class="summary" id="summary"></p>
-      <ul class="contact" id="contact"></ul>
+<div class="shell">
+  <header class="shell-header">
+    <div class="header-side">
+      <button type="button" class="action-icon burger" id="burger" aria-label="Open navigation" aria-expanded="false" aria-controls="navbar"><span data-icon="menu"></span></button>
+      <a class="brand" href="#overview">
+        <span class="brand-mark" aria-hidden="true">SB</span>
+        <span class="brand-name">Shraddha Biswas</span>
+      </a>
     </div>
-    <dl class="highlights" id="highlights"></dl>
+    <div class="search" id="search">
+      <label class="search-box" for="searchInput">
+        <span data-icon="search"></span>
+        <input id="searchInput" type="search" placeholder="Search roles, skills, sections" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list">
+        <kbd class="kbd">Ctrl K</kbd>
+      </label>
+      <div class="search-results" id="searchResults" role="listbox" hidden></div>
+    </div>
+    <div class="header-side header-actions">
+      <button type="button" class="action-icon mobile-search" id="mobileSearch" aria-label="Search"><span data-icon="search"></span></button>
+      <button type="button" class="action-icon" id="themeToggle" aria-label="Switch colour scheme"><span data-icon="sun" class="icon-sun"></span><span data-icon="moon" class="icon-moon"></span></button>
+    </div>
   </header>
 
-  <nav class="nav" aria-label="Sections">
-    <a href="#matcher">Role matcher</a>
-    <a href="#skills">Skills</a>
-    <a href="#experience">Experience</a>
-    <a href="#learning">Learning</a>
-    <a href="#education">Education</a>
-    <a href="#personal">Personal</a>
+  <nav class="shell-navbar" id="navbar" aria-label="Sections">
+    <div class="nav-links">
+      <a class="nav-link" href="#overview" data-nav="overview"><span data-icon="home"></span>Overview</a>
+      <a class="nav-link" href="#matcher" data-nav="matcher"><span data-icon="target"></span>Role matcher<span class="nav-badge" id="navMatcherBadge"></span></a>
+      <a class="nav-link" href="#skills" data-nav="skills"><span data-icon="bolt"></span>Skills<span class="nav-badge" id="navSkillsBadge"></span></a>
+      <a class="nav-link" href="#experience" data-nav="experience"><span data-icon="briefcase"></span>Experience</a>
+      <a class="nav-link" href="#learning" data-nav="learning"><span data-icon="book"></span>Learning log<span class="nav-badge" id="navLearningBadge"></span></a>
+      <a class="nav-link" href="#education" data-nav="education"><span data-icon="school"></span>Education</a>
+      <a class="nav-link" href="#personal" data-nav="personal"><span data-icon="user"></span>Personal details</a>
+    </div>
+    <div class="nav-status">
+      <span class="dot" aria-hidden="true"></span>
+      <div>
+        <strong>Open to roles</strong>
+        <span class="dimmed">Hyderabad, Telangana</span>
+      </div>
+    </div>
   </nav>
+  <div class="nav-overlay" id="navOverlay" hidden></div>
 
-  <main>
-    <section id="matcher" class="section">
-      <div class="section-head">
-        <h2>Which Hyderabad roles fit best</h2>
-        <p class="lede">Each role gets a match score from your experience, your skills and how many openings Hyderabad has for it. Change your skills below and the scores update.</p>
-      </div>
-      <div class="top-picks" id="topPicks"></div>
-      <ol class="roles" id="roles"></ol>
-      <aside class="next-skills">
-        <h3>Skills that would raise your scores most</h3>
-        <p class="muted">Ranked by total points gained across every role. Tap one once you've learned it.</p>
-        <ol id="nextSkills"></ol>
-      </aside>
-      <details class="method">
-        <summary>How the score is calculated</summary>
-        <div class="method-body">
-          <p><strong>Experience fit</strong> (45%): how directly your work history maps to the day-to-day job. <strong>Skill coverage</strong> (31.5%): the share of the role's core and supporting skills you have, weighted by importance. <strong>Hyderabad demand</strong> (13.5%): how many openings the city usually has for the role.</p>
-          <p>That adds up to 90. The last 10 points depend on things a profile can't predict, such as interviews, timing and referrals, so no role scores above 90%.</p>
-          <p>Treat the numbers as a way to rank where to apply first. They are estimates based on typical job descriptions and the Hyderabad market in 2026, not guarantees. Experience fit and demand values are set in <code>data.js</code>.</p>
+  <main class="shell-main">
+    <section class="hero" id="overview" aria-labelledby="name">
+      <div class="hero-main">
+        <div class="hero-id">
+          <span class="avatar" aria-hidden="true">SB</span>
+          <div class="hero-titles">
+            <div class="badge-row">
+              <span class="badge badge-green"><span class="badge-dot"></span>Open to roles</span>
+              <span class="badge badge-gray"><span data-icon="pin"></span>Hyderabad</span>
+            </div>
+            <h1 id="name">Shraddha Biswas</h1>
+            <p class="headline" id="headline"></p>
+          </div>
         </div>
-      </details>
+        <p class="summary" id="summary"></p>
+        <div class="contact" id="contact"></div>
+      </div>
+      <dl class="stats" id="highlights"></dl>
     </section>
 
-    <section id="skills" class="section">
-      <div class="section-head">
-        <h2>Skills</h2>
+    <section class="category" id="matcher">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="matcher-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Which Hyderabad roles fit best</span>
+          <span class="count-badge" id="matcherCount"></span>
+        </button>
+      </h2>
+      <div class="category-body" id="matcher-body">
+        <p class="lede">Each role gets a match score from your experience, your skills and how many openings Hyderabad has for it. Change your skills and the scores update.</p>
+        <div class="picks" id="topPicks"></div>
+        <ol class="roles" id="roles"></ol>
+        <aside class="alert">
+          <div class="alert-head"><span data-icon="trending"></span><h3>Skills that would raise your scores most</h3></div>
+          <p class="dimmed">Ranked by total points gained across every role. Tap one once you've learned it.</p>
+          <ol class="next-skills" id="nextSkills"></ol>
+        </aside>
+        <details class="method">
+          <summary><span data-icon="chevron" class="chevron"></span>How the score is calculated</summary>
+          <div class="method-body">
+            <p><strong>Experience fit</strong> (45%): how directly your work history maps to the day-to-day job. <strong>Skill coverage</strong> (31.5%): the share of the role's core and supporting skills you have, weighted by importance. <strong>Hyderabad demand</strong> (13.5%): how many openings the city usually has for the role.</p>
+            <p>That adds up to 90. The last 10 points depend on things a profile can't predict, such as interviews, timing and referrals, so no role scores above 90%.</p>
+            <p>Treat the numbers as a way to rank where to apply first. They are estimates based on typical job descriptions and the Hyderabad market in 2026, not guarantees. Experience fit and demand values are set in <code>data.js</code>.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="category" id="skills">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="skills-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Skills</span>
+          <span class="count-badge" id="skillsCount"></span>
+        </button>
+      </h2>
+      <div class="category-body" id="skills-body">
         <p class="lede">Filled chips are skills on your profile. Outlined chips are gaps the role matcher looks for. Tap a chip to switch it.</p>
+        <form class="inline-form" id="addSkillForm" autocomplete="off">
+          <label class="label" for="skillInput">Add a skill you've learned</label>
+          <div class="input-row">
+            <input class="input" id="skillInput" list="skillOptions" placeholder="e.g. Python, Tableau, NIST AI RMF" required>
+            <datalist id="skillOptions"></datalist>
+            <button type="submit" class="button"><span data-icon="plus"></span>Add skill</button>
+          </div>
+          <p class="form-msg" id="skillMsg" role="status"></p>
+        </form>
+        <div class="item-grid two" id="skillGroups"></div>
       </div>
-      <form class="add-skill" id="addSkillForm" autocomplete="off">
-        <label for="skillInput">Add a skill you've learned</label>
-        <div class="field-row">
-          <input id="skillInput" list="skillOptions" placeholder="e.g. Python, Tableau, NIST AI RMF" required>
-          <datalist id="skillOptions"></datalist>
-          <button type="submit" class="btn">Add skill</button>
-        </div>
-        <p class="form-msg" id="skillMsg" role="status"></p>
-      </form>
-      <div class="skill-groups" id="skillGroups"></div>
     </section>
 
-    <section id="experience" class="section">
-      <div class="section-head">
-        <h2>Experience</h2>
+    <section class="category" id="experience">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="experience-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Experience</span>
+          <span class="count-badge" id="experienceCount"></span>
+        </button>
+      </h2>
+      <div class="category-body" id="experience-body">
         <p class="lede" id="tenure"></p>
+        <ol class="timeline" id="timeline"></ol>
+        <article class="item project" id="project"></article>
       </div>
-      <ol class="timeline" id="timeline"></ol>
-      <article class="project" id="project"></article>
     </section>
 
-    <section id="learning" class="section">
-      <div class="section-head">
-        <h2>Learning log</h2>
+    <section class="category" id="learning">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="learning-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Learning log</span>
+          <span class="count-badge" id="learningCount"></span>
+        </button>
+      </h2>
+      <div class="category-body" id="learning-body">
         <p class="lede">Courses, certifications and self-study. Adding an entry here also adds its skills to your profile.</p>
+        <ul class="item-grid two" id="learningList"></ul>
+        <form class="item learn-form" id="learnForm" autocomplete="off">
+          <h3 class="item-title">Add a learning entry</h3>
+          <div class="form-grid">
+            <div class="field"><label class="label" for="learnTitle">What did you learn?</label><input class="input" id="learnTitle" required placeholder="e.g. ISO 42001 Foundations"></div>
+            <div class="field"><label class="label" for="learnSource">Where from?</label><input class="input" id="learnSource" placeholder="e.g. Coursera, YouTube, book"></div>
+            <div class="field"><label class="label" for="learnDate">When?</label><input class="input" id="learnDate" placeholder="e.g. Oct 2026"></div>
+            <div class="field"><label class="label" for="learnNote">Notes</label><input class="input" id="learnNote" placeholder="One line on what it covered"></div>
+          </div>
+          <fieldset class="picker-wrap">
+            <legend class="label">Skills it gave you</legend>
+            <div id="learnSkillPicker" class="picker"></div>
+          </fieldset>
+          <div><button type="submit" class="button"><span data-icon="plus"></span>Add to learning log</button></div>
+          <p class="form-msg" id="learnMsg" role="status"></p>
+        </form>
       </div>
-      <form class="learn-form" id="learnForm" autocomplete="off">
-        <div class="grid-2">
-          <div class="field"><label for="learnTitle">What did you learn?</label><input id="learnTitle" required placeholder="e.g. ISO 42001 Foundations"></div>
-          <div class="field"><label for="learnSource">Where from?</label><input id="learnSource" placeholder="e.g. Coursera, YouTube, book"></div>
-          <div class="field"><label for="learnDate">When?</label><input id="learnDate" placeholder="e.g. Oct 2026"></div>
-          <div class="field"><label for="learnNote">Notes</label><input id="learnNote" placeholder="One line on what it covered"></div>
+    </section>
+
+    <section class="category" id="education">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="education-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Education</span>
+          <span class="count-badge" id="educationCount"></span>
+        </button>
+      </h2>
+      <div class="category-body" id="education-body">
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th scope="col">Year</th><th scope="col">Qualification</th><th scope="col">Institution</th></tr></thead>
+            <tbody id="educationList"></tbody>
+          </table>
         </div>
-        <fieldset class="learn-skills">
-          <legend>Skills it gave you</legend>
-          <div id="learnSkillPicker" class="picker"></div>
-        </fieldset>
-        <button type="submit" class="btn">Add to learning log</button>
-        <p class="form-msg" id="learnMsg" role="status"></p>
-      </form>
-      <ul class="learning" id="learningList"></ul>
+      </div>
     </section>
 
-    <section id="education" class="section">
-      <div class="section-head"><h2>Education</h2></div>
-      <ul class="education" id="educationList"></ul>
-    </section>
-
-    <section id="personal" class="section">
-      <div class="section-head">
-        <h2>Personal details</h2>
+    <section class="category" id="personal">
+      <h2 class="category-head">
+        <button type="button" class="category-toggle" aria-expanded="true" aria-controls="personal-body">
+          <span data-icon="chevron" class="chevron"></span>
+          <span class="category-title">Personal details</span>
+        </button>
+      </h2>
+      <div class="category-body" id="personal-body">
         <p class="lede">Your own reference card for applications. Everything you type here saves in this browser automatically.</p>
-      </div>
-      <form id="personalForm" class="personal-grid" autocomplete="off"></form>
-      <div class="backup">
-        <h3>Backup and restore</h3>
-        <p class="muted">Browser storage can be cleared. Copy your backup now and then, and paste it back here to restore it on any device.</p>
-        <div class="backup-actions">
-          <button type="button" class="btn" id="copyBackup">Copy backup</button>
-          <button type="button" class="btn btn-quiet" id="showRestore">Restore from backup</button>
-          <button type="button" class="btn btn-quiet" id="resetBtn">Reset page changes</button>
+        <form id="personalForm" class="form-grid three" autocomplete="off"></form>
+        <div class="item backup">
+          <h3 class="item-title">Backup and restore</h3>
+          <p class="dimmed">Browser storage can be cleared. Copy your backup now and then, and paste it back here to restore it on any device.</p>
+          <div class="button-row">
+            <button type="button" class="button" id="copyBackup"><span data-icon="copy"></span>Copy backup</button>
+            <button type="button" class="button button-default" id="showRestore">Restore from backup</button>
+            <button type="button" class="button button-subtle" id="resetBtn">Reset page changes</button>
+          </div>
+          <div id="restoreBox" class="stack" hidden>
+            <label class="label" for="restoreInput">Paste a backup</label>
+            <textarea class="input" id="restoreInput" rows="4"></textarea>
+            <div><button type="button" class="button" id="doRestore">Restore</button></div>
+          </div>
+          <div id="resetConfirm" class="confirm" hidden>
+            <p>This removes skills, learning entries and personal details you added on this page. Content in <code>data.js</code> stays.</p>
+            <div class="button-row">
+              <button type="button" class="button button-danger" id="confirmReset">Reset</button>
+              <button type="button" class="button button-default" id="cancelReset">Cancel</button>
+            </div>
+          </div>
+          <textarea id="backupFallback" class="input mono" rows="4" readonly hidden aria-label="Backup text"></textarea>
+          <p class="form-msg" id="backupMsg" role="status"></p>
         </div>
-        <div id="restoreBox" class="restore" hidden>
-          <label for="restoreInput">Paste a backup</label>
-          <textarea id="restoreInput" rows="4"></textarea>
-          <button type="button" class="btn" id="doRestore">Restore</button>
-        </div>
-        <div id="resetConfirm" class="confirm" hidden>
-          <p>This removes skills, learning entries and personal details you added on this page. Content in <code>data.js</code> stays.</p>
-          <button type="button" class="btn btn-danger" id="confirmReset">Reset</button>
-          <button type="button" class="btn btn-quiet" id="cancelReset">Cancel</button>
-        </div>
-        <textarea id="backupFallback" class="backup-fallback" rows="4" readonly hidden aria-label="Backup text"></textarea>
-        <p class="form-msg" id="backupMsg" role="status"></p>
       </div>
     </section>
-  </main>
 
-  <footer class="footer">
-    <p>Built with Claude. Content comes from <code>data.js</code> plus anything added on this page.</p>
-  </footer>
+    <footer class="footer">Built with Claude. Design inspired by Homarr. Content comes from <code>data.js</code> plus anything added on this page.</footer>
+  </main>
 </div>
 <script src="data.js"></script>
 <script src="app.js"></script>
