@@ -9,7 +9,7 @@ window.PROFILE_DATA = {
     location: "Hyderabad, Telangana, India",
     email: "shraddhabiswas2723@gmail.com",
     phone: "+91 8639627073",
-    linkedin: "https://shorturl.at/YKvUb",
+    linkedin: "https://www.linkedin.com/in/shraddha-biswas-20b2a324a",
     summary:
       "Compliance and operations professional with 3+ years of experience auditing high-volume transactions, " +
       "mitigating operational risk, and enforcing strict policy standards at Amazon. I run root-cause analyses, " +
@@ -287,7 +287,7 @@ window.PROFILE_DATA = {
     { id: "city", label: "Current city", value: "Hyderabad, Telangana" },
     { id: "email", label: "Email", value: "shraddhabiswas2723@gmail.com" },
     { id: "phone", label: "Phone", value: "+91 8639627073" },
-    { id: "linkedin", label: "LinkedIn", value: "https://shorturl.at/YKvUb" },
+    { id: "linkedin", label: "LinkedIn", value: "https://www.linkedin.com/in/shraddha-biswas-20b2a324a" },
     { id: "dob", label: "Date of birth", value: "" },
     { id: "languages", label: "Languages", value: "" },
     { id: "notice", label: "Notice period", value: "" },
