@@ -19,13 +19,23 @@ vm.runInNewContext(await readFile(new URL("data.js", ROOT), "utf8"), ctx);
 const DATA = ctx.window.PROFILE_DATA;
 
 // Public job-board endpoints that each company's own careers site uses.
+// Workday: POST /wday/cxs/<tenant>/<site>/jobs. `search` is the text Workday matches against.
 const WORKDAY = [
-  { companyId: "franklin", company: "Franklin Templeton", host: "franklintempleton.wd5.myworkdayjobs.com", tenant: "franklintempleton", site: "Primary-External-1" },
-  { companyId: "schwab", company: "Charles Schwab", host: "schwab.wd1.myworkdayjobs.com", tenant: "schwab", site: "External" },
-  { companyId: "hartford", company: "The Hartford", host: "thehartford.wd5.myworkdayjobs.com", tenant: "thehartford", site: "Careers_External" },
-  { companyId: "accenture", company: "Accenture", host: "accenture.wd103.myworkdayjobs.com", tenant: "accenture", site: "AccentureCareers" },
+  { company: "The Hartford", host: "thehartford.wd5.myworkdayjobs.com", tenant: "thehartford", site: "Careers_External", search: "India" },
+  { company: "DBS Tech India", host: "dbs.wd3.myworkdayjobs.com", tenant: "dbs", site: "DBS_Careers", search: "Hyderabad" },
+  { company: "Teleperformance", host: "onetp.wd1.myworkdayjobs.com", tenant: "onetp", site: "Teleperformance", search: "HYD" },
+  { company: "Concentrix", host: "cnx.wd1.myworkdayjobs.com", tenant: "cnx", site: "external_global", search: "Hyderabad" },
+  { company: "Accenture", host: "accenture.wd103.myworkdayjobs.com", tenant: "accenture", site: "AccentureCareers", search: "Hyderabad" },
 ];
-const SMARTRECRUITERS = [];
+// Eightfold: `pcsx` is the newer search API, `v2` the older one.
+const EIGHTFOLD = [
+  { company: "Microsoft", host: "apply.careers.microsoft.com", domain: "microsoft.com", api: "pcsx", location: "Hyderabad, Telangana, India" },
+  { company: "HSBC", host: "hsbc.eightfold.ai", domain: "hsbc.com", api: "v2", location: "Hyderabad", jobBase: "https://portal.careers.hsbc.com/careers/job/" },
+];
+const SMARTRECRUITERS = [
+  { company: "Experian", id: "Experian" },
+  { company: "IQ-EQ", id: "IQEQ" },
+];
 const GREENHOUSE = [];
 const LEVER = [];
 
@@ -93,7 +103,7 @@ function companyFor(name) {
 
 function areaFor(location, company) {
   const l = (location || "").toLowerCase();
-  if (l.includes("gachibowli")) return { area: "gachibowli", areaFrom: "posting" };
+  if (l.includes("gachibowli") || l.includes("puppalaguda")) return { area: "gachibowli", areaFrom: "posting" };
   if (l.includes("nanakramguda") || l.includes("financial district") || l.includes("waverock")) return { area: "nanakramguda", areaFrom: "posting" };
   if (company) return { area: company.area, areaFrom: "company" };
   return { area: "hyderabad", areaFrom: "none" };
@@ -106,7 +116,7 @@ function maxYears(text) {
 }
 
 function isHyderabad(location) {
-  return /hyderabad|telangana|gachibowli|nanakramguda|secunderabad/i.test(location || "");
+  return /hyderabad|telangana|gachibowli|nanakramguda|secunderabad|puppalaguda|\bhyd\b/i.test(location || "");
 }
 
 function toISO(d) {
@@ -147,84 +157,121 @@ function makeJob({ id, title, companyName, location, posted, url, source, years 
 }
 
 // ---------- Sources ----------
+// Each source returns raw postings: { id, title, companyName, location, posted, url, source, years }.
 
 async function amazon() {
   const queries = [...new Set(DATA.roles.flatMap((r) => r.search))];
-  const jobs = [];
+  const out = [];
   for (const q of queries) {
     const url = "https://www.amazon.jobs/en/search.json?" + new URLSearchParams({
       base_query: q, loc_query: "Hyderabad, Telangana, IND", country: "IND", result_limit: "100", sort: "recent", offset: "0",
     });
     const data = await getJSON(url);
     for (const j of data.jobs || []) {
-      jobs.push(makeJob({
+      out.push({
         id: j.id_icims || j.id, title: j.title, companyName: "Amazon",
         location: [j.normalized_location, j.location, j.city].filter(Boolean).join(" · "),
         posted: toISO(j.posted_date), url: "https://www.amazon.jobs" + j.job_path, source: "amazon",
         years: maxYears(j.basic_qualifications),
-      }));
+      });
     }
     await sleep(400);
   }
-  return jobs;
+  return out;
 }
 
-async function microsoft() {
-  const queries = [...new Set(DATA.roles.map((r) => r.search[0]))];
-  const jobs = [];
+async function eightfold(cfg) {
+  const out = [];
+  const queries = cfg.api === "pcsx" ? [""] : [...new Set(DATA.roles.map((r) => r.search[0]))];
   for (const q of queries) {
-    const url = "https://apply.careers.microsoft.com/api/apply/v2/jobs?" + new URLSearchParams({
-      domain: "microsoft.com", query: q, location: "Hyderabad, Telangana, India", start: "0", num: "50", sort_by: "timestamp",
-    });
-    const data = await getJSON(url);
-    for (const p of data.positions || []) {
-      jobs.push(makeJob({
-        id: p.id, title: p.name, companyName: "Microsoft",
-        location: [p.location].concat(p.locations || []).filter(Boolean).join(" · "),
-        posted: p.t_create ? toISO(new Date(p.t_create * 1000)) : null,
-        url: p.canonicalPositionUrl || `https://apply.careers.microsoft.com/careers/job/${p.id}`, source: "microsoft",
-      }));
+    for (let start = 0; start < (cfg.api === "pcsx" ? 200 : 50); start += cfg.api === "pcsx" ? 10 : 50) {
+      const path = cfg.api === "pcsx" ? "/api/pcsx/search?" : "/api/apply/v2/jobs?";
+      const params = { domain: cfg.domain, query: q, location: cfg.location, start: String(start), sort_by: "timestamp" };
+      if (cfg.api === "v2") params.num = "50";
+      const data = await getJSON(`https://${cfg.host}${path}` + new URLSearchParams(params));
+      const list = (data.data && data.data.positions) || data.positions || [];
+      for (const p of list) {
+        const ts = p.postedTs || p.t_create;
+        out.push({
+          id: p.id, title: p.name, companyName: cfg.company,
+          location: [].concat(p.location || [], p.locations || []).filter(Boolean).join(" · "),
+          posted: ts ? toISO(new Date(ts * 1000)) : null,
+          url: p.canonicalPositionUrl || (cfg.jobBase ? cfg.jobBase + p.id + "?domain=" + cfg.domain : `https://${cfg.host}/careers/job/${p.id}`),
+          source: "eightfold",
+        });
+      }
+      if (list.length < (cfg.api === "pcsx" ? 10 : 50)) break;
+      await sleep(700);
     }
-    await sleep(400);
+    await sleep(500);
   }
-  return jobs;
+  return out;
 }
 
 async function workday(cfg) {
-  const jobs = [];
+  const out = [];
   const base = `https://${cfg.host}/wday/cxs/${cfg.tenant}/${cfg.site}/jobs`;
-  for (let offset = 0; offset < 100; offset += 20) {
+  for (let offset = 0; offset < 200; offset += 20) {
     const data = await getJSON(base, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset, searchText: "Hyderabad" }),
+      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset, searchText: cfg.search || "Hyderabad" }),
     });
     const list = data.jobPostings || [];
     for (const p of list) {
-      jobs.push(makeJob({
+      out.push({
         id: (p.bulletFields && p.bulletFields[0]) || p.externalPath, title: p.title, companyName: cfg.company,
-        location: p.locationsText || "", posted: workdayPosted(p.postedOn),
-        url: `https://${cfg.host}/${cfg.site}${p.externalPath}`, source: "workday",
-      }));
+        location: [p.locationsText, p.externalPath].filter(Boolean).join(" · "), posted: workdayPosted(p.postedOn),
+        url: `https://${cfg.host}/en-US/${cfg.site}${p.externalPath}`, source: "workday",
+      });
     }
     if (list.length < 20) break;
-    await sleep(400);
+    await sleep(500);
   }
-  return jobs;
+  return out;
 }
 
 async function smartrecruiters(cfg) {
   const data = await getJSON(`https://api.smartrecruiters.com/v1/companies/${cfg.id}/postings?` + new URLSearchParams({ city: "Hyderabad", limit: "100" }));
-  return (data.content || []).map((p) => makeJob({
+  return (data.content || []).map((p) => ({
     id: p.id, title: p.name, companyName: cfg.company,
     location: [p.location && p.location.city, p.location && p.location.region, p.location && p.location.country].filter(Boolean).join(", "),
     posted: toISO(p.releasedDate), url: `https://jobs.smartrecruiters.com/${cfg.id}/${p.id}`, source: "smartrecruiters",
   }));
 }
 
+async function infosys() {
+  const data = await getJSON("https://intapgateway.infosysapps.com/careersci/search/intapjbsrch/getCareerSearchJobs?sourceId=1,21&searchText=ALL");
+  const list = Array.isArray(data) ? data : data.data || [];
+  return list.map((j) => ({
+    id: j.referenceCode || j.jobReferenceCode, title: j.postingTitle || j.title, companyName: "Infosys",
+    location: j.location || j.city || "", posted: toISO(j.createdOn),
+    url: `https://career.infosys.com/jobdesc?jobReferenceCode=${encodeURIComponent(j.referenceCode || "")}&sourceId=${j.sourceId || 1}`, source: "infosys",
+  }));
+}
+
+async function capgemini() {
+  const out = [];
+  for (let page = 1; page <= 5; page++) {
+    const data = await getJSON(`https://cg-jobstream-api.azurewebsites.net/api/job-search?country_code=in-en&page=${page}&size=100`);
+    const list = data.data || data.jobs || data.results || (Array.isArray(data) ? data : []);
+    for (const j of list) {
+      out.push({
+        id: j.id || j.ref || j.job_id || j.apply_job_url, title: j.title || j.job_title || j.name, companyName: "Capgemini",
+        location: [j.location, j.city, j.locations && [].concat(j.locations).join(", ")].filter(Boolean).join(" · "),
+        posted: toISO(j.created_at || j.posted_date || j.date || j.updated_at),
+        url: j.apply_job_url || j.url || j.job_url || "https://www.capgemini.com/in-en/careers/join-capgemini/job-search/", source: "capgemini",
+      });
+    }
+    if (list.length < 100) break;
+    await sleep(500);
+  }
+  return out;
+}
+
 async function greenhouse(cfg) {
   const data = await getJSON(`https://boards-api.greenhouse.io/v1/boards/${cfg.token}/jobs`);
-  return (data.jobs || []).map((j) => makeJob({
+  return (data.jobs || []).map((j) => ({
     id: j.id, title: j.title, companyName: cfg.company, location: (j.location && j.location.name) || "",
     posted: toISO(j.updated_at), url: j.absolute_url, source: "greenhouse",
   }));
@@ -232,7 +279,7 @@ async function greenhouse(cfg) {
 
 async function lever(cfg) {
   const data = await getJSON(`https://api.lever.co/v0/postings/${cfg.slug}?mode=json`);
-  return (data || []).map((p) => makeJob({
+  return (data || []).map((p) => ({
     id: p.id, title: p.text, companyName: cfg.company, location: (p.categories && p.categories.location) || "",
     posted: toISO(p.createdAt), url: p.hostedUrl, source: "lever",
   }));
@@ -240,9 +287,11 @@ async function lever(cfg) {
 
 const SOURCES = [
   { name: "Amazon", run: amazon },
-  { name: "Microsoft", run: microsoft },
+  ...EIGHTFOLD.map((c) => ({ name: c.company, run: () => eightfold(c) })),
   ...WORKDAY.map((c) => ({ name: c.company, run: () => workday(c) })),
   ...SMARTRECRUITERS.map((c) => ({ name: c.company, run: () => smartrecruiters(c) })),
+  { name: "Infosys", run: infosys },
+  { name: "Capgemini", run: capgemini },
   ...GREENHOUSE.map((c) => ({ name: c.company, run: () => greenhouse(c) })),
   ...LEVER.map((c) => ({ name: c.company, run: () => lever(c) })),
 ];
@@ -257,13 +306,16 @@ const found = new Map();
 for (const src of SOURCES) {
   const started = Date.now();
   try {
-    const jobs = (await src.run()).filter(Boolean);
+    const raw = (await src.run()).filter((r) => r && r.title);
+    const hyd = raw.filter((r) => isHyderabad(r.location));
     let kept = 0;
-    for (const j of jobs) {
-      if (!found.has(j.id)) { found.set(j.id, j); kept++; }
+    for (const r of hyd) {
+      const j = makeJob(r);
+      if (j && !found.has(j.id)) { found.set(j.id, j); kept++; }
     }
     report.push({ name: src.name, ok: true, count: kept });
-    console.log(`✓ ${src.name}: ${kept} matching jobs (${Date.now() - started} ms)`);
+    console.log(`✓ ${src.name}: ${raw.length} postings, ${hyd.length} in Hyderabad, ${kept} matching (${Date.now() - started} ms)`);
+    if (!kept) for (const r of raw.slice(0, 4)) console.log(`    sample: ${r.title} [${(r.location || "").slice(0, 90)}]`);
   } catch (err) {
     report.push({ name: src.name, ok: false, count: 0, error: String(err.message || err).slice(0, 120) });
     console.log(`✗ ${src.name}: ${err.message || err}`);
