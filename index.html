@@ -39,6 +39,7 @@
     <div class="nav-links">
       <p class="nav-label">Job search</p>
       <a class="nav-link" href="#dashboard" data-view="dashboard"><span data-icon="home"></span>Dashboard</a>
+      <a class="nav-link" href="#jobs" data-view="jobs"><span data-icon="live"></span>Live jobs<span class="nav-badge nav-badge-new" data-count="jobs"></span></a>
       <a class="nav-link" href="#roles" data-view="roles"><span data-icon="target"></span>Role matcher<span class="nav-badge" data-count="roles"></span></a>
       <a class="nav-link" href="#companies" data-view="companies"><span data-icon="building"></span>Companies<span class="nav-badge" data-count="companies"></span></a>
       <a class="nav-link" href="#resume" data-view="resume"><span data-icon="file"></span>Resume &amp; ATS</a>
@@ -70,6 +71,14 @@
         </div>
       </div>
       <dl class="kpis" id="kpis"></dl>
+      <section class="card">
+        <header class="card-head">
+          <h2 class="card-title">Fresh openings for you</h2>
+          <a class="link-more" href="#jobs">All live jobs<span data-icon="arrow"></span></a>
+        </header>
+        <p class="dimmed small" id="dashJobsStatus"></p>
+        <ul class="job-list" id="dashJobs"></ul>
+      </section>
       <div class="two-col">
         <section class="card">
           <header class="card-head">
@@ -80,7 +89,7 @@
         </section>
         <section class="card">
           <header class="card-head">
-            <h2 class="card-title">Next steps</h2>
+            <h2 class="card-title">15-day plan</h2>
             <span class="dimmed small" id="stepsProgress"></span>
           </header>
           <ul class="steps" id="steps"></ul>
@@ -88,11 +97,33 @@
       </div>
     </section>
 
+    <!-- Live jobs -->
+    <section class="view" id="view-jobs" data-view="jobs" aria-labelledby="h-jobs" hidden>
+      <header class="view-head">
+        <h1 id="h-jobs">Live jobs</h1>
+        <p class="lede">Openings in Hyderabad that match your roles, pulled from company job boards every 3 hours. Each one shows your match for that role and the salary range to expect.</p>
+      </header>
+      <div class="filters" role="group" aria-label="Filter jobs">
+        <div class="segmented" id="jobAreaFilter"></div>
+        <select class="input select" id="jobRoleFilter" aria-label="Filter by role"></select>
+        <div class="segmented" id="jobSort"></div>
+      </div>
+      <p class="dimmed small" id="jobsStatus"></p>
+      <ul class="job-list" id="jobList"></ul>
+      <section class="card">
+        <header class="card-head">
+          <h2 class="card-title">Search job sites live</h2>
+          <span class="dimmed small">Opens each site's own search, filtered to Hyderabad and recent postings</span>
+        </header>
+        <div class="live-links" id="liveLinks"></div>
+      </section>
+    </section>
+
     <!-- Role matcher -->
     <section class="view" id="view-roles" data-view="roles" aria-labelledby="h-roles" hidden>
       <header class="view-head">
         <h1 id="h-roles">Role matcher</h1>
-        <p class="lede">Roles ranked by how likely you are to be shortlisted in Hyderabad, with the salary you can expect at around 3 years' experience. Open a role for companies in Gachibowli and Nanakramguda, the skills you have, and what's missing.</p>
+        <p class="lede">How closely your profile matches what each role asks for, with the salary you can expect at around 3 years' experience. Open a role to see exactly what gets it above 90%.</p>
       </header>
       <div class="legend" id="tierLegend"></div>
       <ol class="role-list" id="roleList"></ol>

@@ -19,13 +19,26 @@ https://shraddhabiswas2723.github.io/personal-portfolio/
 
 ## Pages
 
-- **Dashboard:** contact details, best match, ATS score, project count, the three roles to apply for first, and a next-steps checklist.
-- **Role matcher:** roles ranked by match score with expected salary (₹ LPA), employers in Gachibowli and Nanakramguda, job titles to search, and skill gaps.
-- **Companies:** employers with offices in Gachibowli or Nanakramguda, filterable by area and role, with careers links. "Verify" marks offices that only secondary sources place there.
-- **Resume & ATS:** ATS score of the current resume per role, keyword coverage, projects recommended, project ideas, and **Generate** for a tailored plain-text ATS resume (copy, Word, .txt or PDF).
-- **Skills / Learning log / Profile:** skills you have and what to learn next, every course marked useful or not useful, experience, and application details.
+- **Dashboard:** best match, live jobs in your areas, ATS score, projects, the freshest openings for you, the roles to apply for first, and a 15-day plan.
+- **Live jobs:** real Hyderabad openings that match your roles, refreshed every 3 hours, with your match %, salary range, area and any language the posting needs. Plus one-click LinkedIn, Naukri, Indeed and Amazon searches filtered to recent postings.
+- **Role matcher:** roles ranked by profile match with expected salary (₹ LPA), a **Path to 90%** list of the exact actions that raise each score, employers in Gachibowli and Nanakramguda, and job titles to search.
+- **Companies:** employers with offices in Gachibowli or Nanakramguda, filterable by area and role, with careers links.
+- **Resume & ATS:** ATS score per role, keyword coverage, projects needed with ideas, and **Generate** for a tailored ATS resume (copy, Word, .txt or PDF).
+- **Skills / Learning log / Profile:** skills and what to learn next, every course marked useful or not, experience and application details. Add your languages on the Profile page to hide postings that need a language you don't speak.
 
 Press Ctrl K (⌘ K on Mac) to search roles, companies and skills. The sun/moon button switches light and dark.
+
+## Live jobs: how it works
+
+`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon Jobs first, more as they're added) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
+
+To switch it on:
+
+1. Merge this branch into `main` (scheduled workflows only run on the default branch).
+2. Turn on GitHub Pages: Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`.
+3. Optional: Actions → Refresh live jobs → Run workflow, to refresh straight away.
+
+Opened as a local file (double-click), the site can't read `jobs.json`; use the online site, or the job-site search buttons.
 
 ## Update it
 
@@ -41,15 +54,16 @@ quantified bullets 10, standard headings 8, contact details 5, action verbs 5, d
 length 5, file and fonts 5, education and certifications 5. Keywords come from Hyderabad job
 descriptions. The generated resume only uses keywords for skills you actually have.
 
-**Role match score:**
+**Profile match** (out of 100): how closely you meet what the role asks for.
 
-- Experience fit (45%): how directly past work maps to the job.
-- Skill coverage (31.5%): weighted share of the role's skills you have.
-- Hyderabad demand (13.5%): how many openings the city usually has.
+- Experience (40): how directly past work maps to the job. Fixed by your history.
+- Skills (30): weighted share of the role's skills you have.
+- Resume keywords (15): ATS score of the resume you send (higher once you generate a tailored one).
+- Projects and certificates (10): projects against the number recommended (7) plus a relevant certificate (3).
+- Referral (5): whether someone inside can refer you.
 
-The maximum is 90%, because interviews, timing and referrals can't be predicted from a profile.
-The scores are estimates for deciding where to apply first, not guarantees.
-Adjust `exp`, `demand` and skill weights per role in `data.js`.
+90% or more means you meet nearly everything the job asks for. It is not a promise of an offer.
+Adjust `exp` and skill weights per role in `data.js`.
 
 Note: this page shows your phone number and email. Remove them from `data.js` before
 hosting it publicly if you'd rather not share them.

@@ -778,3 +778,75 @@ a.kpi:hover { border-color: var(--primary); }
   .companies-table .company-area-inline { display: block; }
 }
 .company-area-inline { display: none; }
+
+/* ---------- Live jobs ---------- */
+.job-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-sm); }
+.job-list:empty { display: none; }
+.job-list .empty { padding: var(--sp-md); border: 1px dashed var(--input-border); border-radius: var(--r-md); color: var(--dimmed-strong); font-size: var(--fs-sm); }
+.job {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-sm) var(--sp-lg);
+  padding: var(--sp-md) var(--sp-lg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--tier, var(--border));
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.card .job { background: var(--main); }
+.job-main { display: grid; gap: 4px; min-width: 0; }
+.job-title { color: var(--text); font-weight: 600; text-decoration: none; display: inline-flex; gap: 6px; align-items: baseline; line-height: 1.35; }
+.job-title .icon { width: 14px; height: 14px; color: var(--dimmed); flex: none; }
+.job-title:hover { color: var(--primary-light-text); }
+.job-company { font-size: var(--fs-sm); color: var(--dimmed-strong); overflow-wrap: anywhere; }
+.job-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.job-posted { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: var(--dimmed); }
+.job-posted .icon { width: 13px; height: 13px; }
+.job-side { display: grid; justify-items: end; align-content: start; gap: 4px; text-align: right; }
+.job-match { font-size: var(--fs-sm); color: var(--dimmed-strong); }
+.job-match strong { font-size: var(--fs-xl); color: var(--text); font-variant-numeric: tabular-nums; }
+.job-side .button-row { justify-content: flex-end; margin-top: 4px; }
+.live-links { display: grid; gap: var(--sp-sm); }
+.live-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px var(--sp-md); padding: var(--sp-sm) 0; border-top: 1px solid var(--border); }
+.live-row:first-child { border-top: 0; padding-top: 0; }
+.live-row > div:first-child { display: grid; }
+.nav-badge-new { background: var(--green-light); color: var(--green-text); }
+
+/* ---------- Path to 90% ---------- */
+.facts.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.path-wrap { display: grid; gap: 8px; }
+.path-wrap h3 { font-size: var(--fs-md); font-weight: 600; }
+.path { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.path-step {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto auto;
+  gap: 4px var(--sp-sm);
+  align-items: center;
+  padding: var(--sp-xs) var(--sp-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--main);
+}
+.path-step.is-goal { border-color: var(--green); background: var(--green-light); }
+.path-gain { font-weight: 700; color: var(--primary-light-text); font-variant-numeric: tabular-nums; font-size: var(--fs-sm); }
+.path-text { display: grid; gap: 2px; font-size: var(--fs-sm); min-width: 0; }
+.path-text .dimmed { font-size: var(--fs-xs); }
+.path-after { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.top-role-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.step-day { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary-light-text); }
+
+@media (max-width: 1180px) {
+  .facts.five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .job { grid-template-columns: 1fr; padding: var(--sp-sm) var(--sp-md); }
+  .job-side { justify-items: start; text-align: left; grid-auto-flow: row; }
+  .job-side .button-row { justify-content: flex-start; }
+  .path-step { grid-template-columns: 44px minmax(0, 1fr); align-items: start; }
+  .path-gain { grid-row: 1 / span 3; padding-top: 2px; }
+  .path-after, .path-btn { grid-column: 2; }
+  .live-row { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 520px) {
+  .facts.five { grid-template-columns: 1fr 1fr; }
+}

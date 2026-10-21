@@ -229,7 +229,7 @@ window.PROFILE_DATA = {
       salary: { low: 5, high: 8, note: "Mostly Amazon titles (Program Specialist, Senior Escalation Specialist). Your Account Health background transfers directly." },
       why: "This continues your Account Health escalation work, adds process improvement, and pays better than investigation roles. Openings are mostly at Amazon in Nanakramguda.",
       search: ["Program Specialist", "Escalation Specialist", "Senior Escalation Specialist", "Process Specialist", "Selling Partner Support"],
-      jobTitles: ["program specialist", "escalation specialist", "process specialist", "seller support", "selling partner", "account health", "operations specialist", "program associate", "support specialist"],
+      jobTitles: ["program specialist", "escalation specialist", "process specialist", "seller support", "selling partner", "account health", "operations specialist", "program associate"],
       certSuggestion: "Lean Six Sigma Green Belt",
       resumeHeadline: "Program & Escalation Specialist | Seller Operations | Process Improvement",
       resumeSummary: "Seller operations professional with nearly 3 years at Amazon and in technical support in Hyderabad. Resolved critical seller escalations within 24-hour SLAs, wrote decisions that updated regional SOPs, and ran root cause analysis with cross-functional stakeholders to fix recurring failures. Turns metrics into leadership reports using SQL, Advanced Excel and Power BI.",

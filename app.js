@@ -4,15 +4,16 @@
   var DATA = window.PROFILE_DATA;
   var STORAGE_KEY = "shraddha-portfolio-v2";
   var UI_KEY = "shraddha-portfolio-ui-v2";
-  var MAX_SCORE = 90;
+  // Profile match out of 100: how closely you meet what the role asks for.
+  var W = { exp: 40, skills: 30, resume: 15, proof: 10, referral: 5 };
   var TIERS = [
-    { min: 75, key: "now", label: "Apply now", note: "75% and above" },
-    { min: 60, key: "prep", label: "Apply with prep", note: "60–74%" },
-    { min: 45, key: "build", label: "Build toward", note: "45–59%" },
-    { min: 0, key: "long", label: "Long-term goal", note: "below 45%" },
+    { min: 90, key: "now", label: "Strong match", note: "90% and above" },
+    { min: 75, key: "prep", label: "Apply now", note: "75–89%" },
+    { min: 60, key: "build", label: "Apply with prep", note: "60–74%" },
+    { min: 0, key: "long", label: "Long-term goal", note: "below 60%" },
   ];
   var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  var VIEWS = ["dashboard", "roles", "companies", "resume", "skills", "learning", "profile"];
+  var VIEWS = ["dashboard", "jobs", "roles", "companies", "resume", "skills", "learning", "profile"];
 
   // Stroke icons drawn in the Tabler style that Homarr uses.
   var ICONS = {
@@ -46,6 +47,9 @@
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v4h1"/>',
     flask: '<path d="M9 3h6"/><path d="M10 9V3h4v6l5 10a1 1 0 0 1-.9 1.5H5.9A1 1 0 0 1 5 19z"/>',
     rupee: '<path d="M18 5H6h3a4 4 0 0 1 0 8H6l7 6"/><path d="M6 9h12"/>',
+    live: '<path d="M6.7 17.3a8 8 0 0 1 0-10.6"/><path d="M17.3 6.7a8 8 0 0 1 0 10.6"/><path d="M9.5 14.5a3.5 3.5 0 0 1 0-5"/><path d="M14.5 9.5a3.5 3.5 0 0 1 0 5"/><circle cx="12" cy="12" r="1"/>',
+    handshake: '<path d="M11 17l2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
   };
 
   function icon(name) {
@@ -66,7 +70,7 @@
   // ---------- Saved state ----------
 
   function emptyState() {
-    return { added: [], removed: [], custom: [], learning: [], projects: [], personal: {}, steps: {} };
+    return { added: [], removed: [], custom: [], learning: [], projects: [], personal: {}, steps: {}, generated: {}, referrals: {} };
   }
 
   function normalizeState(obj) {
@@ -75,8 +79,9 @@
     ["added", "removed", "custom", "learning", "projects"].forEach(function (k) {
       if (Array.isArray(obj[k])) s[k] = obj[k];
     });
-    if (obj.personal && typeof obj.personal === "object") s.personal = obj.personal;
-    if (obj.steps && typeof obj.steps === "object") s.steps = obj.steps;
+    ["personal", "steps", "generated", "referrals"].forEach(function (k) {
+      if (obj[k] && typeof obj[k] === "object" && !Array.isArray(obj[k])) s[k] = obj[k];
+    });
     s.added = s.added.filter(function (id) { return skillById[id]; });
     s.removed = s.removed.filter(function (id) { return skillById[id]; });
     s.custom = s.custom.filter(function (c) { return typeof c === "string"; });
@@ -128,21 +133,43 @@
 
   // ---------- Role scoring ----------
 
-  function scoreRole(role, have) {
+  function certList() {
+    return DATA.learning.filter(function (l) { return l.useful === "yes" && l.onResume; })
+      .map(function (l) { return l.title; })
+      .concat(state.learning.map(function (l) { return l.title; }))
+      .join(" | ").toLowerCase();
+  }
+
+  // ATS scores and other inputs shared by every role score in one render.
+  function scoreContext() {
+    var ats = {};
+    DATA.roles.forEach(function (r) {
+      var current = atsScore(DATA.resumeText, r).total;
+      var tailored = atsScore(buildResume(r), r).total;
+      ats[r.id] = { current: current, tailored: tailored, used: state.generated[r.id] ? tailored : current };
+    });
+    return { ats: ats, certs: certList(), projects: allProjects().length };
+  }
+
+  function scoreRole(role, have, ctx) {
     var total = 0, got = 0;
     Object.keys(role.skills).forEach(function (id) {
       var w = role.skills[id];
       total += w;
       if (have[id]) got += w;
     });
-    var coverage = total ? (100 * got) / total : 0;
-    var raw = 0.5 * role.exp + 0.35 * coverage + 0.15 * role.demand;
-    return {
-      value: raw * (MAX_SCORE / 100),
-      exp: role.exp * 0.45,
-      skills: coverage * 0.315,
-      demand: role.demand * 0.135,
+    var coverage = total ? got / total : 0;
+    var certHit = (role.certTerms || []).some(function (t) { return ctx.certs.indexOf(t.toLowerCase()) !== -1; });
+    var parts = {
+      exp: W.exp * role.exp / 100,
+      skills: W.skills * coverage,
+      resume: W.resume * ctx.ats[role.id].used / 100,
+      proof: 7 * Math.min(1, ctx.projects / role.projectsNeeded) + (certHit ? 3 : 0),
+      referral: state.referrals[role.id] ? W.referral : 0,
     };
+    var value = parts.exp + parts.skills + parts.resume + parts.proof + parts.referral;
+    var max = parts.exp + W.skills + W.resume + W.proof + W.referral;
+    return { value: value, parts: parts, certHit: certHit, max: max };
   }
 
   function tierFor(score) {
@@ -150,14 +177,46 @@
     return TIERS[TIERS.length - 1];
   }
 
-  function rankedRoles(have) {
+  function rankedRoles(have, ctx) {
     return DATA.roles
-      .map(function (r) { return { role: r, score: scoreRole(r, have), pct: Math.round(scoreRole(r, have).value) }; })
+      .map(function (r) { var sc = scoreRole(r, have, ctx); return { role: r, score: sc, pct: Math.round(sc.value) }; })
       .sort(function (a, b) { return b.score.value - a.score.value; });
+  }
+
+  // The concrete actions that raise one role's match, biggest gain first.
+  function pathActions(role, have, ctx, sc) {
+    var acts = [];
+    var a = ctx.ats[role.id];
+    if (!state.generated[role.id] && a.tailored > a.current) {
+      acts.push({ gain: W.resume * (a.tailored - a.current) / 100, label: "Generate a tailored resume for this role", time: "10 minutes", kind: "resume" });
+    }
+    var total = 0;
+    Object.keys(role.skills).forEach(function (id) { total += role.skills[id]; });
+    Object.keys(role.skills).filter(function (id) { return !have[id]; }).forEach(function (id) {
+      var sk = skillById[id];
+      acts.push({ gain: W.skills * role.skills[id] / total, label: "Learn " + sk.label, detail: sk.how, time: sk.time, kind: "skill", id: id });
+    });
+    var missing = role.projectsNeeded - ctx.projects;
+    if (missing > 0) {
+      var done = allProjects().map(function (pr) { return pr.title; });
+      role.projectIdeas.filter(function (i) { return done.indexOf(i.title) === -1; }).slice(0, missing).forEach(function (idea) {
+        acts.push({ gain: 7 / role.projectsNeeded, label: "Build the " + idea.title.toLowerCase() + " project", detail: idea.detail, time: "2–4 days", kind: "project", ref: role.id + ":" + role.projectIdeas.indexOf(idea) });
+      });
+    }
+    if (!sc.certHit) acts.push({ gain: 3, label: "Add the " + role.certSuggestion, time: "see Learning log", kind: "cert" });
+    if (!state.referrals[role.id]) {
+      acts.push({ gain: W.referral, label: "Get a referral for this role", detail: "Ask former Amazon colleagues, or alumni working at the companies listed below.", time: "1–3 days", kind: "referral", id: role.id });
+    }
+    acts.sort(function (x, y) { return y.gain - x.gain; });
+    return acts;
   }
 
   function salaryText(role) {
     return role.salary ? "₹" + role.salary.low + "–" + role.salary.high + " LPA" : "Not available";
+  }
+
+  function demandText(role) {
+    return role.demand >= 70 ? "High" : role.demand >= 45 ? "Medium" : "Low";
   }
 
   // ---------- Helpers ----------
@@ -395,9 +454,152 @@
     return lines.join("\n");
   }
 
+  // ---------- Live jobs ----------
+
+  var LIVE = { status: "loading", data: null, seen: null };
+  var jobFilter = { area: "mine", role: "all", sort: "new" };
+
+  function loadJobs() {
+    var url = "jobs.json?t=" + Date.now();
+    fetch(url, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (data) {
+        LIVE.data = data;
+        LIVE.status = "ok";
+        var prev = Array.isArray(ui.seenJobs) ? ui.seenJobs : null;
+        LIVE.seen = prev ? new Set(prev) : null;
+        ui.seenJobs = (data.jobs || []).map(function (j) { return j.id; });
+        saveUi();
+        renderScored();
+      })
+      .catch(function () {
+        LIVE.status = "error";
+        renderScored();
+      });
+  }
+
+  function isNewJob(j) {
+    if (LIVE.seen) return !LIVE.seen.has(j.id);
+    return daysAgo(j.posted || j.firstSeen) <= 2;
+  }
+
+  function daysAgo(iso) {
+    if (!iso) return 99;
+    var d = Date.parse(iso + "T00:00:00");
+    return Math.max(0, Math.floor((Date.now() - d) / 86400000));
+  }
+
+  function agoText(iso) {
+    var n = daysAgo(iso);
+    return n === 0 ? "Today" : n === 1 ? "Yesterday" : n + " days ago";
+  }
+
+  function hoursAgoText(iso) {
+    var h = Math.round((Date.now() - Date.parse(iso)) / 3600000);
+    if (h < 1) return "less than an hour ago";
+    if (h < 48) return h + (h === 1 ? " hour ago" : " hours ago");
+    return Math.round(h / 24) + " days ago";
+  }
+
+  function inMyAreas(j) { return j.area === "gachibowli" || j.area === "nanakramguda"; }
+
+  // Languages listed on the Profile page. Jobs asking for a language that isn't listed are hidden.
+  function myLanguages() {
+    var v = Object.prototype.hasOwnProperty.call(state.personal, "languages") ? state.personal.languages : "";
+    return String(v || "").toLowerCase();
+  }
+
+  function languageOk(j) {
+    var mine = myLanguages();
+    if (!mine || !(j.languages || []).length) return true;
+    return j.languages.every(function (l) { return mine.indexOf(l.toLowerCase()) !== -1; });
+  }
+
+  function liveJobs() {
+    return LIVE.data && Array.isArray(LIVE.data.jobs) ? LIVE.data.jobs.filter(function (j) { return roleById[j.roleId] && languageOk(j); }) : [];
+  }
+
+  function jobCard(j, scores) {
+    var role = roleById[j.roleId];
+    var pct = scores[j.roleId];
+    var t = tierFor(pct);
+    var area = j.area === "hyderabad" ? '<span class="badge badge-gray">Hyderabad</span>'
+      : '<span class="badge badge-red" title="' + (j.areaFrom === "posting" ? "Area named in the posting" : "Company office in this area; check the posting") + '">' + icon("pin") + areaLabel(j.area) + '</span>';
+    return '<li class="job tier-' + t.key + '">' +
+      '<div class="job-main">' +
+        '<a class="job-title" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + icon("external") + '</a>' +
+        '<span class="job-company">' + esc(j.company) + ' · ' + esc(j.location.split(" · ")[0]) + (j.openings > 1 ? ' · ' + j.openings + ' openings' : '') + '</span>' +
+        '<span class="job-badges">' + (isNewJob(j) ? '<span class="badge badge-green">New</span>' : '') + area +
+          '<span class="badge badge-blue">' + esc(role.short) + '</span>' +
+          ((j.languages || []).length ? '<span class="badge badge-yellow">Needs ' + esc(j.languages.join(" & ")) + '</span>' : '') +
+          '<span class="job-posted">' + icon("clock") + agoText(j.posted || j.firstSeen) + '</span></span>' +
+      '</div>' +
+      '<div class="job-side">' +
+        '<span class="job-match"><strong>' + pct + '%</strong> match</span>' +
+        '<span class="salary">' + salaryText(role) + '</span>' +
+        '<span class="button-row"><a class="button button-sm" href="' + esc(j.url) + '" target="_blank" rel="noopener">Apply' + icon("external") + '</a>' +
+        '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">Tailor resume</a></span>' +
+      '</div></li>';
+  }
+
+  function feedStatus() {
+    if (LIVE.status === "loading") return "Loading live jobs…";
+    if (LIVE.status === "error") return "Live jobs load when the site is online (GitHub Pages). Until then, use the job-site searches below.";
+    var d = LIVE.data;
+    var ok = (d.sources || []).filter(function (x) { return x.ok && x.count; }).map(function (x) { return x.name; });
+    var hidden = (d.jobs || []).filter(function (j) { return roleById[j.roleId] && !languageOk(j); }).length;
+    var langNote = hidden ? " " + hidden + " hidden because they need a language you haven't listed." :
+      (!myLanguages() && (d.jobs || []).some(function (j) { return (j.languages || []).length; }) ? " Add your languages on the Profile page to hide postings that need other languages." : "");
+    return "Updated " + hoursAgoText(d.updated) + " from " + (ok.length ? ok.join(", ") : "company job boards") + ". Refreshes every 3 hours." + langNote;
+  }
+
+  function renderJobs(scores) {
+    var all = liveJobs();
+    var mine = all.filter(inMyAreas);
+    $("jobAreaFilter").innerHTML = [["mine", "Gachibowli & Nanakramguda (" + mine.length + ")"], ["all", "All Hyderabad (" + all.length + ")"]].map(function (x) {
+      return '<button type="button" data-job-area="' + x[0] + '" aria-pressed="' + (jobFilter.area === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    $("jobSort").innerHTML = [["new", "Newest"], ["match", "Best match"]].map(function (x) {
+      return '<button type="button" data-job-sort="' + x[0] + '" aria-pressed="' + (jobFilter.sort === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    $("jobRoleFilter").innerHTML = '<option value="all">All matched roles</option>' + DATA.roles.map(function (r) {
+      var n = all.filter(function (j) { return j.roleId === r.id; }).length;
+      return '<option value="' + r.id + '"' + (jobFilter.role === r.id ? " selected" : "") + '>' + esc(r.short) + ' (' + n + ')</option>';
+    }).join("");
+
+    var list = (jobFilter.area === "mine" ? mine : all).filter(function (j) { return jobFilter.role === "all" || j.roleId === jobFilter.role; });
+    list = list.slice().sort(function (x, y) {
+      if (jobFilter.sort === "match" && scores[y.roleId] !== scores[x.roleId]) return scores[y.roleId] - scores[x.roleId];
+      return (y.posted || y.firstSeen || "").localeCompare(x.posted || x.firstSeen || "");
+    });
+    $("jobsStatus").textContent = feedStatus();
+    $("jobList").innerHTML = list.length ? list.slice(0, 120).map(function (j) { return jobCard(j, scores); }).join("")
+      : (LIVE.status === "ok" ? '<li class="empty">No openings match these filters right now. Try All Hyderabad, or the job-site searches below.</li>' : "");
+
+    var newMine = mine.filter(isNewJob).length;
+    document.querySelector('[data-count="jobs"]').textContent = LIVE.status === "ok" ? (newMine ? newMine + " new" : String(mine.length)) : "";
+  }
+
+  function liveLinks(ranked) {
+    function slug(t) { return t.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+    $("liveLinks").innerHTML = ranked.slice(0, 6).map(function (r) {
+      var q = r.role.search[0];
+      var links = [
+        ["LinkedIn · 24 h", "https://www.linkedin.com/jobs/search/?" + new URLSearchParams({ keywords: q, location: "Hyderabad, Telangana, India", f_TPR: "r86400", f_E: "2,3" })],
+        ["Naukri · 1 day", "https://www.naukri.com/" + slug(q) + "-jobs-in-hyderabad-secunderabad?experience=3&jobAge=1"],
+        ["Indeed · 1 day", "https://in.indeed.com/jobs?" + new URLSearchParams({ q: q, l: "Hyderabad, Telangana", fromage: "1" })],
+        ["Amazon Jobs", "https://www.amazon.jobs/en/search?" + new URLSearchParams({ base_query: q, loc_query: "Hyderabad, Telangana, IND", sort: "recent" })],
+      ];
+      return '<div class="live-row"><div><strong>' + esc(r.role.short) + '</strong><span class="dimmed small">“' + esc(q) + '” · ' + r.pct + '% match</span></div>' +
+        '<div class="button-row">' + links.map(function (l) {
+          return '<a class="button button-default button-sm" href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + l[0] + icon("external") + '</a>';
+        }).join("") + '</div></div>';
+    }).join("");
+  }
+
   // ---------- Dashboard ----------
 
-  function renderDashboard(ranked) {
+  function renderDashboard(ranked, ctx, scores) {
     var p = DATA.person;
     $("headline").textContent = p.headline;
 
@@ -413,31 +615,46 @@
       '<span class="contact-item">' + icon("pin") + '<span class="value">' + esc(p.location) + '</span></span>';
 
     var best = ranked[0];
-    var applyNow = ranked.filter(function (r) { return r.pct >= 75; });
-    var ats = atsScore(DATA.resumeText, best.role);
-    var projects = allProjects().length;
+    var ats = ctx.ats[best.role.id];
+    var projects = ctx.projects;
+    var jobs = liveJobs();
+    var mine = jobs.filter(inMyAreas);
+    var newMine = mine.filter(isNewJob).length;
     $("kpis").innerHTML =
-      '<a class="kpi" href="#roles"><dd>' + best.pct + '%</dd><dt>Best match</dt><span class="kpi-note">' + esc(best.role.short) + '</span></a>' +
-      '<a class="kpi" href="#roles"><dd>' + applyNow.length + '</dd><dt>Roles to apply for now</dt><span class="kpi-note">Out of ' + DATA.roles.length + ' matched roles</span></a>' +
-      '<a class="kpi" href="#resume"><dd>' + ats.total + '<span class="dimmed" style="font-size:var(--fs-sm)">/100</span></dd><dt>ATS score of current resume</dt><span class="kpi-note">For ' + esc(best.role.short) + '</span></a>' +
+      '<a class="kpi" href="#roles"><dd>' + best.pct + '%</dd><dt>Best match</dt><span class="kpi-note">' + esc(best.role.short) + ' · up to ' + Math.round(best.score.max) + '%</span></a>' +
+      '<a class="kpi" href="#jobs"><dd>' + (LIVE.status === "ok" ? mine.length : "–") + '</dd><dt>Live jobs in your areas</dt><span class="kpi-note">' + (LIVE.status === "ok" ? newMine + " new since your last visit" : "Shown on the online site") + '</span></a>' +
+      '<a class="kpi" href="#resume"><dd>' + ats.used + '<span class="dimmed" style="font-size:var(--fs-sm)">/100</span></dd><dt>ATS score</dt><span class="kpi-note">' + (state.generated[best.role.id] ? "Tailored resume" : "Current resume · tailored scores " + ats.tailored) + '</span></a>' +
       '<a class="kpi" href="#resume"><dd>' + projects + '<span class="dimmed" style="font-size:var(--fs-sm)"> of ' + best.role.projectsNeeded + '</span></dd><dt>Projects</dt><span class="kpi-note">Recommended for ' + esc(best.role.short) + '</span></a>';
+
+    var top = (jobs.length ? (mine.length ? mine : jobs) : []).slice().sort(function (x, y) {
+      var nx = isNewJob(x) ? 1 : 0, ny = isNewJob(y) ? 1 : 0;
+      if (nx !== ny) return ny - nx;
+      if (scores[y.roleId] !== scores[x.roleId]) return scores[y.roleId] - scores[x.roleId];
+      return (y.posted || "").localeCompare(x.posted || "");
+    }).slice(0, 5);
+    $("dashJobsStatus").textContent = feedStatus();
+    $("dashJobs").innerHTML = top.map(function (j) { return jobCard(j, scores); }).join("");
 
     $("topRoles").innerHTML = ranked.slice(0, 3).map(function (r) {
       var t = tierFor(r.pct);
+      var steps = pathActions(r.role, ownedSet(), ctx, r.score);
+      var run = r.score.value, n = 0;
+      for (var i = 0; i < steps.length && run < 90; i++) { run += steps[i].gain; n++; }
+      var note = r.pct >= 90 ? "Already above 90%" : run >= 90 ? n + (n === 1 ? " step" : " steps") + " to 90%" : "Up to " + Math.round(r.score.max) + "%";
       return '<li class="top-role tier-' + t.key + '">' + ring(r.pct) +
         '<div class="top-role-text"><a href="#roles" data-open-role="' + r.role.id + '">' + esc(r.role.title) + '</a>' +
         '<span class="salary">' + salaryText(r.role) + '</span>' +
-        '<span><span class="badge">' + t.label + '</span></span></div></li>';
+        '<span class="top-role-meta"><span class="badge">' + t.label + '</span><span class="dimmed small">' + note + '</span></span></div></li>';
     }).join("");
 
-    var steps = DATA.steps;
-    var done = steps.filter(function (s) { return state.steps[s.id]; }).length;
-    $("stepsProgress").textContent = done + " of " + steps.length + " done";
-    $("steps").innerHTML = steps.map(function (s) {
+    var plan = DATA.plan;
+    var done = plan.filter(function (s) { return state.steps[s.id]; }).length;
+    $("stepsProgress").textContent = done + " of " + plan.length + " done";
+    $("steps").innerHTML = plan.map(function (s) {
       var isDone = !!state.steps[s.id];
       return '<li class="step' + (isDone ? " is-done" : "") + '"><label for="step-' + s.id + '">' +
         '<input type="checkbox" id="step-' + s.id + '" data-step="' + s.id + '"' + (isDone ? " checked" : "") + '>' +
-        '<span class="step-text"><strong>' + esc(s.title) + '</strong><span class="dimmed">' + esc(s.detail) + '</span></span></label></li>';
+        '<span class="step-text"><span class="step-day">' + esc(s.day) + '</span><strong>' + esc(s.title) + '</strong><span class="dimmed">' + esc(s.detail) + '</span></span></label></li>';
     }).join("");
   }
 
@@ -445,7 +662,34 @@
 
   var openRoles = [];
 
-  function renderRoles(ranked, have) {
+  function pathHtml(role, have, ctx, sc) {
+    var acts = pathActions(role, have, ctx, sc);
+    if (!acts.length) return '<p class="dimmed small">Nothing left to add for this role.</p>';
+    var run = sc.value, reached = sc.value >= 90;
+    var items = acts.map(function (a) {
+      var before = run;
+      run += a.gain;
+      var mark = !reached && before < 90 && run >= 90;
+      if (mark) reached = true;
+      var btn = "";
+      if (a.kind === "resume") btn = '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">' + icon("file") + 'Generate</a>';
+      if (a.kind === "skill") btn = '<button type="button" class="button button-default button-sm" data-learn="' + a.id + '">' + icon("check") + 'I\'ve learned this</button>';
+      if (a.kind === "project") btn = '<button type="button" class="button button-default button-sm" data-add-project="' + a.ref + '">' + icon("check") + 'I\'ve built this</button>';
+      if (a.kind === "referral") btn = '<button type="button" class="button button-default button-sm" data-referral="' + role.id + '">' + icon("handshake") + 'I have a referral</button>';
+      return '<li class="path-step' + (mark ? " is-goal" : "") + '">' +
+        '<span class="path-gain">+' + a.gain.toFixed(1) + '</span>' +
+        '<span class="path-text"><strong>' + esc(a.label) + '</strong>' +
+          '<span class="dimmed">' + esc([a.detail, a.time ? "about " + a.time : ""].filter(Boolean).join(" · ")) + '</span></span>' +
+        '<span class="path-after">' + Math.round(run) + '%' + (mark ? ' <span class="badge badge-green">90% reached</span>' : '') + '</span>' +
+        (btn ? '<span class="path-btn">' + btn + '</span>' : '') + '</li>';
+    }).join("");
+    var head = sc.max < 90
+      ? '<p class="dimmed small">The highest you can reach here is ' + Math.round(sc.max) + '%, because your experience covers ' + role.exp + '% of what this role expects.</p>'
+      : '';
+    return head + '<ol class="path">' + items + '</ol>';
+  }
+
+  function renderRoles(ranked, have, ctx, jobCounts) {
     $("tierLegend").innerHTML = TIERS.map(function (t) {
       return '<span class="tier-' + t.key + '"><span class="badge">' + t.label + '</span>' + t.note + '</span>';
     }).join("");
@@ -455,10 +699,9 @@
       var t = tierFor(pct);
       var ids = Object.keys(role.skills).sort(function (a, b) { return role.skills[b] - role.skills[a]; });
       var got = ids.filter(function (id) { return have[id]; });
-      var gaps = ids.filter(function (id) { return !have[id]; });
-      var weightLabel = function (id) { return ["", "nice to have", "important", "core"][role.skills[id]]; };
       var companies = DATA.companies.filter(function (c) { return c.roles.indexOf(role.id) !== -1; });
       var isOpen = openRoles.indexOf(role.id) !== -1;
+      var live = jobCounts[role.id] || 0;
 
       return '<li><details class="role tier-' + t.key + '" id="role-' + role.id + '" data-role="' + role.id + '"' + (isOpen ? " open" : "") + '>' +
         '<summary>' +
@@ -466,46 +709,55 @@
           '<span class="role-title">' + esc(role.title) + '</span>' +
           '<span class="role-meta"><span class="badge">' + t.label + '</span>' +
             '<span class="salary">' + salaryText(role) + '</span>' +
-            '<span class="dimmed small">' + companies.length + ' employers in your areas</span></span>' +
+            (LIVE.status === "ok" ? '<span class="dimmed small">' + live + ' live ' + (live === 1 ? "job" : "jobs") + '</span>' : '<span class="dimmed small">' + companies.length + ' employers in your areas</span>') +
+            (state.referrals[role.id] ? '<span class="badge badge-green">' + icon("handshake") + 'Referral</span>' : '') +
+          '</span>' +
           '<span class="role-score"><strong>' + pct + '%</strong><span class="progress" role="img" aria-label="Match ' + pct + ' percent"><span style="width:' + pct + '%"></span></span></span>' +
           '<span class="role-chev">' + icon("chevron") + '</span>' +
         '</summary>' +
         '<div class="role-body">' +
           '<p class="role-why">' + esc(role.why) + '</p>' +
+          '<dl class="facts five">' +
+            '<div><dt>Experience</dt><dd>' + sc.parts.exp.toFixed(1) + ' / ' + W.exp + '</dd></div>' +
+            '<div><dt>Skills</dt><dd>' + sc.parts.skills.toFixed(1) + ' / ' + W.skills + '</dd></div>' +
+            '<div><dt>Resume keywords</dt><dd>' + sc.parts.resume.toFixed(1) + ' / ' + W.resume + '</dd></div>' +
+            '<div><dt>Projects &amp; certificates</dt><dd>' + sc.parts.proof.toFixed(1) + ' / ' + W.proof + '</dd></div>' +
+            '<div><dt>Referral</dt><dd>' + sc.parts.referral.toFixed(0) + ' / ' + W.referral + '</dd></div>' +
+          '</dl>' +
+          '<section class="path-wrap"><h3>' + (pct >= 90 ? "You're above 90%. Keep going:" : "Path to 90%") + '</h3>' + pathHtml(role, have, ctx, sc) + '</section>' +
           '<dl class="facts">' +
             '<div><dt>Expected salary</dt><dd>' + salaryText(role) + '</dd></div>' +
-            '<div><dt>Experience fit</dt><dd>' + sc.exp.toFixed(1) + ' / 45</dd></div>' +
-            '<div><dt>Skill coverage</dt><dd>' + sc.skills.toFixed(1) + ' / 31.5</dd></div>' +
-            '<div><dt>Hyderabad demand</dt><dd>' + sc.demand.toFixed(1) + ' / 13.5</dd></div>' +
+            '<div><dt>Openings in Hyderabad</dt><dd>' + demandText(role) + '</dd></div>' +
+            '<div><dt>Projects recommended</dt><dd>' + role.projectsNeeded + '</dd></div>' +
+            '<div><dt>Skills you have</dt><dd>' + got.length + ' of ' + ids.length + '</dd></div>' +
           '</dl>' +
           (role.salary && role.salary.note ? '<p class="dimmed small">' + icon("rupee") + ' ' + esc(role.salary.note) + '</p>' : '') +
           '<div class="role-cols">' +
             '<div><h3>Hiring in Gachibowli &amp; Nanakramguda</h3><ul class="pills">' +
-              (companies.length ? companies.map(function (c) {
+              companies.map(function (c) {
                 return '<li class="pill">' + icon("building") + esc(c.name) + ' <span class="dimmed">· ' + areaLabel(c.area) + '</span></li>';
-              }).join("") : '<li class="dimmed small">No confirmed employers in these two areas yet</li>') +
+              }).join("") +
             '</ul></div>' +
             '<div><h3>Search these job titles</h3><ul class="pills">' +
-              role.search.map(function (s) { return '<li class="pill">' + icon("search") + esc(s) + '</li>'; }).join("") +
-            '</ul></div>' +
-            '<div><h3>Skills you have</h3><ul class="pills">' +
-              (got.length ? got.map(function (id) {
-                return '<li class="pill pill-have">' + icon("check") + esc(skillById[id].label) + '</li>';
-              }).join("") : '<li class="dimmed small">None yet</li>') +
-            '</ul></div>' +
-            '<div><h3>Gaps to close</h3><ul class="pills">' +
-              (gaps.length ? gaps.map(function (id) {
-                return '<li><button type="button" class="pill pill-gap" data-learn="' + id + '" title="Mark as learned">' + icon("plus") +
-                  esc(skillById[id].label) + ' <span class="dimmed">· ' + weightLabel(id) + '</span></button></li>';
-              }).join("") : '<li class="dimmed small">No gaps for this role.</li>') +
+              role.search.map(function (q) { return '<li class="pill">' + icon("search") + esc(q) + '</li>'; }).join("") +
             '</ul></div>' +
           '</div>' +
-          '<div class="button-row"><a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">' + icon("file") + 'Check resume for this role</a></div>' +
+          '<div class="button-row">' +
+            '<a class="button button-default button-sm" href="#jobs" data-job-role="' + role.id + '">' + icon("live") + 'Live jobs for this role</a>' +
+            '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">' + icon("file") + 'Check resume for this role</a>' +
+            (state.referrals[role.id] ? '<button type="button" class="button button-subtle button-sm" data-referral="' + role.id + '">Remove referral</button>' : '') +
+          '</div>' +
         '</div></details></li>';
     }).join("");
 
     $("methodBody").innerHTML =
-      '<p><strong>Match score.</strong> Experience fit (45%) is how directly your work history maps to the job, including whether employers want the exact title on paper. Skill coverage (31.5%) is the weighted share of the role\'s skills you have. Hyderabad demand (13.5%) is how many openings the city usually has. The maximum is 90%, because interviews, timing and referrals can\'t be predicted from a profile.</p>' +
+      '<p><strong>Match score</strong> (out of 100) measures how closely your profile meets what the role asks for:</p><ul>' +
+      '<li><strong>Experience (40):</strong> how directly your work history maps to the job, including whether employers want the exact title on paper. This part is fixed by your history.</li>' +
+      '<li><strong>Skills (30):</strong> the weighted share of the role\'s core and supporting skills you have.</li>' +
+      '<li><strong>Resume keywords (15):</strong> the ATS score of the resume you send. Generating a tailored resume raises it.</li>' +
+      '<li><strong>Projects and certificates (10):</strong> projects against the number recommended (7), plus a relevant certificate (3).</li>' +
+      '<li><strong>Referral (5):</strong> whether someone inside can refer you.</li></ul>' +
+      '<p>90% or more means you meet nearly everything the job asks for. It is not a promise of an offer: interviews, timing and competition still decide that.</p>' +
       '<p><strong>Salary.</strong> Annual CTC for about 3 years\' experience in Hyderabad, from ' + esc(DATA.salarySources) + '. Amazon, Microsoft and Google usually pay at the top of each range; outsourcing firms pay at the bottom.</p>' +
       '<p><strong>Removed:</strong> ' + esc(DATA.removedRoles) + '</p>';
   }
@@ -548,7 +800,7 @@
     return ranked[0].role.id;
   }
 
-  function renderResume(ranked) {
+  function renderResume(ranked, ctx) {
     var roleId = atsRoleId(ranked);
     var role = roleById[roleId];
     $("atsRole").innerHTML = ranked.map(function (r) {
@@ -604,7 +856,7 @@
 
   // ---------- Skills ----------
 
-  function renderSkills(ranked) {
+  function renderSkills(ranked, ctx) {
     var have = ownedSet();
     var ownedCount = Object.keys(have).length + state.custom.length;
     $("haveCount").textContent = ownedCount;
@@ -632,7 +884,7 @@
       var total = 0, roles = [];
       DATA.roles.forEach(function (r) {
         if (!r.skills[s.id]) return;
-        var d = scoreRole(r, withSkill).value - scoreRole(r, have).value;
+        var d = scoreRole(r, withSkill, ctx).value - scoreRole(r, have, ctx).value;
         if (d > 0) { total += d; roles.push(r.short); }
       });
       return { skill: s, gain: total, roles: roles };
@@ -727,11 +979,18 @@
 
   function renderScored() {
     var have = ownedSet();
-    var ranked = rankedRoles(have);
-    renderDashboard(ranked);
-    renderRoles(ranked, have);
-    renderResume(ranked);
-    renderSkills(ranked);
+    var ctx = scoreContext();
+    var ranked = rankedRoles(have, ctx);
+    var scores = {};
+    ranked.forEach(function (r) { scores[r.role.id] = r.pct; });
+    var jobCounts = {};
+    liveJobs().forEach(function (j) { jobCounts[j.roleId] = (jobCounts[j.roleId] || 0) + 1; });
+    renderDashboard(ranked, ctx, scores);
+    renderJobs(scores);
+    liveLinks(ranked);
+    renderRoles(ranked, have, ctx, jobCounts);
+    renderResume(ranked, ctx);
+    renderSkills(ranked, ctx);
     document.querySelector('[data-count="roles"]').textContent = DATA.roles.length;
     document.querySelector('[data-count="companies"]').textContent = DATA.companies.length;
     document.querySelector('[data-count="skills"]').textContent = Object.keys(have).length + state.custom.length;
@@ -826,7 +1085,7 @@
     document.querySelectorAll(".nav-link").forEach(function (l) {
       items.push({ group: "Pages", label: l.childNodes[1].textContent.trim(), icon: l.querySelector("[data-icon]").getAttribute("data-icon"), go: { view: l.getAttribute("data-view") } });
     });
-    rankedRoles(have).forEach(function (r) {
+    rankedRoles(have, scoreContext()).forEach(function (r) {
       items.push({ group: "Roles", label: r.role.title, extra: r.pct + "% · " + salaryText(r.role), icon: "target", keywords: r.role.search.join(" "), go: { role: r.role.id } });
     });
     DATA.companies.forEach(function (c) {
@@ -971,7 +1230,10 @@
     $("resumePreview").textContent = lastResume;
     $("resumeOutput").hidden = false;
     var score = atsScore(lastResume, role).total;
-    flash($("resumeMsg"), "Generated for " + role.title + ". Estimated ATS score " + score + "/100. Read it through before sending.");
+    state.generated[role.id] = true;
+    saveState();
+    renderScored();
+    flash($("resumeMsg"), "Generated for " + role.title + ". Estimated ATS score " + score + "/100, and this role's match is updated. Read it through before sending.");
     $("resumePreview").focus();
   });
   $("copyResume").addEventListener("click", function () {
@@ -1013,6 +1275,13 @@
       go("roles", openRole(link.getAttribute("data-open-role")));
       return;
     }
+    var jobRoleLink = e.target.closest("[data-job-role]");
+    if (jobRoleLink) {
+      jobFilter.role = jobRoleLink.getAttribute("data-job-role");
+      jobFilter.area = "all";
+      renderScored();
+      return;
+    }
     var atsLink = e.target.closest("[data-ats-role]");
     if (atsLink) {
       ui.atsRole = atsLink.getAttribute("data-ats-role");
@@ -1037,6 +1306,17 @@
     } else if (t.dataset.learn) {
       setOwned(t.dataset.learn, true);
       saveState();
+      renderScored();
+    } else if (t.dataset.referral) {
+      var rid = t.dataset.referral;
+      if (state.referrals[rid]) delete state.referrals[rid]; else state.referrals[rid] = true;
+      saveState();
+      renderScored();
+    } else if (t.dataset.jobArea) {
+      jobFilter.area = t.dataset.jobArea;
+      renderScored();
+    } else if (t.dataset.jobSort) {
+      jobFilter.sort = t.dataset.jobSort;
       renderScored();
     } else if (t.dataset.area) {
       companyFilter.area = t.dataset.area;
@@ -1071,9 +1351,14 @@
       state.steps[step] = e.target.checked;
       saveState();
       e.target.closest(".step").classList.toggle("is-done", e.target.checked);
-      var done = DATA.steps.filter(function (s) { return state.steps[s.id]; }).length;
-      $("stepsProgress").textContent = done + " of " + DATA.steps.length + " done";
+      var done = DATA.plan.filter(function (s) { return state.steps[s.id]; }).length;
+      $("stepsProgress").textContent = done + " of " + DATA.plan.length + " done";
     }
+  });
+
+  $("jobRoleFilter").addEventListener("change", function () {
+    jobFilter.role = this.value;
+    renderScored();
   });
 
   $("roleFilter").addEventListener("change", function () {
@@ -1135,6 +1420,7 @@
     if (!f) return;
     state.personal[f] = e.target.value;
     saveState();
+    if (f === "languages") renderScored();
   });
   $("personalForm").addEventListener("submit", function (e) { e.preventDefault(); });
 
@@ -1187,4 +1473,5 @@
   renderPicker();
   renderAll();
   showView(viewFromHash());
+  loadJobs();
 })();

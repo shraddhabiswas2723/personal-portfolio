@@ -53,12 +53,16 @@ function languagesFor(title) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const report = [];
 
-async function getJSON(url, init = {}) {
+async function getJSON(url, init = {}, attempt = 1) {
   const res = await fetch(url, {
     ...init,
-    headers: { "user-agent": UA, accept: "application/json", ...(init.headers || {}) },
+    headers: { "user-agent": UA, accept: "application/json", "accept-language": "en-US,en;q=0.9", ...(init.headers || {}) },
     signal: AbortSignal.timeout(25000),
   });
+  if ((res.status === 429 || res.status >= 500) && attempt < 3) {
+    await sleep(4000 * attempt);
+    return getJSON(url, init, attempt + 1);
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
