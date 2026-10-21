@@ -29,7 +29,26 @@ const SMARTRECRUITERS = [];
 const GREENHOUSE = [];
 const LEVER = [];
 
-const EXCLUDE = /\b(senior manager|manager|director|principal|head|vice president|vp|chief|architect|engineer|engineering|developer|scientist|sde|counsel|attorney|lawyer|intern|internship|trainee|lead|leader|partner)\b/i;
+// Seniority and job families that don't fit the profile (tax, facilities, finance, legal, medical).
+const EXCLUDE = /\b(senior manager|manager|director|principal|head|vice president|vp|chief|architect|engineer|engineering|developer|scientist|sde|counsel|attorney|lawyer|paralegal|intern|internship|trainee|lead|leader|partner|tax|vat|gst|accountant|accounting|accounts payable|accounts receivable|payroll|treasury|maintenance|facilities|bbm|technician|nurse|medical|pharmacovigilance|driver|warehouse)\b/i;
+
+// Language a posting asks for, from its title ("Quality Specialist - Telugu", "Investigation Specialist II - JP").
+const LANGUAGES = {
+  telugu: "Telugu", hindi: "Hindi", bengali: "Bengali", bangla: "Bengali", tamil: "Tamil", kannada: "Kannada", malayalam: "Malayalam",
+  marathi: "Marathi", gujarati: "Gujarati", punjabi: "Punjabi", odia: "Odia", urdu: "Urdu",
+  spanish: "Spanish", german: "German", french: "French", italian: "Italian", portuguese: "Portuguese", turkish: "Turkish",
+  japanese: "Japanese", korean: "Korean", chinese: "Chinese", mandarin: "Chinese", arabic: "Arabic", dutch: "Dutch",
+  polish: "Polish", swedish: "Swedish", russian: "Russian", thai: "Thai", vietnamese: "Vietnamese", indonesian: "Indonesian",
+};
+const LANG_CODES = { JP: "Japanese", ES: "Spanish", FR: "French", PT: "Portuguese", DE: "German", IT: "Italian", TR: "Turkish", AR: "Arabic", ZH: "Chinese", KO: "Korean", NL: "Dutch", PL: "Polish", SV: "Swedish" };
+
+function languagesFor(title) {
+  const found = new Set();
+  const lower = title.toLowerCase();
+  for (const [k, v] of Object.entries(LANGUAGES)) if (new RegExp(`\\b${k}\\b`).test(lower)) found.add(v);
+  for (const [k, v] of Object.entries(LANG_CODES)) if (new RegExp(`(^|[\\s\\-–(\\[])${k}($|[\\s\\-–),\\]])`).test(title)) found.add(v);
+  return [...found];
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const report = [];
@@ -113,6 +132,7 @@ function makeJob({ id, title, companyName, location, posted, url, source, years 
     company: company ? company.name : companyName,
     companyId: company ? company.id : null,
     location: location.trim(),
+    languages: languagesFor(title),
     area,
     areaFrom,
     posted,
@@ -245,6 +265,20 @@ for (const src of SOURCES) {
     console.log(`✗ ${src.name}: ${err.message || err}`);
   }
 }
+
+// Merge repeat postings (Amazon lists one post per opening) into one card with a count.
+const grouped = new Map();
+for (const j of found.values()) {
+  const key = [j.company, j.title.toLowerCase().replace(/\s+/g, " "), j.location].join("|");
+  const g = grouped.get(key);
+  if (!g) grouped.set(key, { ...j, openings: 1 });
+  else {
+    g.openings++;
+    if ((j.posted || "") > (g.posted || "")) Object.assign(g, { ...j, openings: g.openings });
+  }
+}
+found.clear();
+for (const g of grouped.values()) found.set(g.id, g);
 
 const today = new Date().toISOString().slice(0, 10);
 const cutoff = new Date(Date.now() - MAX_AGE_DAYS * 86400000).toISOString().slice(0, 10);
