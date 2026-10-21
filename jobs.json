@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T12:04:46.310Z",
+ "updated": "2026-10-21T12:15:05.927Z",
  "sources": [
   {
    "name": "Amazon",
@@ -10,32 +10,76 @@
    "name": "Microsoft",
    "ok": false,
    "count": 0,
-   "error": "HTTP 403"
+   "error": "HTTP 429"
   },
   {
-   "name": "Franklin Templeton",
+   "name": "HSBC",
    "ok": true,
-   "count": 0
-  },
-  {
-   "name": "Charles Schwab",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 422"
+   "count": 1
   },
   {
    "name": "The Hartford",
+   "ok": true,
+   "count": 2
+  },
+  {
+   "name": "DBS Tech India",
+   "ok": true,
+   "count": 4
+  },
+  {
+   "name": "Teleperformance",
+   "ok": true,
+   "count": 4
+  },
+  {
+   "name": "Concentrix",
    "ok": true,
    "count": 0
   },
   {
    "name": "Accenture",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 429"
+   "ok": true,
+   "count": 0
+  },
+  {
+   "name": "Experian",
+   "ok": true,
+   "count": 0
+  },
+  {
+   "name": "IQ-EQ",
+   "ok": true,
+   "count": 0
+  },
+  {
+   "name": "Infosys",
+   "ok": true,
+   "count": 8
+  },
+  {
+   "name": "Capgemini",
+   "ok": true,
+   "count": 0
   }
  ],
  "jobs": [
+  {
+   "id": "workday:WD89874",
+   "title": "Associate , Legal & Compliance, Central Operation Office",
+   "company": "DBS Tech India",
+   "companyId": "dbs",
+   "location": "Hyderabad - DTI Waverock SEZ · /job/Hyderabad---DTI-Waverock-SEZ/Associate---Legal---Compliance--Central-Operation-Office_WD89874",
+   "languages": [],
+   "area": "nanakramguda",
+   "areaFrom": "posting",
+   "posted": "2026-10-21",
+   "url": "https://dbs.wd3.myworkdayjobs.com/en-US/DBS_Careers/job/Hyderabad---DTI-Waverock-SEZ/Associate---Legal---Compliance--Central-Operation-Office_WD89874",
+   "roleId": "compliance",
+   "source": "workday",
+   "openings": 1,
+   "firstSeen": "2026-10-21"
+  },
   {
    "id": "amazon:10583502",
    "title": "Program Specialist, NCC, Network Control Center, Amazon Customer Service",
@@ -151,6 +195,22 @@
    "url": "https://www.amazon.jobs/en/jobs/10579818/ml-data-associate-ii-artificial-general-intelligence",
    "roleId": "aidata",
    "source": "amazon",
+   "openings": 1,
+   "firstSeen": "2026-10-21"
+  },
+  {
+   "id": "workday:R2626661",
+   "title": "IND Staff Business Analyst Duck Creek",
+   "company": "The Hartford",
+   "companyId": "hartford",
+   "location": "India GCC-Puppalaguda Village · /job/India-GCC-Puppalaguda-Village/IND-Staff-Business-Analyst-Duck-Creek_R2626661",
+   "languages": [],
+   "area": "gachibowli",
+   "areaFrom": "posting",
+   "posted": "2026-10-14",
+   "url": "https://thehartford.wd5.myworkdayjobs.com/en-US/Careers_External/job/India-GCC-Puppalaguda-Village/IND-Staff-Business-Analyst-Duck-Creek_R2626661",
+   "roleId": "ops",
+   "source": "workday",
    "openings": 1,
    "firstSeen": "2026-10-21"
   },
@@ -391,6 +451,38 @@
    "url": "https://www.amazon.jobs/en/jobs/10570980/risk-specialist-i-transportation-controllership",
    "roleId": "risk",
    "source": "amazon",
+   "openings": 2,
+   "firstSeen": "2026-10-21"
+  },
+  {
+   "id": "infosys:INFSYS-EXTERNAL-254455",
+   "title": "Associate Business Analyst",
+   "company": "Infosys",
+   "companyId": "infosys",
+   "location": "HYDERABAD",
+   "languages": [],
+   "area": "gachibowli",
+   "areaFrom": "company",
+   "posted": "2026-10-01",
+   "url": "https://career.infosys.com/jobdesc?jobReferenceCode=INFSYS-EXTERNAL-254455&sourceId=1",
+   "roleId": "ops",
+   "source": "infosys",
+   "openings": 1,
+   "firstSeen": "2026-10-21"
+  },
+  {
+   "id": "infosys:INFSYS-EXTERNAL-254394",
+   "title": "eGRC Tester",
+   "company": "Infosys",
+   "companyId": "infosys",
+   "location": "HYDERABAD",
+   "languages": [],
+   "area": "gachibowli",
+   "areaFrom": "company",
+   "posted": "2026-10-01",
+   "url": "https://career.infosys.com/jobdesc?jobReferenceCode=INFSYS-EXTERNAL-254394&sourceId=1",
+   "roleId": "grc",
+   "source": "infosys",
    "openings": 2,
    "firstSeen": "2026-10-21"
   }
