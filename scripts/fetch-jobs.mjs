@@ -25,7 +25,7 @@ const WORKDAY = [
   { company: "DBS Tech India", host: "dbs.wd3.myworkdayjobs.com", tenant: "dbs", site: "DBS_Careers", search: "Hyderabad" },
   { company: "Teleperformance", host: "onetp.wd1.myworkdayjobs.com", tenant: "onetp", site: "Teleperformance", search: "HYD" },
   { company: "Concentrix", host: "cnx.wd1.myworkdayjobs.com", tenant: "cnx", site: "external_global", search: "Hyderabad" },
-  { company: "Accenture", host: "accenture.wd103.myworkdayjobs.com", tenant: "accenture", site: "AccentureCareers", search: "Hyderabad" },
+  { company: "Accenture", host: "accenture.wd103.myworkdayjobs.com", tenant: "accenture", site: "AccentureCareers", search: ["Trust and Safety Hyderabad", "Content Moderation Hyderabad", "KYC Hyderabad", "AML Hyderabad", "Compliance Hyderabad", "Risk Hyderabad", "Data Annotation Hyderabad"], pages: 2 },
 ];
 // Eightfold: `pcsx` is the newer search API, `v2` the older one.
 const EIGHTFOLD = [
@@ -211,11 +211,12 @@ async function eightfold(cfg) {
 async function workday(cfg) {
   const out = [];
   const base = `https://${cfg.host}/wday/cxs/${cfg.tenant}/${cfg.site}/jobs`;
-  for (let offset = 0; offset < 200; offset += 20) {
+  for (const searchText of [].concat(cfg.search || "Hyderabad")) {
+  for (let offset = 0; offset < 20 * (cfg.pages || 10); offset += 20) {
     const data = await getJSON(base, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset, searchText: cfg.search || "Hyderabad" }),
+      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset, searchText }),
     });
     const list = data.jobPostings || [];
     for (const p of list) {
@@ -227,6 +228,7 @@ async function workday(cfg) {
     }
     if (list.length < 20) break;
     await sleep(500);
+  }
   }
   return out;
 }
