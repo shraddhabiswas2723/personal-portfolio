@@ -324,14 +324,20 @@ for (const src of SOURCES) {
   }
 }
 
+// A source that failed this run (often a rate limit) keeps its previous jobs until it answers again.
+const failed = new Set(report.filter((r) => !r.ok).map((r) => r.name));
+for (const j of previous.jobs || []) {
+  if (failed.has(j.company) && !found.has(j.id)) found.set(j.id, j);
+}
+
 // Merge repeat postings (Amazon lists one post per opening) into one card with a count.
 const grouped = new Map();
 for (const j of found.values()) {
   const key = [j.company, j.title.toLowerCase().replace(/\s+/g, " "), j.location].join("|");
   const g = grouped.get(key);
-  if (!g) grouped.set(key, { ...j, openings: 1 });
+  if (!g) grouped.set(key, { ...j, openings: j.openings || 1 });
   else {
-    g.openings++;
+    g.openings += j.openings || 1;
     if ((j.posted || "") > (g.posted || "")) Object.assign(g, { ...j, openings: g.openings });
   }
 }
