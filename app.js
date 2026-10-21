@@ -546,7 +546,8 @@
     if (LIVE.status === "loading") return "Loading live jobs…";
     if (LIVE.status === "error") return "Live jobs load when the site is online (GitHub Pages). Until then, use the job-site searches below.";
     var d = LIVE.data;
-    var ok = (d.sources || []).filter(function (x) { return x.ok && x.count; }).map(function (x) { return x.name; });
+    var ok = [];
+    (d.jobs || []).forEach(function (j) { if (ok.indexOf(j.company) === -1) ok.push(j.company); });
     var hidden = (d.jobs || []).filter(function (j) { return roleById[j.roleId] && !languageOk(j); }).length;
     var langNote = hidden ? " " + hidden + " hidden because they need a language you haven't listed." :
       (!myLanguages() && (d.jobs || []).some(function (j) { return (j.languages || []).length; }) ? " Add your languages on the Profile page to hide postings that need other languages." : "");
