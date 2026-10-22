@@ -783,7 +783,7 @@ a.kpi:hover { border-color: var(--primary); }
 .job-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-sm); }
 .job-list:empty { display: none; }
 .job-list .empty { padding: var(--sp-md); border: 1px dashed var(--input-border); border-radius: var(--r-md); color: var(--dimmed-strong); font-size: var(--fs-sm); }
-.job {
+.job-list .job {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--sp-sm) var(--sp-lg);
@@ -793,7 +793,7 @@ a.kpi:hover { border-color: var(--primary); }
   border-radius: var(--r-lg);
   background: var(--surface);
 }
-.card .job { background: var(--main); }
+.card .job-list .job { background: var(--main); }
 .job-main { display: grid; gap: 4px; min-width: 0; }
 .job-title { color: var(--text); font-weight: 600; text-decoration: none; display: inline-flex; gap: 6px; align-items: baseline; line-height: 1.35; }
 .job-title .icon { width: 14px; height: 14px; color: var(--dimmed); flex: none; }
@@ -839,7 +839,7 @@ a.kpi:hover { border-color: var(--primary); }
   .facts.five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-  .job { grid-template-columns: 1fr; padding: var(--sp-sm) var(--sp-md); }
+  .job-list .job { grid-template-columns: 1fr; padding: var(--sp-sm) var(--sp-md); }
   .job-side { justify-items: start; text-align: left; grid-auto-flow: row; }
   .job-side .button-row { justify-content: flex-start; }
   .path-step { grid-template-columns: 44px minmax(0, 1fr); align-items: start; }
