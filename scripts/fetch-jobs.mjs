@@ -35,9 +35,18 @@ const EIGHTFOLD = [
 const SMARTRECRUITERS = [
   { company: "Experian", id: "Experian" },
   { company: "IQ-EQ", id: "IQEQ" },
+  { company: "ServiceNow", id: "ServiceNow" },
+];
+// Jibe (iCIMS) career sites answer GET /api/jobs.
+const JIBE = [
+  { company: "Wipro", host: "careers.wipro.com", path: "careers-home" },
 ];
 const GREENHOUSE = [];
 const LEVER = [];
+// Extra searches for AI work at companies whose sites need a search term.
+const AMAZON_AI_QUERIES = ["AGI Data Services", "ML Data Associate", "Language Data", "Responsible AI", "Generative AI"];
+const GOOGLE_QUERIES = ["trust and safety", "generative AI", "policy", "data", "operations"];
+const APPLE_QUERIES = ["annotation", "AIML", "data", "language", "quality", "operations"];
 
 // Seniority and job families that don't fit the profile (tax, facilities, finance, legal, medical).
 const EXCLUDE = /\b(senior manager|manager|director|principal|head|vice president|vp|chief|architect|engineer|engineering|developer|scientist|sde|counsel|attorney|lawyer|paralegal|intern|internship|trainee|lead|leader|partner|tax|vat|gst|accountant|accounting|accounts payable|accounts receivable|payroll|treasury|maintenance|facilities|bbm|technician|nurse|medical|pharmacovigilance|driver|warehouse)\b/i;
@@ -52,6 +61,26 @@ const LANGUAGES = {
 };
 const LANG_CODES = { JP: "Japanese", ES: "Spanish", FR: "French", PT: "Portuguese", DE: "German", IT: "Italian", TR: "Turkish", AR: "Arabic", ZH: "Chinese", KO: "Korean", NL: "Dutch", PL: "Polish", SV: "Swedish" };
 
+// A posting counts as AI work when its title says so, or its description uses two or more of these terms.
+const AI_TITLE = /\b(ai|aiml|genai|gen ai|generative|llms?|ml|machine learning|agi|artificial intelligence|annotation|annotator|rater|data associate|language data|prompt)\b/i;
+const AI_TEXT = ["generative ai", "genai", "gen ai", "large language model", "llm", "machine learning", "responsible ai", "ai safety",
+  "ai model", "ai system", "annotation", "artificial general intelligence", "ai-generated", "ai generated", "prompt engineering", "model evaluation"];
+const AI_ROLES = new Set(["aidata", "aiops", "aigov"]);
+
+function aiReason(title, text, roleId) {
+  if (AI_ROLES.has(roleId) || AI_TITLE.test(title)) return "title";
+  const t = String(text || "").toLowerCase();
+  return AI_TEXT.filter((w) => t.includes(w)).length >= 2 ? "description" : null;
+}
+
+// AI titles that none of the role phrases cover ("AI Solutions Analyst").
+function aiRoleFor(title) {
+  const t = title.toLowerCase();
+  if (/governance|responsible|ethic|risk|policy|compliance|assurance/.test(t)) return "aigov";
+  if (/data|quality|annotat|evaluat|language|rater|trainer/.test(t)) return "aidata";
+  return "aiops";
+}
+
 function languagesFor(title) {
   const found = new Set();
   const lower = title.toLowerCase();
@@ -63,18 +92,34 @@ function languagesFor(title) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const report = [];
 
-async function getJSON(url, init = {}, attempt = 1) {
+async function request(url, init = {}, accept = "application/json", attempt = 1) {
   const res = await fetch(url, {
     ...init,
-    headers: { "user-agent": UA, accept: "application/json", "accept-language": "en-US,en;q=0.9", ...(init.headers || {}) },
+    headers: { "user-agent": UA, accept, "accept-language": "en-US,en;q=0.9", ...(init.headers || {}) },
     signal: AbortSignal.timeout(25000),
   });
   if ((res.status === 429 || res.status >= 500) && attempt < 3) {
     await sleep(4000 * attempt);
-    return getJSON(url, init, attempt + 1);
+    return request(url, init, accept, attempt + 1);
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return res;
+}
+
+const getJSON = async (url, init) => (await request(url, init)).json();
+const getText = async (url) => (await request(url, {}, "text/html,application/xhtml+xml")).text();
+
+const stripTags = (html) => String(html || "").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+const slugify = (s) => String(s).toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// Years asked for in the minimum/basic qualifications only, so "10 years of history" in the blurb doesn't count.
+function minimumYears(text) {
+  const t = stripTags(text);
+  const start = t.search(/(basic|minimum) qualifications/i);
+  if (start === -1) return null;
+  const rest = t.slice(start);
+  const end = rest.search(/preferred qualifications/i);
+  return maxYears(end === -1 ? rest.slice(0, 1500) : rest.slice(0, end));
 }
 
 // ---------- Classification ----------
@@ -133,13 +178,15 @@ function workdayPosted(text) {
   return m ? toISO(new Date(now - parseInt(m[1], 10) * 86400000)) : null;
 }
 
-function makeJob({ id, title, companyName, location, posted, url, source, years }) {
+function makeJob({ id, title, companyName, location, posted, url, source, years, text }) {
   if (!title || !url || !isHyderabad(location)) return null;
-  const roleId = classify(title);
+  let roleId = classify(title);
+  if (!roleId && !EXCLUDE.test(title) && AI_TITLE.test(title)) roleId = aiRoleFor(title);
   if (!roleId) return null;
   if (years != null && years > MAX_YEARS) return null;
   const company = companyFor(companyName);
   const { area, areaFrom } = areaFor(location, company);
+  const ai = aiReason(title, text, roleId);
   return {
     id: `${source}:${id}`,
     title: title.trim(),
@@ -153,14 +200,17 @@ function makeJob({ id, title, companyName, location, posted, url, source, years 
     url,
     roleId,
     source,
+    years: years ?? null,
+    ...(ai ? { ai } : {}),
   };
 }
 
 // ---------- Sources ----------
-// Each source returns raw postings: { id, title, companyName, location, posted, url, source, years }.
+// Each source returns raw postings: { id, title, companyName, location, posted, url, source, years, text }.
+// `text` is the description, used only to tell whether the job is AI work; it isn't saved.
 
 async function amazon() {
-  const queries = [...new Set(DATA.roles.flatMap((r) => r.search))];
+  const queries = [...new Set(DATA.roles.flatMap((r) => r.search).concat(AMAZON_AI_QUERIES))];
   const out = [];
   for (const q of queries) {
     const url = "https://www.amazon.jobs/en/search.json?" + new URLSearchParams({
@@ -172,7 +222,7 @@ async function amazon() {
         id: j.id_icims || j.id, title: j.title, companyName: "Amazon",
         location: [j.normalized_location, j.location, j.city].filter(Boolean).join(" · "),
         posted: toISO(j.posted_date), url: "https://www.amazon.jobs" + j.job_path, source: "amazon",
-        years: maxYears(j.basic_qualifications),
+        years: maxYears(j.basic_qualifications), text: [j.description, j.basic_qualifications].join(" "),
       });
     }
     await sleep(400);
@@ -242,6 +292,122 @@ async function smartrecruiters(cfg) {
   }));
 }
 
+async function jibe(cfg) {
+  const out = [];
+  for (let page = 1; page <= 5; page++) {
+    const data = await getJSON(`https://${cfg.host}/api/jobs?` + new URLSearchParams({
+      location: "Hyderabad", page: String(page), limit: "100", sortBy: "posted_date", descending: "true", internal: "false",
+    }));
+    const list = data.jobs || [];
+    for (const item of list) {
+      const j = item.data || item;
+      out.push({
+        id: j.req_id || j.slug, title: j.title, companyName: cfg.company,
+        location: [j.full_location, j.location_name, j.city, j.state].filter(Boolean).join(" · "),
+        posted: toISO(j.posted_date || j.create_date), url: `https://${cfg.host}/${cfg.path}/jobs/${j.slug}?lang=en-us`, source: "jibe",
+        years: minimumYears(j.qualifications || j.description), text: [j.description, j.qualifications, j.responsibilities].join(" "),
+      });
+    }
+    if (list.length < 100) break;
+    await sleep(500);
+  }
+  return out;
+}
+
+// Google's careers page is server-rendered; the results sit in an AF_initDataCallback block.
+function googleJobs(html) {
+  const m = html.match(/AF_initDataCallback\(\{key: 'ds:1',[^]*?data:([^]*?), sideChannel: \{\}\}\);/);
+  if (!m) throw new Error("Google results block not found (blocks: " + [...html.matchAll(/AF_initDataCallback\(\{key: '([^']+)'/g)].map((x) => x[1]).join(", ") + `; ${html.length} chars)`);
+  const data = JSON.parse(m[1]);
+  const strings = (v) => (Array.isArray(v) ? v.flatMap(strings) : typeof v === "string" ? [v] : []);
+  const rows = Array.isArray(data[0]) ? data[0] : [];
+  return rows.filter((r) => Array.isArray(r) && typeof r[0] === "string" && typeof r[1] === "string").map((r) => {
+    const quals = strings(r[4]).join(" ");
+    const ts = r.find((v, i) => i > 10 && Array.isArray(v) && typeof v[0] === "number" && v[0] > 1e9);
+    return {
+      id: r[0], title: r[1], companyName: "Google",
+      location: (Array.isArray(r[9]) ? r[9] : []).map((l) => (Array.isArray(l) ? l[0] : l)).filter((l) => typeof l === "string").join(" · "),
+      posted: ts ? toISO(new Date(ts[0] * 1000)) : null,
+      url: `https://www.google.com/about/careers/applications/jobs/results/${r[0]}-${slugify(r[1])}`, source: "google",
+      years: minimumYears(quals), text: strings([r[3], r[4], r[10]]).join(" "),
+    };
+  });
+}
+
+async function google() {
+  const out = [];
+  for (const q of GOOGLE_QUERIES) {
+    for (let page = 1; page <= 2; page++) {
+      const html = await getText("https://www.google.com/about/careers/applications/jobs/results/?" + new URLSearchParams({
+        location: "Hyderabad, Telangana, India", q, page: String(page),
+      }));
+      const list = googleJobs(html);
+      out.push(...list);
+      if (list.length < 20) break;
+      await sleep(800);
+    }
+    await sleep(500);
+  }
+  return out;
+}
+
+// Apple's search page carries its results in React Router hydration data.
+function appleJobs(html) {
+  const m = html.match(/__staticRouterHydrationData\s*=\s*JSON\.parse\(("(?:[^"\\]|\\.)*")\)/);
+  if (!m) throw new Error(`Apple results data not found (${html.length} chars, title: ${(html.match(/<title>([^<]*)/) || [])[1]})`);
+  const found = [];
+  (function walk(v) {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object") {
+      if (typeof v.postingTitle === "string") found.push(v);
+      else Object.values(v).forEach(walk);
+    }
+  })(JSON.parse(JSON.parse(m[1])));
+  return found.map((p) => {
+    const id = p.positionId || p.jobPositionId || p.id;
+    return {
+      id, title: p.postingTitle, companyName: "Apple",
+      location: (p.locations || []).map((l) => [l.name, l.city, l.stateProvince, l.countryName].filter(Boolean).join(", ")).join(" · "),
+      posted: toISO(p.postDateInGMT || p.postingDate),
+      url: `https://jobs.apple.com/en-in/details/${id}/${p.transformedPostingTitle || slugify(p.postingTitle)}`, source: "apple",
+      text: [p.jobSummary, p.description].join(" "),
+    };
+  });
+}
+
+async function apple() {
+  const out = [];
+  for (const q of APPLE_QUERIES) {
+    const html = await getText("https://jobs.apple.com/en-in/search?" + new URLSearchParams({ search: q, sort: "newest", location: "hyderabad-HYD" }));
+    out.push(...appleJobs(html));
+    await sleep(600);
+  }
+  return out;
+}
+
+async function uber() {
+  const out = [];
+  for (let page = 0; page < 5; page++) {
+    const data = await getJSON("https://www.uber.com/api/loadSearchJobsResults?localeCode=en", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-csrf-token": "x" },
+      body: JSON.stringify({ limit: 50, page, params: { location: [{ country: "IND", region: "Telangana", city: "Hyderabad" }], department: [], team: [] } }),
+    });
+    const list = (data.data && data.data.results) || [];
+    for (const j of list) {
+      out.push({
+        id: j.id, title: j.title, companyName: "Uber",
+        location: [].concat(j.location || [], j.allLocations || []).map((l) => [l.city, l.region, l.countryName].filter(Boolean).join(", ")).join(" · "),
+        posted: toISO(j.creationDate || j.updatedDate), url: `https://www.uber.com/global/en/careers/list/${j.id}/`, source: "uber",
+        years: minimumYears(j.description), text: j.description || "",
+      });
+    }
+    if (list.length < 50) break;
+    await sleep(600);
+  }
+  return out;
+}
+
 async function infosys() {
   const data = await getJSON("https://intapgateway.infosysapps.com/careersci/search/intapjbsrch/getCareerSearchJobs?sourceId=1,21&searchText=ALL");
   const list = Array.isArray(data) ? data : data.data || [];
@@ -292,6 +458,10 @@ const SOURCES = [
   ...EIGHTFOLD.map((c) => ({ name: c.company, run: () => eightfold(c) })),
   ...WORKDAY.map((c) => ({ name: c.company, run: () => workday(c) })),
   ...SMARTRECRUITERS.map((c) => ({ name: c.company, run: () => smartrecruiters(c) })),
+  ...JIBE.map((c) => ({ name: c.company, run: () => jibe(c) })),
+  { name: "Google", run: google },
+  { name: "Apple", run: apple },
+  { name: "Uber", run: uber },
   { name: "Infosys", run: infosys },
   { name: "Capgemini", run: capgemini },
   ...GREENHOUSE.map((c) => ({ name: c.company, run: () => greenhouse(c) })),
