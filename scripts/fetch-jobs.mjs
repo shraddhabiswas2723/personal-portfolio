@@ -335,7 +335,8 @@ async function google() {
   return out;
 }
 
-// Apple's search page carries its results in React Router hydration data.
+// Apple's search page carries its results in React Router hydration data. Apple has no Hyderabad-only
+// filter, so this searches India and keeps the Hyderabad postings.
 function appleJobs(html) {
   const m = html.match(/__staticRouterHydrationData\s*=\s*JSON\.parse\(("(?:[^"\\]|\\.)*")\)/);
   if (!m) throw new Error(`Apple results data not found (${html.length} chars, title: ${(html.match(/<title>([^<]*)/) || [])[1]})`);
@@ -362,26 +363,11 @@ function appleJobs(html) {
 async function apple() {
   const out = [];
   for (const q of APPLE_QUERIES) {
-    const html = await getText("https://jobs.apple.com/en-in/search?" + new URLSearchParams({ search: q, sort: "newest", location: "hyderabad-HYD" }));
+    const html = await getText("https://jobs.apple.com/en-in/search?" + new URLSearchParams({ search: q, sort: "newest", location: "india-INDC" }));
     out.push(...appleJobs(html));
     await sleep(600);
   }
-  if (!out.length) await appleDiagnose();
   return out;
-}
-
-// Temporary: shows what Apple's page returns when no postings are parsed.
-async function appleDiagnose() {
-  for (const loc of ["hyderabad-HYD", "india-INDC", ""]) {
-    const params = { search: "annotation", sort: "newest" };
-    if (loc) params.location = loc;
-    const html = await getText("https://jobs.apple.com/en-in/search?" + new URLSearchParams(params));
-    const at = html.indexOf("postingTitle");
-    const hyd = html.indexOf("__staticRouterHydrationData");
-    console.log(`    apple [${loc || "no location"}]: ${html.length} chars, postingTitle x${(html.match(/postingTitle/g) || []).length}, hydration at ${hyd}`);
-    console.log("      " + (at !== -1 ? html.slice(Math.max(0, at - 200), at + 300) : html.slice(Math.max(0, hyd), hyd + 400)).replace(/\s+/g, " "));
-    await sleep(600);
-  }
 }
 
 async function infosys() {
