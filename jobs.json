@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T14:30:34.224Z",
+ "updated": "2026-10-22T14:36:42.749Z",
  "sources": [
   {
    "name": "Amazon",
@@ -8,8 +8,9 @@
   },
   {
    "name": "Microsoft",
-   "ok": true,
-   "count": 6
+   "ok": false,
+   "count": 0,
+   "error": "HTTP 429"
   },
   {
    "name": "HSBC",
@@ -58,15 +59,9 @@
    "count": 0
   },
   {
-   "name": "Wipro",
-   "ok": false,
-   "count": 0,
-   "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
-  },
-  {
    "name": "Google",
    "ok": true,
-   "count": 6
+   "count": 5
   },
   {
    "name": "Apple",
@@ -74,20 +69,14 @@
    "count": 0
   },
   {
-   "name": "Uber",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 404"
-  },
-  {
    "name": "Infosys",
    "ok": true,
-   "count": 12
+   "count": 8
   },
   {
    "name": "Capgemini",
    "ok": true,
-   "count": 1
+   "count": 0
   }
  ],
  "jobs": [
@@ -474,24 +463,6 @@
    "firstSeen": "2026-10-21"
   },
   {
-   "id": "capgemini:541549-en_GB_SAPBTP",
-   "title": "AI Product Owner",
-   "company": "Capgemini",
-   "companyId": "capgemini",
-   "location": "Hyderabad",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-09",
-   "url": "https://careers.capgemini.com/job/Hyderabad-AI-Product-Owner/1445964733/?feedId=388633&utm_source=CareerSite&tcsource=apply",
-   "roleId": "aiops",
-   "source": "capgemini",
-   "years": null,
-   "ai": "title",
-   "openings": 1,
-   "firstSeen": "2026-10-22"
-  },
-  {
    "id": "amazon:10573026",
    "title": "Investigation Specialist",
    "company": "Amazon",
@@ -657,60 +628,6 @@
    "firstSeen": "2026-10-21"
   },
   {
-   "id": "eightfold:1970393556944053",
-   "title": "Sr Consultant - Infra AI",
-   "company": "Microsoft",
-   "companyId": "microsoft",
-   "location": "India, Telangana, Hyderabad",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-06",
-   "url": "https://apply.careers.microsoft.com/careers/job/1970393556944053",
-   "roleId": "aiops",
-   "source": "eightfold",
-   "years": null,
-   "ai": "title",
-   "openings": 1,
-   "firstSeen": "2026-10-22"
-  },
-  {
-   "id": "eightfold:1970393556950492",
-   "title": "Senior Consultant - (Dotnet Full stack + AI)",
-   "company": "Microsoft",
-   "companyId": "microsoft",
-   "location": "India, Telangana, Hyderabad · India, Karnataka, Bangalore · India, Uttar Pradesh, Noida",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-06",
-   "url": "https://apply.careers.microsoft.com/careers/job/1970393556950492",
-   "roleId": "aiops",
-   "source": "eightfold",
-   "years": null,
-   "ai": "title",
-   "openings": 1,
-   "firstSeen": "2026-10-22"
-  },
-  {
-   "id": "eightfold:1970393556946465",
-   "title": "Senior Consultant - Cloud Infra & AI",
-   "company": "Microsoft",
-   "companyId": "microsoft",
-   "location": "India, Telangana, Hyderabad · India, Karnataka, Bangalore · India, Uttar Pradesh, Noida",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-05",
-   "url": "https://apply.careers.microsoft.com/careers/job/1970393556946465",
-   "roleId": "aiops",
-   "source": "eightfold",
-   "years": null,
-   "ai": "title",
-   "openings": 1,
-   "firstSeen": "2026-10-22"
-  },
-  {
    "id": "infosys:INFSYS-EXTERNAL-254455",
    "title": "Associate Business Analyst",
    "company": "Infosys",
@@ -743,24 +660,6 @@
    "years": null,
    "openings": 2,
    "firstSeen": "2026-10-21"
-  },
-  {
-   "id": "infosys:INFSYS-EXTERNAL-254349",
-   "title": "Cloud development, Agentic AI",
-   "company": "Infosys",
-   "companyId": "infosys",
-   "location": "HYDERABAD",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-01",
-   "url": "https://career.infosys.com/jobdesc?jobReferenceCode=INFSYS-EXTERNAL-254349&sourceId=1",
-   "roleId": "aiops",
-   "source": "infosys",
-   "years": null,
-   "ai": "title",
-   "openings": 2,
-   "firstSeen": "2026-10-22"
   }
  ]
 }
