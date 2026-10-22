@@ -40,6 +40,7 @@
       <p class="nav-label">Job search</p>
       <a class="nav-link" href="#dashboard" data-view="dashboard"><span data-icon="home"></span>Dashboard</a>
       <a class="nav-link" href="#jobs" data-view="jobs"><span data-icon="live"></span>Live jobs<span class="nav-badge nav-badge-new" data-count="jobs"></span></a>
+      <a class="nav-link" href="#ai" data-view="ai"><span data-icon="sparkles"></span>AI jobs<span class="nav-badge nav-badge-new" data-count="ai"></span></a>
       <a class="nav-link" href="#roles" data-view="roles"><span data-icon="target"></span>Role matcher<span class="nav-badge" data-count="roles"></span></a>
       <a class="nav-link" href="#companies" data-view="companies"><span data-icon="building"></span>Companies<span class="nav-badge" data-count="companies"></span></a>
       <a class="nav-link" href="#resume" data-view="resume"><span data-icon="file"></span>Resume &amp; ATS</a>
@@ -116,6 +117,41 @@
           <span class="dimmed small">Opens each site's own search, filtered to Hyderabad and recent postings</span>
         </header>
         <div class="live-links" id="liveLinks"></div>
+      </section>
+    </section>
+
+    <!-- AI jobs -->
+    <section class="view" id="view-ai" data-view="ai" aria-labelledby="h-ai" hidden>
+      <header class="view-head">
+        <h1 id="h-ai">AI jobs</h1>
+        <p class="lede">Every AI-related opening in Hyderabad from companies' own job boards, refreshed every 3 hours. Open "What to do next" on a job to check it suits you and get ready before you apply.</p>
+      </header>
+      <section class="card">
+        <header class="card-head">
+          <h2 class="card-title">Your AI roles</h2>
+          <span class="dimmed small">Your match today, the pay to expect and the next step</span>
+        </header>
+        <ul class="ai-roles" id="aiRoles"></ul>
+      </section>
+      <div class="filters" role="group" aria-label="Filter AI jobs">
+        <div class="segmented" id="aiAreaFilter"></div>
+        <div class="segmented" id="aiSort"></div>
+      </div>
+      <p class="dimmed small" id="aiStatus"></p>
+      <ul class="job-list" id="aiJobList"></ul>
+      <section class="card">
+        <header class="card-head">
+          <h2 class="card-title">More AI openings to check</h2>
+          <span class="dimmed small" id="aiLeadsNote"></span>
+        </header>
+        <ul class="job-list" id="aiLeads"></ul>
+      </section>
+      <section class="card">
+        <header class="card-head">
+          <h2 class="card-title">Is it a real job?</h2>
+          <span class="dimmed small">AI jobs are a common scam in India. Check these before you share documents.</span>
+        </header>
+        <div class="safety" id="aiSafety"></div>
       </section>
     </section>
 

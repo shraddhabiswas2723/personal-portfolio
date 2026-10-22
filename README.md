@@ -21,6 +21,7 @@ https://shraddhabiswas2723.github.io/personal-portfolio/
 
 - **Dashboard:** best match, live jobs in your areas, ATS score, projects, the freshest openings for you, the roles to apply for first, and a 15-day plan.
 - **Live jobs:** real Hyderabad openings that match your roles, refreshed every 3 hours, with your match %, salary range, area and any language the posting needs. Plus one-click LinkedIn, Naukri, Indeed and Amazon searches filtered to recent postings.
+- **AI jobs:** every AI-related opening in Hyderabad from the live feed (all areas), each with a **What to do next** checklist: is it genuine, does it suit you (match, salary, years and language asked), the resume to send, the step that strengthens the application most, finding a referral, and applying on the official site. Also your match for the three AI roles, AI openings to check that the feed can't read yet, and how to tell a real job from a scam.
 - **Role matcher:** roles ranked by profile match with expected salary (₹ LPA), a **Path to 90%** list of the exact actions that raise each score, employers in Gachibowli and Nanakramguda, and job titles to search.
 - **Companies:** employers with offices in Gachibowli or Nanakramguda, filterable by area and role, with careers links.
 - **Resume & ATS:** ATS score per role, keyword coverage, projects needed with ideas, and **Generate** for a tailored ATS resume (copy, Word, .txt or PDF).
@@ -30,7 +31,7 @@ Press Ctrl K (⌘ K on Mac) to search roles, companies and skills. The sun/moon 
 
 ## Live jobs: how it works
 
-`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon Jobs first, more as they're added) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
+`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon, Google, Apple, Microsoft, Uber, HSBC, Accenture, Wipro, Infosys, Capgemini and others) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. A job is marked as AI work when its title says so or its description uses two or more AI terms, and it records the years of experience its minimum qualifications ask for. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
 
 To switch it on:
 

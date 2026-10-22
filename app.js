@@ -13,7 +13,10 @@
     { min: 0, key: "long", label: "Long-term goal", note: "below 60%" },
   ];
   var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  var VIEWS = ["dashboard", "jobs", "roles", "companies", "resume", "skills", "learning", "profile"];
+  var VIEWS = ["dashboard", "jobs", "ai", "roles", "companies", "resume", "skills", "learning", "profile"];
+  // Same test the job feed uses: AI roles, or AI words in the title. The feed also flags jobs by description (job.ai).
+  var AI_ROLE_IDS = ["aidata", "aiops", "aigov"];
+  var AI_TITLE = /\b(ai|aiml|genai|gen ai|generative|llms?|ml|machine learning|agi|artificial intelligence|annotation|annotator|rater|data associate|language data|prompt)\b/i;
 
   // Stroke icons drawn in the Tabler style that Homarr uses.
   var ICONS = {
@@ -458,6 +461,8 @@
 
   var LIVE = { status: "loading", data: null, seen: null };
   var jobFilter = { area: "mine", role: "all", sort: "new" };
+  var aiFilter = { area: "all", sort: "new" };
+  var openNext = {};
 
   function loadJobs() {
     var url = "jobs.json?t=" + Date.now();
@@ -519,7 +524,74 @@
     return LIVE.data && Array.isArray(LIVE.data.jobs) ? LIVE.data.jobs.filter(function (j) { return roleById[j.roleId] && languageOk(j); }) : [];
   }
 
-  function jobCard(j, scores) {
+  function isAiJob(j) {
+    return !!j.ai || AI_ROLE_IDS.indexOf(j.roleId) !== -1 || AI_TITLE.test(j.title);
+  }
+
+  function experienceMonths() {
+    return DATA.experience.reduce(function (sum, job) { return sum + monthsBetween(job.start, job.end); }, 0);
+  }
+
+  function isStretch(j) { return j.years != null && j.years * 12 > experienceMonths() + 3; }
+
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return "the company's site"; }
+  }
+
+  function yearsBadge(j) {
+    if (j.years == null) return "";
+    return '<span class="badge ' + (isStretch(j) ? "badge-yellow" : "badge-gray") + '" title="From the minimum qualifications">Asks ' + j.years + '+ yrs</span>';
+  }
+
+  // The checklist under "What to do next" on an AI job card.
+  function nextSteps(j, role, pct, sc, have, ctx) {
+    var mine = formatDuration(experienceMonths());
+    var a = ctx.ats[role.id];
+    var steps = [];
+    steps.push({ cls: "is-ok", title: "It's a genuine posting",
+      text: "Listed on " + hostOf(j.url) + ", " + j.company + "'s own job board. Real employers never charge a fee, so ignore anyone who asks." });
+
+    var fit = [pct + "% match for " + role.short + ", paying about " + salaryText(role) + "."];
+    var warn = false;
+    if (j.years != null) {
+      warn = isStretch(j);
+      fit.push("Asks for " + j.years + "+ years; you have " + mine + (warn ? ", so apply as a stretch and lead with your Amazon audit results." : "."));
+    }
+    if ((j.languages || []).length) {
+      warn = true;
+      fit.push("Needs " + j.languages.join(" & ") + ". Apply only if you read and write it fluently; expect a language test.");
+    }
+    steps.push({ cls: warn ? "is-warn" : "is-ok", title: "Check it suits you", text: fit.join(" ") });
+
+    steps.push({ cls: state.generated[role.id] ? "is-ok" : "", title: "Send a resume made for this job",
+      text: state.generated[role.id] ? "Your tailored " + role.short + " resume is ready (ATS " + a.tailored + "/100)."
+        : "Generate the " + role.short + " version first. It lifts your ATS score from " + a.current + " to " + a.tailored + ".",
+      btn: '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">' + icon("file") + (state.generated[role.id] ? "Open resume" : "Generate resume") + '</a>' });
+
+    var act = pathActions(role, have, ctx, sc).filter(function (x) { return x.kind !== "resume" && x.kind !== "referral"; })[0];
+    if (act) {
+      steps.push({ title: "Strengthen your application",
+        text: act.label + (act.detail ? ". " + act.detail : "") + " (+" + act.gain.toFixed(1) + "% match" + (act.time ? ", about " + act.time : "") + ")",
+        btn: '<a class="button button-default button-sm" href="#roles" data-open-role="' + role.id + '">' + icon("target") + 'Your plan for 90%</a>' });
+    }
+
+    var people = "https://www.linkedin.com/search/results/people/?" + new URLSearchParams({ keywords: j.company + " " + role.short + " Hyderabad" });
+    steps.push({ cls: state.referrals[role.id] ? "is-ok" : "", title: "Ask for a referral",
+      text: "A referral adds 5% to your match and gets your resume read sooner. Message people at " + j.company + " in Hyderabad, starting with former Amazon colleagues.",
+      btn: '<a class="button button-default button-sm" href="' + esc(people) + '" target="_blank" rel="noopener">' + icon("link") + 'Find people on LinkedIn</a>' +
+        '<button type="button" class="button button-default button-sm" data-referral="' + role.id + '">' + icon(state.referrals[role.id] ? "check" : "handshake") + (state.referrals[role.id] ? "Referral added" : "I have a referral") + '</button>' });
+
+    steps.push({ title: "Apply on the official site",
+      text: "Apply within a few days of the posting date, note the date, and follow up with the recruiter after a week.",
+      btn: '<a class="button button-sm" href="' + esc(j.url) + '" target="_blank" rel="noopener">Apply on ' + esc(hostOf(j.url)) + icon("external") + '</a>' });
+
+    return '<details class="job-next" data-job="' + esc(j.id) + '"' + (openNext[j.id] ? " open" : "") + '><summary>What to do next' + icon("chevron") + '</summary><ol class="next-steps">' + steps.map(function (st) {
+      return '<li class="' + st.cls + '"><strong>' + esc(st.title) + '</strong><span class="dimmed">' + esc(st.text) + '</span>' +
+        (st.btn ? '<span class="button-row">' + st.btn + '</span>' : '') + '</li>';
+    }).join("") + '</ol></details>';
+  }
+
+  function jobCard(j, scores, more) {
     var role = roleById[j.roleId];
     var pct = scores[j.roleId];
     var t = tierFor(pct);
@@ -531,7 +603,7 @@
         '<span class="job-company">' + esc(j.company) + ' · ' + esc(j.location.split(" · ")[0]) + (j.openings > 1 ? ' · ' + j.openings + ' openings' : '') + '</span>' +
         '<span class="job-badges">' + (isNewJob(j) ? '<span class="badge badge-green">New</span>' : '') + area +
           '<span class="badge badge-blue">' + esc(role.short) + '</span>' +
-          ((j.languages || []).length ? '<span class="badge badge-yellow">Needs ' + esc(j.languages.join(" & ")) + '</span>' : '') +
+          ((j.languages || []).length ? '<span class="badge badge-yellow">Needs ' + esc(j.languages.join(" & ")) + '</span>' : '') + yearsBadge(j) +
           '<span class="job-posted">' + icon("clock") + agoText(j.posted || j.firstSeen) + '</span></span>' +
       '</div>' +
       '<div class="job-side">' +
@@ -539,7 +611,7 @@
         '<span class="salary">' + salaryText(role) + '</span>' +
         '<span class="button-row"><a class="button button-sm" href="' + esc(j.url) + '" target="_blank" rel="noopener">Apply' + icon("external") + '</a>' +
         '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">Tailor resume</a></span>' +
-      '</div></li>';
+      '</div>' + (more ? more(j, role, pct) : '') + '</li>';
   }
 
   function feedStatus() {
@@ -596,6 +668,76 @@
           return '<a class="button button-default button-sm" href="' + esc(l[1]) + '" target="_blank" rel="noopener">' + l[0] + icon("external") + '</a>';
         }).join("") + '</div></div>';
     }).join("");
+  }
+
+  // ---------- AI jobs ----------
+
+  function leadCard(l, scores) {
+    var role = roleById[l.roleId];
+    var pct = scores[l.roleId];
+    var fit = { now: ["Apply now", "badge-green", tierFor(pct).key], stretch: ["Stretch", "badge-yellow", "build"], later: ["Later", "badge-gray", "long"] }[l.fit];
+    return '<li class="job tier-' + fit[2] + '">' +
+      '<div class="job-main">' +
+        '<a class="job-title" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.title) + icon("external") + '</a>' +
+        '<span class="job-company">' + esc(l.company) + ' · ' + esc(l.place) + '</span>' +
+        '<span class="job-badges"><span class="badge ' + fit[1] + '">' + fit[0] + '</span><span class="badge badge-blue">' + esc(role.short) + '</span>' +
+          '<a class="job-posted" href="' + esc(l.source) + '" target="_blank" rel="noopener">' + icon("info") + 'Seen on ' + esc(hostOf(l.source)) + '</a></span>' +
+        '<span class="dimmed small">' + esc(l.asks) + (l.note ? " " + esc(l.note) : "") + '</span>' +
+      '</div>' +
+      '<div class="job-side">' +
+        '<span class="job-match"><strong>' + pct + '%</strong> match</span>' +
+        '<span class="salary">' + salaryText(role) + '</span>' +
+        '<span class="button-row"><a class="button button-sm" href="' + esc(l.url) + '" target="_blank" rel="noopener">Official site' + icon("external") + '</a>' +
+        '<a class="button button-default button-sm" href="#resume" data-ats-role="' + role.id + '">Tailor resume</a></span>' +
+      '</div></li>';
+  }
+
+  function renderAi(ranked, have, ctx, scores) {
+    var all = liveJobs().filter(isAiJob);
+    var mine = all.filter(inMyAreas);
+
+    $("aiRoles").innerHTML = ranked.filter(function (r) { return AI_ROLE_IDS.indexOf(r.role.id) !== -1; }).map(function (r) {
+      var t = tierFor(r.pct);
+      var n = all.filter(function (j) { return j.roleId === r.role.id; }).length;
+      var act = pathActions(r.role, have, ctx, r.score)[0];
+      return '<li class="top-role tier-' + t.key + '">' + ring(r.pct) +
+        '<div class="top-role-text"><a href="#roles" data-open-role="' + r.role.id + '">' + esc(r.role.title) + '</a>' +
+        '<span class="salary">' + salaryText(r.role) + '</span>' +
+        '<span class="top-role-meta"><span class="badge">' + t.label + '</span><span class="dimmed small">' + (LIVE.status === "ok" ? n + " live" : "") + '</span></span>' +
+        (act ? '<span class="ai-next">Next: <strong>' + esc(act.label) + '</strong> (+' + act.gain.toFixed(1) + '%)</span>' : '') + '</div></li>';
+    }).join("");
+
+    $("aiAreaFilter").innerHTML = [["all", "All Hyderabad (" + all.length + ")"], ["mine", "Gachibowli & Nanakramguda (" + mine.length + ")"]].map(function (x) {
+      return '<button type="button" data-ai-area="' + x[0] + '" aria-pressed="' + (aiFilter.area === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    $("aiSort").innerHTML = [["new", "Newest"], ["match", "Best match"]].map(function (x) {
+      return '<button type="button" data-ai-sort="' + x[0] + '" aria-pressed="' + (aiFilter.sort === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+
+    var list = (aiFilter.area === "mine" ? mine : all).slice().sort(function (x, y) {
+      if (aiFilter.sort === "match" && scores[y.roleId] !== scores[x.roleId]) return scores[y.roleId] - scores[x.roleId];
+      return (y.posted || y.firstSeen || "").localeCompare(x.posted || x.firstSeen || "");
+    });
+    var companies = [];
+    all.forEach(function (j) { if (companies.indexOf(j.company) === -1) companies.push(j.company); });
+    $("aiStatus").textContent = LIVE.status !== "ok" ? feedStatus()
+      : all.length + (all.length === 1 ? " AI opening" : " AI openings") + (companies.length ? " from " + companies.join(", ") : "") +
+        ". Updated " + hoursAgoText(LIVE.data.updated) + "; refreshes every 3 hours.";
+    $("aiJobList").innerHTML = list.length ? list.map(function (j) {
+      return jobCard(j, scores, function (job, role, pct) { return nextSteps(job, role, pct, scoreRole(role, have, ctx), have, ctx); });
+    }).join("") : (LIVE.status === "ok" ? '<li class="empty">No AI openings match this filter right now. Try All Hyderabad, or the openings to check below.</li>' : "");
+
+    $("aiLeadsNote").textContent = "Seen on job boards and company pages on " + DATA.aiLeadsChecked + ". Confirm each is still open on the official site.";
+    $("aiLeads").innerHTML = DATA.aiLeads.map(function (l) { return leadCard(l, scores); }).join("");
+
+    var sf = DATA.aiSafety;
+    $("aiSafety").innerHTML =
+      '<div class="safety-real"><h3>' + icon("check") + 'Signs it\'s real</h3><ul>' + sf.real.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></div>' +
+      '<div class="safety-scam"><h3>' + icon("alert") + 'Signs of a scam</h3><ul>' + sf.scam.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></div>' +
+      '<div class="safety-foot"><span>' + esc(sf.freelance) + '</span><span>Every job in the list above comes straight from the company\'s own careers site.</span></div>';
+
+    var newAi = all.filter(isNewJob).length;
+    document.querySelector('[data-count="ai"]').textContent = LIVE.status === "ok" ? (newAi ? newAi + " new" : String(all.length)) : "";
   }
 
   // ---------- Dashboard ----------
@@ -988,6 +1130,7 @@
     liveJobs().forEach(function (j) { jobCounts[j.roleId] = (jobCounts[j.roleId] || 0) + 1; });
     renderDashboard(ranked, ctx, scores);
     renderJobs(scores);
+    renderAi(ranked, have, ctx, scores);
     liveLinks(ranked);
     renderRoles(ranked, have, ctx, jobCounts);
     renderResume(ranked, ctx);
@@ -1319,6 +1462,12 @@
     } else if (t.dataset.jobSort) {
       jobFilter.sort = t.dataset.jobSort;
       renderScored();
+    } else if (t.dataset.aiArea) {
+      aiFilter.area = t.dataset.aiArea;
+      renderScored();
+    } else if (t.dataset.aiSort) {
+      aiFilter.sort = t.dataset.aiSort;
+      renderScored();
     } else if (t.dataset.area) {
       companyFilter.area = t.dataset.area;
       renderCompanies();
@@ -1366,6 +1515,12 @@
     companyFilter.role = this.value;
     renderCompanies();
   });
+
+  $("aiJobList").addEventListener("toggle", function (e) {
+    var d = e.target;
+    if (!d.dataset || !d.dataset.job) return;
+    if (d.open) openNext[d.dataset.job] = true; else delete openNext[d.dataset.job];
+  }, true);
 
   $("roleList").addEventListener("toggle", function (e) {
     var d = e.target;

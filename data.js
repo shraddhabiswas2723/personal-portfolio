@@ -569,6 +569,53 @@ window.PROFILE_DATA = {
   ],
   companyNote: "Not listed because their Hyderabad offices are outside these two areas: Genpact (Uppal, Hafeezpet, Kondapur), Google (Kondapur; its Gachibowli campus isn't open yet), JPMorgan, Goldman Sachs, Novartis, EY, S&P Global and Invesco (Raidurg / HITEC City). Big employers run several sites, so check the location on each posting. \"Verify\" means only secondary sources place the office here.",
 
+  // AI openings seen on job boards and company pages that the live feed can't read yet. Recheck before applying.
+  aiLeadsChecked: "22 Oct 2026",
+  aiLeads: [
+    { company: "Apple", title: "AIML Annotation Analyst (language-based)", roleId: "aidata", place: "WaveRock, Nanakramguda", fit: "now",
+      asks: "Fluent English plus an Indian language; a language test, then interviews with team leads. Hiring can take up to 3 months.",
+      note: "Apple is hiring an Annotation Team Lead for a 25–30 analyst team in Hyderabad, so analyst roles open often.",
+      url: "https://jobs.apple.com/en-in/search?search=annotation&location=hyderabad-HYD", source: "https://jobs.apple.com/es-es/details/200554635/aiml-annotation-team-lead" },
+    { company: "Accenture", title: "Trust & Safety Associate (testing generative AI)", roleId: "ts", place: "Hyderabad", fit: "now",
+      asks: "0–1 years; the team tests and challenges AI systems for safety and quality.",
+      note: "Entry level, so ask to be considered at Analyst level given your 3 years.",
+      url: "https://www.accenture.com/in-en/careers/jobdetails?id=AIOC-S01664639_en", source: "https://www.accenture.com/in-en/careers/jobdetails?id=AIOC-S01664639_en" },
+    { company: "Cognizant", title: "Process Executive, Generative AI projects", roleId: "aidata", place: "Hyderabad", fit: "now",
+      asks: "12–24 months in content moderation or data processing.",
+      url: "https://careers.cognizant.com/in-en/", source: "https://in.indeed.com/q-content-moderator,-cognizant,-trust-and-safety-l-hyderabad,-telangana-jobs.html" },
+    { company: "Wipro", title: "Policy SME (data annotation)", roleId: "aidata", place: "Financial District", fit: "now",
+      asks: "Writing and owning the guidelines annotation teams follow, close to your policy and SOP work.",
+      url: "https://careers.wipro.com/careers-home/jobs?keywords=annotation&location=Hyderabad", source: "https://in.indeed.com/q-data-annotation-l-hyderabad,-telangana-jobs.html" },
+    { company: "Genpact", title: "Associate, Trust & Safety Moderation Services", roleId: "ts", place: "Uppal (outside your two areas)", fit: "now",
+      asks: "Content moderation; AI-generated content is part of the queue.",
+      url: "https://www.genpact.com/careers", source: "https://in.indeed.com/q-remote-work-from-home-content-moderation-l-hyderabad,-telangana-jobs.html" },
+    { company: "Google", title: "Analyst, Trust and Safety (generative AI)", roleId: "ts", place: "Kondapur", fit: "stretch",
+      asks: "4 years in Trust & Safety, policy or data analytics; SQL or Python preferred.",
+      note: "Pays far above the Trust & Safety range, but you are about a year short. A target for 2027.",
+      url: "https://www.google.com/about/careers/applications/jobs/results/?location=Hyderabad%2C%20Telangana%2C%20India&q=trust%20and%20safety", source: "https://jobs.anitab.org/companies/google-24698/jobs/57883756-analyst-trust-and-safety" },
+    { company: "Uber", title: "Data Analyst, Tech (AI data labelling programs)", roleId: "aidata", place: "Hyderabad", fit: "stretch",
+      asks: "SQL, Excel and Python (numpy, pandas) for checking data used to train AI.",
+      url: "https://www.uber.com/global/en/careers/list/157510", source: "https://jobs.anitab.org/companies/uber/jobs/65750898-data-analyst-ii-tech" },
+    { company: "Infosys, EY", title: "AI Governance / AI Ethics roles", roleId: "aigov", place: "Hyderabad", fit: "later",
+      asks: "8–10 years, or manager level, with NIST AI RMF and EU AI Act experience.",
+      url: "https://www.infosys.com/careers/", source: "https://www.foundit.in/search/ai-governance-jobs-in-hyderabad-secunderabad-telangana" },
+  ],
+  aiSafety: {
+    real: [
+      "You apply on the company's own careers site (amazon.jobs, jobs.apple.com, google.com/about/careers).",
+      "Recruiters write from the company's domain, such as @amazon.com or @apple.com, and have a real LinkedIn profile.",
+      "There is a test or interview before any offer.",
+      "You never pay anything, at any stage.",
+    ],
+    scam: [
+      "Any fee: registration, training, a laptop \"kit\" or a \"refundable deposit\".",
+      "Recruiting only on WhatsApp or Telegram, or an offer with no interview.",
+      "\"Rate AI answers from home and earn ₹40–50k a month\" task schemes.",
+      "Offer letters from Gmail or Yahoo, or requests for OTPs, bank details or Aadhaar before an offer.",
+    ],
+    freelance: "Outlier, DataAnnotation, Toloka, Mercor and TELUS Digital are real, but they offer contract work paid per task, not a salaried job, and scammers copy their names. Sign up only on their own websites.",
+  },
+
   learning: [
     {
       title: "Claude Code for Non-Coders (6-hour course)",
