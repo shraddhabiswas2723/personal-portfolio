@@ -31,7 +31,7 @@ Press Ctrl K (⌘ K on Mac) to search roles, companies and skills. The sun/moon 
 
 ## Live jobs: how it works
 
-`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon, Google, Apple, Microsoft, Uber, HSBC, Accenture, Wipro, Infosys, Capgemini and others) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. A job is marked as AI work when its title says so or its description uses two or more AI terms, and it records the years of experience its minimum qualifications ask for. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
+`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon, Google, Microsoft, Apple, HSBC, DBS, Accenture, Infosys, Capgemini and others) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. A job is marked as AI work when its title says so or its description uses two or more AI terms, and it records the years of experience its minimum qualifications ask for. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
 
 To switch it on:
 

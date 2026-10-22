@@ -585,7 +585,7 @@ window.PROFILE_DATA = {
       url: "https://careers.cognizant.com/in-en/", source: "https://in.indeed.com/q-content-moderator,-cognizant,-trust-and-safety-l-hyderabad,-telangana-jobs.html" },
     { company: "Wipro", title: "Policy SME (data annotation)", roleId: "aidata", place: "Financial District", fit: "now",
       asks: "Writing and owning the guidelines annotation teams follow, close to your policy and SOP work.",
-      url: "https://careers.wipro.com/careers-home/jobs?keywords=annotation&location=Hyderabad", source: "https://in.indeed.com/q-data-annotation-l-hyderabad,-telangana-jobs.html" },
+      url: "https://careers.wipro.com", source: "https://in.indeed.com/q-data-annotation-l-hyderabad,-telangana-jobs.html" },
     { company: "Genpact", title: "Associate, Trust & Safety Moderation Services", roleId: "ts", place: "Uppal (outside your two areas)", fit: "now",
       asks: "Content moderation; AI-generated content is part of the queue.",
       url: "https://www.genpact.com/careers", source: "https://in.indeed.com/q-remote-work-from-home-content-moderation-l-hyderabad,-telangana-jobs.html" },

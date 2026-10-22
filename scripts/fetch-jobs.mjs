@@ -37,10 +37,6 @@ const SMARTRECRUITERS = [
   { company: "IQ-EQ", id: "IQEQ" },
   { company: "ServiceNow", id: "ServiceNow" },
 ];
-// Jibe (iCIMS) career sites answer GET /api/jobs.
-const JIBE = [
-  { company: "Wipro", host: "careers.wipro.com", path: "careers-home" },
-];
 const GREENHOUSE = [];
 const LEVER = [];
 // Extra searches for AI work at companies whose sites need a search term.
@@ -73,8 +69,13 @@ function aiReason(title, text, roleId) {
   return AI_TEXT.filter((w) => t.includes(w)).length >= 2 ? "description" : null;
 }
 
-// AI titles that none of the role phrases cover ("AI Solutions Analyst").
+// AI titles that none of the role phrases cover ("AI Solutions Analyst"). Only non-technical job types qualify,
+// so "Senior Consultant - Cloud Infra & AI" or "AI Product Owner" stay out.
+const AI_FALLBACK_JOB = /\b(analyst|associate|specialist|executive|reviewer|trainer|rater|annotator|evaluator|moderator|linguist|coordinator|auditor|writer)\b/i;
+const TECHNICAL = /\b(cloud|infra|infrastructure|dotnet|\.net|full ?stack|devops|development|python|java|sap|azure|aws|gcp|platform|product owner|product manager|sales|pre-?sales|solutions? architect|software|mlops|data engineer)\b/i;
+
 function aiRoleFor(title) {
+  if (!AI_FALLBACK_JOB.test(title) || TECHNICAL.test(title)) return null;
   const t = title.toLowerCase();
   if (/governance|responsible|ethic|risk|policy|compliance|assurance/.test(t)) return "aigov";
   if (/data|quality|annotat|evaluat|language|rater|trainer/.test(t)) return "aidata";
@@ -178,10 +179,15 @@ function workdayPosted(text) {
   return m ? toISO(new Date(now - parseInt(m[1], 10) * 86400000)) : null;
 }
 
+function roleFor(title) {
+  const roleId = classify(title);
+  if (roleId || EXCLUDE.test(title) || !AI_TITLE.test(title)) return roleId;
+  return aiRoleFor(title);
+}
+
 function makeJob({ id, title, companyName, location, posted, url, source, years, text }) {
   if (!title || !url || !isHyderabad(location)) return null;
-  let roleId = classify(title);
-  if (!roleId && !EXCLUDE.test(title) && AI_TITLE.test(title)) roleId = aiRoleFor(title);
+  const roleId = roleFor(title);
   if (!roleId) return null;
   if (years != null && years > MAX_YEARS) return null;
   const company = companyFor(companyName);
@@ -292,28 +298,6 @@ async function smartrecruiters(cfg) {
   }));
 }
 
-async function jibe(cfg) {
-  const out = [];
-  for (let page = 1; page <= 5; page++) {
-    const data = await getJSON(`https://${cfg.host}/api/jobs?` + new URLSearchParams({
-      location: "Hyderabad", page: String(page), limit: "100", sortBy: "posted_date", descending: "true", internal: "false",
-    }));
-    const list = data.jobs || [];
-    for (const item of list) {
-      const j = item.data || item;
-      out.push({
-        id: j.req_id || j.slug, title: j.title, companyName: cfg.company,
-        location: [j.full_location, j.location_name, j.city, j.state].filter(Boolean).join(" · "),
-        posted: toISO(j.posted_date || j.create_date), url: `https://${cfg.host}/${cfg.path}/jobs/${j.slug}?lang=en-us`, source: "jibe",
-        years: minimumYears(j.qualifications || j.description), text: [j.description, j.qualifications, j.responsibilities].join(" "),
-      });
-    }
-    if (list.length < 100) break;
-    await sleep(500);
-  }
-  return out;
-}
-
 // Google's careers page is server-rendered; the results sit in an AF_initDataCallback block.
 function googleJobs(html) {
   const m = html.match(/AF_initDataCallback\(\{key: 'ds:1',[^]*?data:([^]*?), sideChannel: \{\}\}\);/);
@@ -382,30 +366,22 @@ async function apple() {
     out.push(...appleJobs(html));
     await sleep(600);
   }
+  if (!out.length) await appleDiagnose();
   return out;
 }
 
-async function uber() {
-  const out = [];
-  for (let page = 0; page < 5; page++) {
-    const data = await getJSON("https://www.uber.com/api/loadSearchJobsResults?localeCode=en", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-csrf-token": "x" },
-      body: JSON.stringify({ limit: 50, page, params: { location: [{ country: "IND", region: "Telangana", city: "Hyderabad" }], department: [], team: [] } }),
-    });
-    const list = (data.data && data.data.results) || [];
-    for (const j of list) {
-      out.push({
-        id: j.id, title: j.title, companyName: "Uber",
-        location: [].concat(j.location || [], j.allLocations || []).map((l) => [l.city, l.region, l.countryName].filter(Boolean).join(", ")).join(" · "),
-        posted: toISO(j.creationDate || j.updatedDate), url: `https://www.uber.com/global/en/careers/list/${j.id}/`, source: "uber",
-        years: minimumYears(j.description), text: j.description || "",
-      });
-    }
-    if (list.length < 50) break;
+// Temporary: shows what Apple's page returns when no postings are parsed.
+async function appleDiagnose() {
+  for (const loc of ["hyderabad-HYD", "india-INDC", ""]) {
+    const params = { search: "annotation", sort: "newest" };
+    if (loc) params.location = loc;
+    const html = await getText("https://jobs.apple.com/en-in/search?" + new URLSearchParams(params));
+    const at = html.indexOf("postingTitle");
+    const hyd = html.indexOf("__staticRouterHydrationData");
+    console.log(`    apple [${loc || "no location"}]: ${html.length} chars, postingTitle x${(html.match(/postingTitle/g) || []).length}, hydration at ${hyd}`);
+    console.log("      " + (at !== -1 ? html.slice(Math.max(0, at - 200), at + 300) : html.slice(Math.max(0, hyd), hyd + 400)).replace(/\s+/g, " "));
     await sleep(600);
   }
-  return out;
 }
 
 async function infosys() {
@@ -458,10 +434,8 @@ const SOURCES = [
   ...EIGHTFOLD.map((c) => ({ name: c.company, run: () => eightfold(c) })),
   ...WORKDAY.map((c) => ({ name: c.company, run: () => workday(c) })),
   ...SMARTRECRUITERS.map((c) => ({ name: c.company, run: () => smartrecruiters(c) })),
-  ...JIBE.map((c) => ({ name: c.company, run: () => jibe(c) })),
   { name: "Google", run: google },
   { name: "Apple", run: apple },
-  { name: "Uber", run: uber },
   { name: "Infosys", run: infosys },
   { name: "Capgemini", run: capgemini },
   ...GREENHOUSE.map((c) => ({ name: c.company, run: () => greenhouse(c) })),
@@ -497,7 +471,7 @@ for (const src of SOURCES) {
 // A source that failed this run (often a rate limit) keeps its previous jobs until it answers again.
 const failed = new Set(report.filter((r) => !r.ok).map((r) => r.name));
 for (const j of previous.jobs || []) {
-  if (failed.has(j.company) && !found.has(j.id)) found.set(j.id, j);
+  if (failed.has(j.company) && !found.has(j.id) && roleFor(j.title)) found.set(j.id, j);
 }
 
 // Merge repeat postings (Amazon lists one post per opening) into one card with a count.
