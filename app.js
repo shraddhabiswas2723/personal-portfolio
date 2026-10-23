@@ -171,7 +171,9 @@
       referral: state.referrals[role.id] ? W.referral : 0,
     };
     var value = parts.exp + parts.skills + parts.resume + parts.proof + parts.referral;
-    var max = parts.exp + W.skills + W.resume + W.proof + W.referral;
+    // Best reachable: every skill, project, certificate and referral, plus the better of the two resumes.
+    var bestAts = Math.max(ctx.ats[role.id].tailored, ctx.ats[role.id].used);
+    var max = parts.exp + W.skills + W.resume * bestAts / 100 + W.proof + W.referral;
     return { value: value, parts: parts, certHit: certHit, max: max };
   }
 
@@ -826,9 +828,9 @@
         '<span class="path-after">' + Math.round(run) + '%' + (mark ? ' <span class="badge badge-green">90% reached</span>' : '') + '</span>' +
         (btn ? '<span class="path-btn">' + btn + '</span>' : '') + '</li>';
     }).join("");
-    var head = sc.max < 90
-      ? '<p class="dimmed small">The highest you can reach here is ' + Math.round(sc.max) + '%, because your experience covers ' + role.exp + '% of what this role expects.</p>'
-      : '';
+    var head = '<p class="dimmed small">' + (sc.max < 90
+      ? 'The highest you can reach here is ' + Math.round(sc.max) + '%, because your experience covers ' + role.exp + '% of what this role expects.'
+      : 'Experience gives you ' + sc.parts.exp.toFixed(1) + ' of ' + W.exp + ' points and only changes with new work experience, so the most you can reach here is ' + Math.round(sc.max) + '%.') + '</p>';
     return head + '<ol class="path">' + items + '</ol>';
   }
 
