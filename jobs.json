@@ -1,10 +1,10 @@
 {
- "updated": "2026-10-22T14:36:42.749Z",
+ "updated": "2026-10-23T13:03:53.231Z",
  "sources": [
   {
    "name": "Amazon",
    "ok": true,
-   "count": 63
+   "count": 62
   },
   {
    "name": "Microsoft",
@@ -15,7 +15,7 @@
   {
    "name": "HSBC",
    "ok": true,
-   "count": 1
+   "count": 4
   },
   {
    "name": "The Hartford",
@@ -624,40 +624,6 @@
    "roleId": "risk",
    "source": "amazon",
    "years": 2,
-   "openings": 2,
-   "firstSeen": "2026-10-21"
-  },
-  {
-   "id": "infosys:INFSYS-EXTERNAL-254455",
-   "title": "Associate Business Analyst",
-   "company": "Infosys",
-   "companyId": "infosys",
-   "location": "HYDERABAD",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-01",
-   "url": "https://career.infosys.com/jobdesc?jobReferenceCode=INFSYS-EXTERNAL-254455&sourceId=1",
-   "roleId": "ops",
-   "source": "infosys",
-   "years": null,
-   "openings": 1,
-   "firstSeen": "2026-10-21"
-  },
-  {
-   "id": "infosys:INFSYS-EXTERNAL-254394",
-   "title": "eGRC Tester",
-   "company": "Infosys",
-   "companyId": "infosys",
-   "location": "HYDERABAD",
-   "languages": [],
-   "area": "gachibowli",
-   "areaFrom": "company",
-   "posted": "2026-10-01",
-   "url": "https://career.infosys.com/jobdesc?jobReferenceCode=INFSYS-EXTERNAL-254394&sourceId=1",
-   "roleId": "grc",
-   "source": "infosys",
-   "years": null,
    "openings": 2,
    "firstSeen": "2026-10-21"
   }
