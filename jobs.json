@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T13:03:53.231Z",
+ "updated": "2026-10-23T13:31:53.353Z",
  "sources": [
   {
    "name": "Amazon",
@@ -8,9 +8,8 @@
   },
   {
    "name": "Microsoft",
-   "ok": false,
-   "count": 0,
-   "error": "HTTP 429"
+   "ok": true,
+   "count": 0
   },
   {
    "name": "HSBC",
@@ -38,6 +37,21 @@
    "count": 0
   },
   {
+   "name": "State Street",
+   "ok": true,
+   "count": 2
+  },
+  {
+   "name": "Novartis",
+   "ok": true,
+   "count": 4
+  },
+  {
+   "name": "Synchrony",
+   "ok": true,
+   "count": 0
+  },
+  {
    "name": "Accenture",
    "ok": false,
    "count": 0,
@@ -57,6 +71,11 @@
    "name": "ServiceNow",
    "ok": true,
    "count": 0
+  },
+  {
+   "name": "JPMorgan Chase",
+   "ok": true,
+   "count": 2
   },
   {
    "name": "Google",
@@ -214,14 +233,48 @@
    "firstSeen": "2026-10-22"
   },
   {
+   "id": "workday:REQ-10088594",
+   "title": "Sr. eCompliance Specialist",
+   "company": "Novartis",
+   "companyId": "novartis",
+   "location": "Hyderabad (Office) · /job/Hyderabad-Office/Sr-eCompliance-Specialist_REQ-10088594",
+   "languages": [],
+   "area": "knowledgecity",
+   "areaFrom": "company",
+   "posted": "2026-10-22",
+   "url": "https://novartis.wd3.myworkdayjobs.com/en-US/Novartis_Careers/job/Hyderabad-Office/Sr-eCompliance-Specialist_REQ-10088594",
+   "roleId": "compliance",
+   "source": "workday",
+   "years": null,
+   "openings": 1,
+   "firstSeen": "2026-10-23"
+  },
+  {
+   "id": "workday:REQ-10090208",
+   "title": "Data Analyst, MMF - Insights & Operational Excellence",
+   "company": "Novartis",
+   "companyId": "novartis",
+   "location": "Hyderabad (Office) · /job/Hyderabad-Office/Data-Analyst--MMF---Insights---Operational-Excellence_REQ-10090208-1",
+   "languages": [],
+   "area": "knowledgecity",
+   "areaFrom": "company",
+   "posted": "2026-10-22",
+   "url": "https://novartis.wd3.myworkdayjobs.com/en-US/Novartis_Careers/job/Hyderabad-Office/Data-Analyst--MMF---Insights---Operational-Excellence_REQ-10090208-1",
+   "roleId": "ops",
+   "source": "workday",
+   "years": null,
+   "openings": 1,
+   "firstSeen": "2026-10-23"
+  },
+  {
    "id": "google:76233263839879878",
    "title": "Scaled Abuse Analyst, Trust and Safety, YouTube",
    "company": "Google",
-   "companyId": null,
+   "companyId": "google",
    "location": "Hyderabad, Telangana, India",
    "languages": [],
-   "area": "hyderabad",
-   "areaFrom": "none",
+   "area": "kondapur",
+   "areaFrom": "company",
    "posted": "2026-10-22",
    "url": "https://www.google.com/about/careers/applications/jobs/results/76233263839879878-scaled-abuse-analyst-trust-and-safety-youtube",
    "roleId": "ts",
@@ -235,11 +288,11 @@
    "id": "google:133116085586010822",
    "title": "Content Specialist, YouTube Trust and Safety",
    "company": "Google",
-   "companyId": null,
+   "companyId": "google",
    "location": "Hyderabad, Telangana, India",
    "languages": [],
-   "area": "hyderabad",
-   "areaFrom": "none",
+   "area": "kondapur",
+   "areaFrom": "company",
    "posted": "2026-10-22",
    "url": "https://www.google.com/about/careers/applications/jobs/results/133116085586010822-content-specialist-youtube-trust-and-safety",
    "roleId": "ts",
@@ -395,6 +448,42 @@
    "firstSeen": "2026-10-21"
   },
   {
+   "id": "workday:REQ-10089858",
+   "title": "Business Analyst - AI Content Engine",
+   "company": "Novartis",
+   "companyId": "novartis",
+   "location": "Hyderabad (Office) · /job/Hyderabad-Office/Business-Analyst---AI-Content-Engine_REQ-10089858",
+   "languages": [],
+   "area": "knowledgecity",
+   "areaFrom": "company",
+   "posted": "2026-10-14",
+   "url": "https://novartis.wd3.myworkdayjobs.com/en-US/Novartis_Careers/job/Hyderabad-Office/Business-Analyst---AI-Content-Engine_REQ-10089858",
+   "roleId": "ops",
+   "source": "workday",
+   "years": null,
+   "ai": "title",
+   "openings": 1,
+   "firstSeen": "2026-10-23"
+  },
+  {
+   "id": "oracle:210800119",
+   "title": "Applied AI /ML Associate",
+   "company": "JPMorgan Chase",
+   "companyId": "jpmorgan",
+   "location": "Hyderabad, Telangana, India · Bengaluru, Karnataka, India · Mumbai, Maharashtra, India",
+   "languages": [],
+   "area": "knowledgecity",
+   "areaFrom": "company",
+   "posted": "2026-10-14",
+   "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210800119",
+   "roleId": "aiops",
+   "source": "oracle",
+   "years": null,
+   "ai": "title",
+   "openings": 1,
+   "firstSeen": "2026-10-23"
+  },
+  {
    "id": "amazon:10576773",
    "title": "Investigation Specialist, Sales Abuse Pre Operations-VAR",
    "company": "Amazon",
@@ -480,14 +569,31 @@
    "firstSeen": "2026-10-21"
   },
   {
+   "id": "workday:R-798882",
+   "title": "Anti-Money Laundering - Senior Associate",
+   "company": "State Street",
+   "companyId": "statestreet",
+   "location": "2 Locations · /job/Hyderabad-India/Anti-Money-Laundering---Senior-Associate_R-798882",
+   "languages": [],
+   "area": "knowledgecity",
+   "areaFrom": "company",
+   "posted": "2026-10-08",
+   "url": "https://statestreet.wd1.myworkdayjobs.com/en-US/Global/job/Hyderabad-India/Anti-Money-Laundering---Senior-Associate_R-798882",
+   "roleId": "aml",
+   "source": "workday",
+   "years": null,
+   "openings": 1,
+   "firstSeen": "2026-10-23"
+  },
+  {
    "id": "google:135283167169782470",
    "title": "Data Analyst, Risk",
    "company": "Google",
-   "companyId": null,
+   "companyId": "google",
    "location": "Hyderabad, Telangana, India",
    "languages": [],
-   "area": "hyderabad",
-   "areaFrom": "none",
+   "area": "kondapur",
+   "areaFrom": "company",
    "posted": "2026-10-08",
    "url": "https://www.google.com/about/careers/applications/jobs/results/135283167169782470-data-analyst-risk",
    "roleId": "ops",
