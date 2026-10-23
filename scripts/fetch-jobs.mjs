@@ -81,7 +81,7 @@ function aiReason(title, text, roleId) {
 // AI titles that none of the role phrases cover ("AI Solutions Analyst"). Only non-technical job types qualify,
 // so "Senior Consultant - Cloud Infra & AI" or "AI Product Owner" stay out.
 const AI_FALLBACK_JOB = /\b(analyst|associate|specialist|executive|reviewer|trainer|rater|annotator|evaluator|moderator|linguist|coordinator|auditor|writer)\b/i;
-const TECHNICAL = /\b(cloud|infra|infrastructure|dotnet|\.net|full ?stack|devops|development|python|java|sap|azure|aws|gcp|platform|product owner|product manager|sales|pre-?sales|solutions? architect|software|mlops|data engineer)\b/i;
+const TECHNICAL = /\b(cloud|infra|infrastructure|dotnet|\.net|full ?stack|devops|development|python|java|sap|azure|aws|gcp|platform|product owner|product manager|sales|pre-?sales|solutions? architect|software|mlops|data engineer|applied ai|ai ?\/ ?ml)\b/i;
 
 function aiRoleFor(title) {
   if (!AI_FALLBACK_JOB.test(title) || TECHNICAL.test(title)) return null;
