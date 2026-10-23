@@ -1,10 +1,11 @@
 name: Refresh live jobs
 
-# Checks the job boards every 3 hours and commits jobs.json when openings change.
+# Checks the job boards every hour and commits jobs.json when openings change.
+# The site's Refresh button can also start it (workflow_dispatch).
 # Scheduled runs only happen on the default branch (main).
 on:
   schedule:
-    - cron: "23 */3 * * *"
+    - cron: "23 * * * *"
   workflow_dispatch:
   push:
     branches: [claude/portfolio-role-matcher-710nn2]

@@ -544,30 +544,52 @@ window.PROFILE_DATA = {
 
   // Employers with an office in Gachibowli or Nanakramguda (incl. Financial District).
   // confirmed: true = address confirmed by the company or a primary news report.
+  // Hyderabad office areas, in the order the job feed tests them (Knowledge City before the wider HITEC City).
+  // The first two are your priority areas.
+  areas: [
+    { id: "gachibowli", label: "Gachibowli", priority: true, match: ["gachibowli", "puppalaguda"] },
+    { id: "nanakramguda", label: "Nanakramguda & Financial District", short: "Nanakramguda", priority: true, match: ["nanakramguda", "financial district", "waverock"] },
+    { id: "knowledgecity", label: "Knowledge City & Raidurg (Sattva)", short: "Knowledge City", match: ["knowledge city", "sattva", "raidurg"] },
+    { id: "mindspace", label: "HITEC City & Raheja Mindspace", short: "HITEC City", match: ["mindspace", "hitec city", "hi-tec city", "hitech city", "hi-tech city", "madhapur"] },
+    { id: "kondapur", label: "Kondapur & Hafeezpet", short: "Kondapur", match: ["kondapur", "kothaguda", "hafeezpet"] },
+  ],
+
+  // Where the live job feed lives, for the Refresh button.
+  feed: { repo: "shraddhabiswas2723/personal-portfolio", branch: "main", workflow: "jobs.yml" },
+
+  // `alsoIn` lists other areas where the company has an office.
   companies: [
-    { id: "amazon", name: "Amazon", area: "nanakramguda", campus: "HYD13 campus, Financial District", confirmed: true, careers: "https://www.amazon.jobs/en/locations/hyderabad-india", roles: ["ts", "risk", "program", "compliance", "aml", "aidata", "ops"] },
+    { id: "amazon", name: "Amazon", area: "nanakramguda", alsoIn: ["mindspace"], campus: "HYD13 campus, Financial District (also Mindspace Building 9)", confirmed: true, careers: "https://www.amazon.jobs/en/locations/hyderabad-india", roles: ["ts", "risk", "program", "compliance", "aml", "aidata", "ops"] },
     { id: "icici", name: "ICICI Bank", area: "nanakramguda", campus: "ICICI Bank Towers, Financial District", confirmed: true, careers: "https://www.icicicareers.com", roles: ["compliance", "aml", "grc", "ops"] },
     { id: "franklin", name: "Franklin Templeton", area: "nanakramguda", campus: "Franklin Templeton Park, Financial District", confirmed: true, careers: "https://www.franklintempleton.com/careers", roles: ["compliance", "aml", "grc", "ops"] },
     { id: "wipro", name: "Wipro", area: "nanakramguda", campus: "Financial District campus, ISB Road", confirmed: true, careers: "https://careers.wipro.com", roles: ["ts", "risk", "compliance", "aml", "aidata", "ops", "aiops"] },
     { id: "dbs", name: "DBS Tech India", area: "nanakramguda", campus: "WaveRock SEZ, Tower 2.1", confirmed: true, careers: "https://www.dbs.com/careers", roles: ["aml", "grc", "compliance", "ops"] },
     { id: "apple", name: "Apple", area: "nanakramguda", campus: "WaveRock IT Park", confirmed: true, careers: "https://jobs.apple.com/en-in/search?location=hyderabad-HYD", roles: ["aidata", "ops"] },
-    { id: "microsoft", name: "Microsoft", area: "gachibowli", campus: "Microsoft IDC campus (plus Phoenix Centaurus, Financial District)", confirmed: true, careers: "https://jobs.careers.microsoft.com/global/en/search?lc=Hyderabad", roles: ["aigov", "aidata", "grc", "ops"] },
+    { id: "microsoft", name: "Microsoft", area: "gachibowli", alsoIn: ["nanakramguda", "knowledgecity"], campus: "Microsoft IDC campus (plus Phoenix Centaurus, Financial District, and Sattva Knowledge City)", confirmed: true, careers: "https://jobs.careers.microsoft.com/global/en/search?lc=Hyderabad", roles: ["aigov", "aidata", "grc", "ops"] },
     { id: "deloitte", name: "Deloitte USI", area: "gachibowli", campus: "Meenakshi Tech Park and Pride Rock", confirmed: true, careers: "https://www2.deloitte.com/ui/en/careers/careers.html", roles: ["compliance", "aml", "grc", "aigov", "ops", "aiops"] },
-    { id: "hsbc", name: "HSBC", area: "gachibowli", campus: "Phoenix Avance Business Hub (H09)", confirmed: true, careers: "https://www.hsbc.com/careers", roles: ["aml", "grc", "compliance", "ops"] },
-    { id: "optum", name: "Optum (UnitedHealth Group)", area: "gachibowli", campus: "Phoenix Infocity SEZ, buildings H04 and H06", confirmed: true, careers: "https://www.unitedhealthgroup.com/careers/in.html", roles: ["risk", "compliance", "grc", "ops", "aidata"] },
+    { id: "hsbc", name: "HSBC", area: "gachibowli", alsoIn: ["mindspace"], campus: "Phoenix Avance Business Hub (H09), plus Mindspace Building 9", confirmed: true, careers: "https://www.hsbc.com/careers", roles: ["aml", "grc", "compliance", "ops"] },
+    { id: "optum", name: "Optum (UnitedHealth Group)", area: "gachibowli", alsoIn: ["mindspace"], campus: "Phoenix Infocity SEZ, buildings H04 and H06, plus Mindspace Buildings 12B and 14", confirmed: true, careers: "https://www.unitedhealthgroup.com/careers/in.html", roles: ["risk", "compliance", "grc", "ops", "aidata"] },
     { id: "capgemini", name: "Capgemini", area: "gachibowli", campus: "Gachibowli campus", confirmed: true, careers: "https://www.capgemini.com/in-en/careers/", roles: ["ts", "compliance", "aml", "aidata", "ops", "aiops"] },
     { id: "infosys", name: "Infosys", area: "gachibowli", campus: "Gachibowli campus (check each posting; Pocharam is separate)", confirmed: true, careers: "https://www.infosys.com/careers/", roles: ["ts", "compliance", "aml", "aidata", "ops", "aiops"] },
     { id: "tcs", name: "TCS", area: "gachibowli", campus: "Synergy Park (plus a Nanakramguda site)", confirmed: true, careers: "https://www.tcs.com/careers", roles: ["ts", "compliance", "aml", "aidata", "ops", "aiops"] },
     { id: "teleperformance", name: "Teleperformance", area: "gachibowli", campus: "DLF Cyber City", confirmed: true, careers: "https://jobs.teleperformance.com", roles: ["ts", "aidata"] },
     { id: "accenture", name: "Accenture", area: "nanakramguda", campus: "WaveRock / Mantri Cosmos, Financial District", confirmed: false, careers: "https://www.accenture.com/in-en/careers", roles: ["ts", "aidata", "compliance", "aml", "ops", "aiops", "aigov"] },
     { id: "concentrix", name: "Concentrix", area: "nanakramguda", campus: "Mantri Cosmos Tower II", confirmed: false, careers: "https://jobs.concentrix.com", roles: ["ts", "aidata"] },
-    { id: "cognizant", name: "Cognizant", area: "gachibowli", campus: "DLF Cybercity SEZ", confirmed: false, careers: "https://careers.cognizant.com/in-en/", roles: ["compliance", "aml", "ops", "aidata"] },
+    { id: "cognizant", name: "Cognizant", area: "gachibowli", alsoIn: ["mindspace"], campus: "DLF Cybercity SEZ, plus Mindspace Buildings 12A and 20", confirmed: false, careers: "https://careers.cognizant.com/in-en/", roles: ["compliance", "aml", "ops", "aidata"] },
     { id: "schwab", name: "Charles Schwab", area: "gachibowli", campus: "Phoenix Equinox", confirmed: false, careers: "https://www.schwabjobs.com", roles: ["compliance", "aml", "risk", "grc", "ops"] },
     { id: "experian", name: "Experian", area: "gachibowli", campus: "Phoenix Equinox", confirmed: false, careers: "https://jobs.experian.com", roles: ["risk", "compliance", "aml", "ops"] },
     { id: "iqeq", name: "IQ-EQ", area: "gachibowli", campus: "Phoenix Equinox", confirmed: false, careers: "https://iqeq.com/careers/", roles: ["aml", "compliance"] },
     { id: "hartford", name: "The Hartford", area: "gachibowli", campus: "Kalyani Trident", confirmed: false, careers: "https://www.thehartford.com/careers", roles: ["risk", "compliance", "grc", "ops"] },
+    { id: "jpmorgan", name: "JPMorgan Chase", area: "knowledgecity", campus: "JP Morgan Tower, Sattva Knowledge City", confirmed: true, careers: "https://careers.jpmorgan.com/in/en/home", roles: ["aml", "compliance", "risk", "grc", "ops"] },
+    { id: "goldman", name: "Goldman Sachs", area: "knowledgecity", campus: "Opel tower, Sattva Knowledge City", confirmed: true, careers: "https://www.goldmansachs.com/careers", roles: ["aml", "compliance", "risk", "grc", "ops"] },
+    { id: "synchrony", name: "Synchrony", area: "knowledgecity", campus: "Sattva Knowledge City", confirmed: false, careers: "https://www.synchronycareers.com", roles: ["risk", "compliance", "aml", "ops"] },
+    { id: "statestreet", name: "State Street", area: "knowledgecity", campus: "Sattva Knowledge City (Orwell)", confirmed: false, careers: "https://careers.statestreet.com", roles: ["compliance", "aml", "grc", "ops"] },
+    { id: "kpmg", name: "KPMG", area: "knowledgecity", campus: "Sattva Knowledge City (Orwell)", confirmed: false, careers: "https://kpmg.com/in/en/careers.html", roles: ["grc", "compliance", "aml", "risk", "aigov"] },
+    { id: "novartis", name: "Novartis", area: "knowledgecity", campus: "Sattva Knowledge City", confirmed: false, careers: "https://www.novartis.com/careers", roles: ["compliance", "grc", "ops"] },
+    { id: "google", name: "Google", area: "kondapur", campus: "DivyaSree Omega, Kondapur (new campus being built in Gachibowli)", confirmed: true, careers: "https://www.google.com/about/careers/applications/jobs/results/?location=Hyderabad%2C%20Telangana%2C%20India", roles: ["ts", "aidata", "risk", "ops"] },
+    { id: "genpact", name: "Genpact", area: "kondapur", campus: "Hafeezpet / Kondapur (main campus in Uppal)", confirmed: false, careers: "https://www.genpact.com/careers", roles: ["ts", "aidata", "aml", "compliance", "ops"] },
   ],
-  companyNote: "Not listed because their Hyderabad offices are outside these two areas: Genpact (Uppal, Hafeezpet, Kondapur), Google (Kondapur; its Gachibowli campus isn't open yet), JPMorgan, Goldman Sachs, Novartis, EY, S&P Global and Invesco (Raidurg / HITEC City). Big employers run several sites, so check the location on each posting. \"Verify\" means only secondary sources place the office here.",
+  companyNote: "Not listed: offices in Uppal, Pocharam and Kokapet, which are a long commute from the west-side IT corridor. Big employers run several sites, so check the location on each posting. \"Verify\" means only secondary sources (property listings, news) place the office here.",
 
   // AI openings seen on job boards and company pages that the live feed can't read yet. Recheck before applying.
   aiLeadsChecked: "22 Oct 2026",

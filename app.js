@@ -53,6 +53,7 @@
     live: '<path d="M6.7 17.3a8 8 0 0 1 0-10.6"/><path d="M17.3 6.7a8 8 0 0 1 0 10.6"/><path d="M9.5 14.5a3.5 3.5 0 0 1 0-5"/><path d="M14.5 9.5a3.5 3.5 0 0 1 0 5"/><circle cx="12" cy="12" r="1"/>',
     handshake: '<path d="M11 17l2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    refresh: '<path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>',
   };
 
   function icon(name) {
@@ -69,6 +70,8 @@
   DATA.skills.forEach(function (s) { skillById[s.id] = s; });
   var roleById = {};
   DATA.roles.forEach(function (r) { roleById[r.id] = r; });
+  var areaById = {};
+  DATA.areas.forEach(function (a) { areaById[a.id] = a; });
 
   // ---------- Saved state ----------
 
@@ -295,7 +298,26 @@
   }
 
   function areaLabel(area) {
-    return area === "nanakramguda" ? "Nanakramguda" : "Gachibowli";
+    var a = areaById[area];
+    return a ? a.short || a.label : "Hyderabad";
+  }
+
+  function priorityAreasLabel() {
+    return DATA.areas.filter(function (a) { return a.priority; }).map(function (a) { return a.short || a.label; }).join(" & ");
+  }
+
+  // Options for an area dropdown, with how many items each would show.
+  function areaOptions(value, count) {
+    return [["mine", priorityAreasLabel()], ["all", "All Hyderabad"]]
+      .concat(DATA.areas.map(function (a) { return [a.id, a.label]; }))
+      .map(function (o) {
+        return '<option value="' + o[0] + '"' + (value === o[0] ? " selected" : "") + '>' + esc(o[1]) + ' (' + count(o[0]) + ')</option>';
+      }).join("");
+  }
+
+  function jobsInArea(list, value) {
+    if (value === "all") return list;
+    return list.filter(value === "mine" ? inMyAreas : function (j) { return j.area === value; });
   }
 
   // ---------- Projects ----------
@@ -466,23 +488,146 @@
   var aiFilter = { area: "all", sort: "new" };
   var openNext = {};
 
+  var FEED = DATA.feed;
+  var IS_ARTIFACT = document.documentElement.classList.contains("is-artifact");
+  var TOKEN_KEY = "shraddha-portfolio-github-token";
+
+  function savedToken() {
+    try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+  }
+
+  function readFeed(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json().then(function (d) {
+      if (!d || !Array.isArray(d.jobs)) throw new Error("Not a job feed");
+      return d;
+    });
+  }
+
+  // The newest jobs.json, read from the repository through GitHub's API so it skips the Pages and CDN delay.
+  // Falls back to the copy served with the site (and always uses it in the preview).
+  function fetchFeed() {
+    function local() { return fetch("jobs.json?t=" + Date.now(), { cache: "no-store" }).then(readFeed); }
+    if (IS_ARTIFACT || !FEED) return local();
+    var headers = { Accept: "application/vnd.github.raw+json" };
+    var token = savedToken();
+    if (token) headers.Authorization = "Bearer " + token;
+    return fetch("https://api.github.com/repos/" + FEED.repo + "/contents/jobs.json?ref=" + encodeURIComponent(FEED.branch), { headers: headers, cache: "no-store" })
+      .then(readFeed)
+      .catch(local);
+  }
+
+  function applyFeed(data, firstLoad) {
+    LIVE.data = data;
+    LIVE.status = "ok";
+    if (firstLoad) {
+      var prev = Array.isArray(ui.seenJobs) ? ui.seenJobs : null;
+      LIVE.seen = prev ? new Set(prev) : null;
+    }
+    ui.seenJobs = data.jobs.map(function (j) { return j.id; });
+    saveUi();
+    renderScored();
+  }
+
   function loadJobs() {
-    var url = "jobs.json?t=" + Date.now();
-    fetch(url, { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(function (data) {
-        LIVE.data = data;
-        LIVE.status = "ok";
-        var prev = Array.isArray(ui.seenJobs) ? ui.seenJobs : null;
-        LIVE.seen = prev ? new Set(prev) : null;
-        ui.seenJobs = (data.jobs || []).map(function (j) { return j.id; });
-        saveUi();
-        renderScored();
-      })
-      .catch(function () {
-        LIVE.status = "error";
-        renderScored();
+    fetchFeed().then(function (data) { applyFeed(data, true); }, function () {
+      LIVE.status = "error";
+      renderScored();
+    });
+  }
+
+  // ---------- Refresh ----------
+
+  var refresh = { busy: false, note: "" };
+
+  function setRefresh(busy, note) {
+    refresh.busy = busy;
+    refresh.note = note || "";
+    document.querySelectorAll("[data-refresh]").forEach(function (b) {
+      b.disabled = busy;
+      b.classList.toggle("is-busy", busy);
+    });
+    document.querySelectorAll("[data-refresh-note]").forEach(function (p) {
+      p.innerHTML = refresh.note;
+      p.hidden = !refresh.note;
+    });
+  }
+
+  function jobIds() { return LIVE.data ? LIVE.data.jobs.map(function (j) { return j.id; }) : []; }
+
+  function addedSince(before, data) {
+    var had = new Set(before);
+    return data.jobs.filter(function (j) { return !had.has(j.id); }).length;
+  }
+
+  function openingsText(n) { return n + (n === 1 ? " new opening" : " new openings"); }
+
+  function runUrl() { return "https://github.com/" + FEED.repo + "/actions/workflows/" + FEED.workflow; }
+
+  function startRun(token) {
+    return fetch("https://api.github.com/repos/" + FEED.repo + "/actions/workflows/" + FEED.workflow + "/dispatches", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+      body: JSON.stringify({ ref: FEED.branch }),
+    }).then(function (r) {
+      if (r.status === 204) return;
+      throw new Error(r.status === 401 ? "GitHub didn't accept the token" : r.status === 403 || r.status === 404 ? "the token can't start job checks for personal-portfolio" : "GitHub answered " + r.status);
+    });
+  }
+
+  // Polls until a check that started after `beforeUpdated` has saved a new list (a manual run always saves one).
+  function waitForCheck(before, beforeUpdated) {
+    var tries = 0;
+    function later() { return new Promise(function (res) { setTimeout(res, 20000); }); }
+    function poll() {
+      tries++;
+      return fetchFeed().then(function (data) {
+        if (data.updated !== beforeUpdated && Date.parse(data.updated) > Date.parse(beforeUpdated || 0)) {
+          applyFeed(data);
+          var n = addedSince(before, data);
+          setRefresh(false, "Checked every job board just now: " + (n ? openingsText(n) + " (marked New)." : "no new openings since you opened the page."));
+          return;
+        }
+        if (tries >= 30) { setRefresh(false, "The check is taking longer than usual. Press Refresh again in a few minutes."); return; }
+        return later().then(poll);
+      }, function () {
+        if (tries >= 30) { setRefresh(false, "Couldn't reach the job list. Check your internet connection and press Refresh again."); return; }
+        return later().then(poll);
       });
+    }
+    return later().then(poll);
+  }
+
+  function refreshJobs() {
+    if (refresh.busy) return;
+    var before = jobIds();
+    setRefresh(true, "Getting the newest list…");
+    fetchFeed().then(function (data) {
+      applyFeed(data, !LIVE.seen && before.length === 0);
+      var n = addedSince(before, data);
+      var summary = "Newest list loaded (last changed " + hoursAgoText(data.updated) + ")" + (n ? ": " + openingsText(n) + "." : ".");
+      var token = savedToken();
+      if (IS_ARTIFACT) {
+        setRefresh(false, summary + " This preview shows a saved copy; on your live site Refresh gets the newest openings.");
+      } else if (token) {
+        startRun(token).then(function () {
+          setRefresh(true, summary + " Now checking every company job board. This takes about 3 minutes; you can keep using the site.");
+          return waitForCheck(jobIds(), data.updated);
+        }, function (err) {
+          setRefresh(false, summary + " Couldn't start a fresh check: " + esc(err.message) + '. Check the token under <a href="#jobs" data-open-setup>One-click refresh</a>.');
+        });
+      } else {
+        setRefresh(false, summary + ' Job boards are checked every hour. To check right now, <a href="' + esc(runUrl()) + '" target="_blank" rel="noopener" data-run-github>run the check on GitHub</a> (press "Run workflow"), or set up <a href="#jobs" data-open-setup>one-click refresh</a>.');
+      }
+    }, function () {
+      setRefresh(false, "Couldn't reach the job list. Check your internet connection and press Refresh again.");
+    });
+  }
+
+  function renderTokenState() {
+    var on = !!savedToken();
+    $("tokenSummary").textContent = on ? "One-click refresh is on: Refresh also checks every job board" : "One-click refresh: check every job board when you press Refresh (optional)";
+    $("forgetToken").hidden = !on;
   }
 
   function isNewJob(j) {
@@ -508,7 +653,7 @@
     return Math.round(h / 24) + " days ago";
   }
 
-  function inMyAreas(j) { return j.area === "gachibowli" || j.area === "nanakramguda"; }
+  function inMyAreas(j) { return !!(areaById[j.area] && areaById[j.area].priority); }
 
   // Languages listed on the Profile page. Jobs asking for a language that isn't listed are hidden.
   function myLanguages() {
@@ -597,8 +742,8 @@
     var role = roleById[j.roleId];
     var pct = scores[j.roleId];
     var t = tierFor(pct);
-    var area = j.area === "hyderabad" ? '<span class="badge badge-gray">Hyderabad</span>'
-      : '<span class="badge badge-red" title="' + (j.areaFrom === "posting" ? "Area named in the posting" : "Company office in this area; check the posting") + '">' + icon("pin") + areaLabel(j.area) + '</span>';
+    var area = !areaById[j.area] ? '<span class="badge badge-gray">Hyderabad</span>'
+      : '<span class="badge ' + (inMyAreas(j) ? "badge-red" : "badge-gray") + '" title="' + (j.areaFrom === "posting" ? "Area named in the posting" : "Company office in this area; check the posting") + '">' + icon("pin") + areaLabel(j.area) + '</span>';
     return '<li class="job tier-' + t.key + '">' +
       '<div class="job-main">' +
         '<a class="job-title" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + icon("external") + '</a>' +
@@ -625,15 +770,13 @@
     var hidden = (d.jobs || []).filter(function (j) { return roleById[j.roleId] && !languageOk(j); }).length;
     var langNote = hidden ? " " + hidden + " hidden because they need a language you haven't listed." :
       (!myLanguages() && (d.jobs || []).some(function (j) { return (j.languages || []).length; }) ? " Add your languages on the Profile page to hide postings that need other languages." : "");
-    return "Updated " + hoursAgoText(d.updated) + " from " + (ok.length ? ok.join(", ") : "company job boards") + ". Refreshes every 3 hours." + langNote;
+    return "Last changed " + hoursAgoText(d.updated) + ", from " + (ok.length ? ok.join(", ") : "company job boards") + ". Checked every hour." + langNote;
   }
 
   function renderJobs(scores) {
     var all = liveJobs();
     var mine = all.filter(inMyAreas);
-    $("jobAreaFilter").innerHTML = [["mine", "Gachibowli & Nanakramguda (" + mine.length + ")"], ["all", "All Hyderabad (" + all.length + ")"]].map(function (x) {
-      return '<button type="button" data-job-area="' + x[0] + '" aria-pressed="' + (jobFilter.area === x[0]) + '">' + x[1] + '</button>';
-    }).join("");
+    $("jobAreaFilter").innerHTML = areaOptions(jobFilter.area, function (v) { return jobsInArea(all, v).length; });
     $("jobSort").innerHTML = [["new", "Newest"], ["match", "Best match"]].map(function (x) {
       return '<button type="button" data-job-sort="' + x[0] + '" aria-pressed="' + (jobFilter.sort === x[0]) + '">' + x[1] + '</button>';
     }).join("");
@@ -642,14 +785,14 @@
       return '<option value="' + r.id + '"' + (jobFilter.role === r.id ? " selected" : "") + '>' + esc(r.short) + ' (' + n + ')</option>';
     }).join("");
 
-    var list = (jobFilter.area === "mine" ? mine : all).filter(function (j) { return jobFilter.role === "all" || j.roleId === jobFilter.role; });
+    var list = jobsInArea(all, jobFilter.area).filter(function (j) { return jobFilter.role === "all" || j.roleId === jobFilter.role; });
     list = list.slice().sort(function (x, y) {
       if (jobFilter.sort === "match" && scores[y.roleId] !== scores[x.roleId]) return scores[y.roleId] - scores[x.roleId];
       return (y.posted || y.firstSeen || "").localeCompare(x.posted || x.firstSeen || "");
     });
     $("jobsStatus").textContent = feedStatus();
     $("jobList").innerHTML = list.length ? list.slice(0, 120).map(function (j) { return jobCard(j, scores); }).join("")
-      : (LIVE.status === "ok" ? '<li class="empty">No openings match these filters right now. Try All Hyderabad, or the job-site searches below.</li>' : "");
+      : (LIVE.status === "ok" ? '<li class="empty">No openings match these filters right now. Try All Hyderabad, press Refresh, or use the job-site searches below.</li>' : "");
 
     var newMine = mine.filter(isNewJob).length;
     document.querySelector('[data-count="jobs"]').textContent = LIVE.status === "ok" ? (newMine ? newMine + " new" : String(mine.length)) : "";
@@ -709,14 +852,12 @@
         (act ? '<span class="ai-next">Next: <strong>' + esc(act.label) + '</strong> (+' + act.gain.toFixed(1) + '%)</span>' : '') + '</div></li>';
     }).join("");
 
-    $("aiAreaFilter").innerHTML = [["all", "All Hyderabad (" + all.length + ")"], ["mine", "Gachibowli & Nanakramguda (" + mine.length + ")"]].map(function (x) {
-      return '<button type="button" data-ai-area="' + x[0] + '" aria-pressed="' + (aiFilter.area === x[0]) + '">' + x[1] + '</button>';
-    }).join("");
+    $("aiAreaFilter").innerHTML = areaOptions(aiFilter.area, function (v) { return jobsInArea(all, v).length; });
     $("aiSort").innerHTML = [["new", "Newest"], ["match", "Best match"]].map(function (x) {
       return '<button type="button" data-ai-sort="' + x[0] + '" aria-pressed="' + (aiFilter.sort === x[0]) + '">' + x[1] + '</button>';
     }).join("");
 
-    var list = (aiFilter.area === "mine" ? mine : all).slice().sort(function (x, y) {
+    var list = jobsInArea(all, aiFilter.area).slice().sort(function (x, y) {
       if (aiFilter.sort === "match" && scores[y.roleId] !== scores[x.roleId]) return scores[y.roleId] - scores[x.roleId];
       return (y.posted || y.firstSeen || "").localeCompare(x.posted || x.firstSeen || "");
     });
@@ -724,7 +865,7 @@
     all.forEach(function (j) { if (companies.indexOf(j.company) === -1) companies.push(j.company); });
     $("aiStatus").textContent = LIVE.status !== "ok" ? feedStatus()
       : all.length + (all.length === 1 ? " AI opening" : " AI openings") + (companies.length ? " from " + companies.join(", ") : "") +
-        ". Updated " + hoursAgoText(LIVE.data.updated) + "; refreshes every 3 hours.";
+        ". Last changed " + hoursAgoText(LIVE.data.updated) + "; checked every hour.";
     $("aiJobList").innerHTML = list.length ? list.map(function (j) {
       return jobCard(j, scores, function (job, role, pct) { return nextSteps(job, role, pct, scoreRole(role, have, ctx), have, ctx); });
     }).join("") : (LIVE.status === "ok" ? '<li class="empty">No AI openings match this filter right now. Try All Hyderabad, or the openings to check below.</li>' : "");
@@ -844,7 +985,9 @@
       var t = tierFor(pct);
       var ids = Object.keys(role.skills).sort(function (a, b) { return role.skills[b] - role.skills[a]; });
       var got = ids.filter(function (id) { return have[id]; });
-      var companies = DATA.companies.filter(function (c) { return c.roles.indexOf(role.id) !== -1; });
+      // Your priority areas first.
+      var companies = DATA.companies.filter(function (c) { return c.roles.indexOf(role.id) !== -1; })
+        .sort(function (a, b) { return (areaById[b.area].priority ? 1 : 0) - (areaById[a.area].priority ? 1 : 0); });
       var isOpen = openRoles.indexOf(role.id) !== -1;
       var live = jobCounts[role.id] || 0;
 
@@ -878,7 +1021,7 @@
           '</dl>' +
           (role.salary && role.salary.note ? '<p class="dimmed small">' + icon("rupee") + ' ' + esc(role.salary.note) + '</p>' : '') +
           '<div class="role-cols">' +
-            '<div><h3>Hiring in Gachibowli &amp; Nanakramguda</h3><ul class="pills">' +
+            '<div><h3>Hiring in Hyderabad</h3><ul class="pills">' +
               companies.map(function (c) {
                 return '<li class="pill">' + icon("building") + esc(c.name) + ' <span class="dimmed">· ' + areaLabel(c.area) + '</span></li>';
               }).join("") +
@@ -912,26 +1055,29 @@
   var companyFilter = { area: "all", role: "all" };
 
   function renderCompanies() {
-    var areas = [["all", "Both areas"], ["nanakramguda", "Nanakramguda"], ["gachibowli", "Gachibowli"]];
-    $("areaFilter").innerHTML = areas.map(function (a) {
-      var n = a[0] === "all" ? DATA.companies.length : DATA.companies.filter(function (c) { return c.area === a[0]; }).length;
-      return '<button type="button" data-area="' + a[0] + '" aria-pressed="' + (companyFilter.area === a[0]) + '">' + a[1] + ' (' + n + ')</button>';
-    }).join("");
+    function inArea(c, v) {
+      if (v === "all") return true;
+      return [c.area].concat(c.alsoIn || []).some(function (a) { return v === "mine" ? areaById[a].priority : a === v; });
+    }
+    $("areaFilter").innerHTML = areaOptions(companyFilter.area, function (v) {
+      return DATA.companies.filter(function (c) { return inArea(c, v); }).length;
+    }).replace(">All Hyderabad (", ">All areas (");
     $("roleFilter").innerHTML = '<option value="all">All target roles</option>' + DATA.roles.map(function (r) {
       return '<option value="' + r.id + '"' + (companyFilter.role === r.id ? " selected" : "") + '>' + esc(r.short) + '</option>';
     }).join("");
 
     var list = DATA.companies.filter(function (c) {
-      if (companyFilter.area !== "all" && c.area !== companyFilter.area) return false;
+      if (!inArea(c, companyFilter.area)) return false;
       if (companyFilter.role !== "all" && c.roles.indexOf(companyFilter.role) === -1) return false;
       return true;
     });
     $("companyRows").innerHTML = list.length ? list.map(function (c) {
+      var also = (c.alsoIn || []).length ? '<span class="company-also">also ' + c.alsoIn.map(areaLabel).join(", ") + '</span>' : '';
       return '<tr id="company-' + c.id + '"><td><div class="company-name">' + esc(c.name) +
         (c.confirmed ? '' : ' <span class="badge badge-yellow" title="Only secondary sources place this office here">Verify</span>') + '</div>' +
         '<div class="company-campus">' + esc(c.campus) + '</div>' +
-        '<div class="company-area-inline company-campus">' + areaLabel(c.area) + '</div></td>' +
-        '<td>' + areaLabel(c.area) + '</td>' +
+        '<div class="company-area-inline company-campus">' + areaLabel(c.area) + also + '</div></td>' +
+        '<td>' + areaLabel(c.area) + also + '</td>' +
         '<td><ul class="pills">' + c.roles.map(function (id) { return roleById[id] ? '<li class="pill">' + esc(roleById[id].short) + '</li>' : ''; }).join("") + '</ul></td>' +
         '<td><a class="button button-default button-sm" href="' + esc(c.careers) + '" target="_blank" rel="noopener">Careers' + icon("external") + '</a></td></tr>';
     }).join("") : '<tr><td colspan="4" class="dimmed">No companies match these filters.</td></tr>';
@@ -1428,6 +1574,21 @@
       renderScored();
       return;
     }
+    if (e.target.closest("[data-run-github]")) {
+      // Opens GitHub in a new tab; new openings show up here once that run saves them.
+      var before = jobIds();
+      setRefresh(true, 'After you press "Run workflow" on GitHub, the new openings appear here in about 3 minutes.');
+      waitForCheck(before, LIVE.data ? LIVE.data.updated : null);
+      return;
+    }
+    if (e.target.closest("[data-open-setup]")) {
+      e.preventDefault();
+      if (location.hash !== "#jobs") location.hash = "#jobs";
+      var setup = $("refreshSetup");
+      setup.open = true;
+      setTimeout(function () { setup.scrollIntoView({ block: "start" }); $("tokenInput").focus(); }, 0);
+      return;
+    }
     var atsLink = e.target.closest("[data-ats-role]");
     if (atsLink) {
       ui.atsRole = atsLink.getAttribute("data-ats-role");
@@ -1438,6 +1599,7 @@
 
     var t = e.target.closest("button");
     if (!t) return;
+    if (t.hasAttribute("data-refresh")) { refreshJobs(); return; }
 
     if (t.dataset.copy) {
       copyText(t.dataset.copy, function (ok) {
@@ -1458,21 +1620,12 @@
       if (state.referrals[rid]) delete state.referrals[rid]; else state.referrals[rid] = true;
       saveState();
       renderScored();
-    } else if (t.dataset.jobArea) {
-      jobFilter.area = t.dataset.jobArea;
-      renderScored();
     } else if (t.dataset.jobSort) {
       jobFilter.sort = t.dataset.jobSort;
-      renderScored();
-    } else if (t.dataset.aiArea) {
-      aiFilter.area = t.dataset.aiArea;
       renderScored();
     } else if (t.dataset.aiSort) {
       aiFilter.sort = t.dataset.aiSort;
       renderScored();
-    } else if (t.dataset.area) {
-      companyFilter.area = t.dataset.area;
-      renderCompanies();
     } else if (t.dataset.addProject) {
       var parts = t.dataset.addProject.split(":");
       var idea = roleById[parts[0]].projectIdeas[parseInt(parts[1], 10)];
@@ -1506,6 +1659,42 @@
       var done = DATA.plan.filter(function (s) { return state.steps[s.id]; }).length;
       $("stepsProgress").textContent = done + " of " + DATA.plan.length + " done";
     }
+  });
+
+  $("jobAreaFilter").addEventListener("change", function () {
+    jobFilter.area = this.value;
+    renderScored();
+  });
+
+  $("aiAreaFilter").addEventListener("change", function () {
+    aiFilter.area = this.value;
+    renderScored();
+  });
+
+  $("areaFilter").addEventListener("change", function () {
+    companyFilter.area = this.value;
+    renderCompanies();
+  });
+
+  $("saveToken").addEventListener("click", function () {
+    var v = $("tokenInput").value.trim();
+    if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(v)) {
+      flash($("tokenMsg"), "That doesn't look like a GitHub token. It starts with github_pat_.", true);
+      return;
+    }
+    try { localStorage.setItem(TOKEN_KEY, v); } catch (e) {
+      flash($("tokenMsg"), "This browser won't save it (private window?).", true);
+      return;
+    }
+    $("tokenInput").value = "";
+    renderTokenState();
+    flash($("tokenMsg"), "Saved in this browser. Press Refresh to check every job board now.");
+  });
+
+  $("forgetToken").addEventListener("click", function () {
+    try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* nothing saved */ }
+    renderTokenState();
+    flash($("tokenMsg"), "Token removed from this browser. You can also delete it on GitHub.");
   });
 
   $("jobRoleFilter").addEventListener("change", function () {
@@ -1631,5 +1820,6 @@
   renderPicker();
   renderAll();
   showView(viewFromHash());
+  renderTokenState();
   loadJobs();
 })();

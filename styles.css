@@ -628,7 +628,7 @@ a.kpi:hover { border-color: var(--primary); }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.is-artifact .file-only { display: none; }
+.is-artifact .file-only, .is-artifact .site-only { display: none; }
 
 /* ---------- Skills ---------- */
 .inline-form { display: grid; gap: 4px; max-width: 620px; }
@@ -891,3 +891,15 @@ a.kpi:hover { border-color: var(--primary); }
 @media (max-width: 768px) {
   .safety { grid-template-columns: 1fr; }
 }
+
+/* ---------- Refresh ---------- */
+.feed-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-xs) var(--sp-sm); flex-wrap: wrap; }
+.feed-bar p { flex: 1 1 260px; }
+.refresh-note { padding: 8px 12px; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: var(--r-md); background: var(--surface); font-size: var(--fs-sm); }
+.button.is-busy .icon { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .button.is-busy .icon { animation: none; } }
+.method-body ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }
+.token-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.token-row .input { flex: 1 1 240px; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.company-also { display: block; font-size: var(--fs-xs); color: var(--dimmed); }

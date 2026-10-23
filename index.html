@@ -102,15 +102,38 @@
     <section class="view" id="view-jobs" data-view="jobs" aria-labelledby="h-jobs" hidden>
       <header class="view-head">
         <h1 id="h-jobs">Live jobs</h1>
-        <p class="lede">Openings in Hyderabad that match your roles, pulled from company job boards every 3 hours. Each one shows your match for that role and the salary range to expect.</p>
+        <p class="lede">Openings in Hyderabad that match your roles, pulled from company job boards every hour. Press Refresh for the newest list. Each opening shows your match for that role and the salary range to expect.</p>
       </header>
       <div class="filters" role="group" aria-label="Filter jobs">
-        <div class="segmented" id="jobAreaFilter"></div>
+        <select class="input select" id="jobAreaFilter" aria-label="Filter by area"></select>
         <select class="input select" id="jobRoleFilter" aria-label="Filter by role"></select>
         <div class="segmented" id="jobSort"></div>
       </div>
-      <p class="dimmed small" id="jobsStatus"></p>
+      <div class="feed-bar">
+        <p class="dimmed small" id="jobsStatus"></p>
+        <button type="button" class="button button-sm" data-refresh><span data-icon="refresh"></span>Refresh</button>
+      </div>
+      <p class="refresh-note" data-refresh-note hidden></p>
       <ul class="job-list" id="jobList"></ul>
+      <details class="card method site-only" id="refreshSetup">
+        <summary><span data-icon="bolt"></span><span id="tokenSummary">One-click refresh: check every job board when you press Refresh (optional)</span></summary>
+        <div class="method-body">
+          <p>Without this, Refresh loads the newest list the hourly check has saved. With it, Refresh also asks GitHub to check every company job board right away, and the new openings appear about 3 minutes later. It needs a GitHub token that can only start job checks:</p>
+          <ol>
+            <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a> (sign in as shraddhabiswas2723).</li>
+            <li>Name it "Job refresh", pick an expiry (90 days is fine), and under <strong>Repository access</strong> choose <strong>Only select repositories → personal-portfolio</strong>.</li>
+            <li>Under <strong>Permissions → Repository permissions</strong>, set <strong>Actions</strong> to <strong>Read and write</strong>. Leave everything else as it is.</li>
+            <li>Press <strong>Generate token</strong>, copy it, and paste it here.</li>
+          </ol>
+          <div class="token-row">
+            <input class="input" type="password" id="tokenInput" placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="GitHub token">
+            <button type="button" class="button button-sm" id="saveToken">Save</button>
+            <button type="button" class="button button-default button-sm" id="forgetToken">Forget</button>
+          </div>
+          <p class="form-msg" id="tokenMsg"></p>
+          <p>The token is saved in this browser only, never in the site's code or your backup. It can start and cancel job checks but can't change your site. Delete it on GitHub any time to switch this off.</p>
+        </div>
+      </details>
       <section class="card">
         <header class="card-head">
           <h2 class="card-title">Search job sites live</h2>
@@ -124,7 +147,7 @@
     <section class="view" id="view-ai" data-view="ai" aria-labelledby="h-ai" hidden>
       <header class="view-head">
         <h1 id="h-ai">AI jobs</h1>
-        <p class="lede">Every AI-related opening in Hyderabad from companies' own job boards, refreshed every 3 hours. Open "What to do next" on a job to check it suits you and get ready before you apply.</p>
+        <p class="lede">Every AI-related opening in Hyderabad from companies' own job boards, checked every hour. Open "What to do next" on a job to check it suits you and get ready before you apply.</p>
       </header>
       <section class="card">
         <header class="card-head">
@@ -134,10 +157,14 @@
         <ul class="ai-roles" id="aiRoles"></ul>
       </section>
       <div class="filters" role="group" aria-label="Filter AI jobs">
-        <div class="segmented" id="aiAreaFilter"></div>
+        <select class="input select" id="aiAreaFilter" aria-label="Filter by area"></select>
         <div class="segmented" id="aiSort"></div>
       </div>
-      <p class="dimmed small" id="aiStatus"></p>
+      <div class="feed-bar">
+        <p class="dimmed small" id="aiStatus"></p>
+        <button type="button" class="button button-sm" data-refresh><span data-icon="refresh"></span>Refresh</button>
+      </div>
+      <p class="refresh-note" data-refresh-note hidden></p>
       <ul class="job-list" id="aiJobList"></ul>
       <section class="card">
         <header class="card-head">
@@ -172,11 +199,11 @@
     <!-- Companies -->
     <section class="view" id="view-companies" data-view="companies" aria-labelledby="h-companies" hidden>
       <header class="view-head">
-        <h1 id="h-companies">Companies in Gachibowli &amp; Nanakramguda</h1>
-        <p class="lede">Employers with offices in your two priority areas that hire for your target roles. Use the filters to narrow the list, then open the careers page.</p>
+        <h1 id="h-companies">Companies by area</h1>
+        <p class="lede">Employers that hire for your target roles across Hyderabad's IT corridor: your priority areas Gachibowli and Nanakramguda, plus HITEC City &amp; Raheja Mindspace, Knowledge City &amp; Raidurg (Sattva) and Kondapur. Filter by area or role, then open the careers page.</p>
       </header>
       <div class="filters" role="group" aria-label="Filter companies">
-        <div class="segmented" id="areaFilter"></div>
+        <select class="input select" id="areaFilter" aria-label="Filter by area"></select>
         <select class="input select" id="roleFilter" aria-label="Filter by role"></select>
       </div>
       <div class="table-wrap">

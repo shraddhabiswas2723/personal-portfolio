@@ -9,6 +9,8 @@ import vm from "node:vm";
 
 const ROOT = new URL("../", import.meta.url);
 const PROBE = process.argv.includes("--probe");
+// A manual run (the site's Refresh button, or Run workflow on GitHub) always rewrites jobs.json so the site sees it finish.
+const FORCE = process.env.GITHUB_EVENT_NAME === "workflow_dispatch";
 const MAX_AGE_DAYS = 21;
 const MAX_JOBS = 250;
 const MAX_YEARS = 6;
@@ -25,6 +27,9 @@ const WORKDAY = [
   { company: "DBS Tech India", host: "dbs.wd3.myworkdayjobs.com", tenant: "dbs", site: "DBS_Careers", search: "Hyderabad" },
   { company: "Teleperformance", host: "onetp.wd1.myworkdayjobs.com", tenant: "onetp", site: "Teleperformance", search: "HYD" },
   { company: "Concentrix", host: "cnx.wd1.myworkdayjobs.com", tenant: "cnx", site: "external_global", search: "Hyderabad" },
+  { company: "State Street", host: "statestreet.wd1.myworkdayjobs.com", tenant: "statestreet", site: "Global", search: "Hyderabad" },
+  { company: "Novartis", host: "novartis.wd3.myworkdayjobs.com", tenant: "novartis", site: "Novartis_Careers", search: "Hyderabad" },
+  { company: "Synchrony", host: "synchronyfinancial.wd5.myworkdayjobs.com", tenant: "synchronyfinancial", site: "careers", search: "Hyderabad" },
   { company: "Accenture", host: "accenture.wd103.myworkdayjobs.com", tenant: "accenture", site: "AccentureCareers", search: ["Trust and Safety Hyderabad", "Content Moderation Hyderabad", "KYC Hyderabad", "AML Hyderabad", "Compliance Hyderabad", "Risk Hyderabad", "Data Annotation Hyderabad"], pages: 2 },
 ];
 // Eightfold: `pcsx` is the newer search API, `v2` the older one.
@@ -36,6 +41,10 @@ const SMARTRECRUITERS = [
   { company: "Experian", id: "Experian" },
   { company: "IQ-EQ", id: "IQEQ" },
   { company: "ServiceNow", id: "ServiceNow" },
+];
+// Oracle Recruiting Cloud: the Hyderabad location id is looked up from the search facets.
+const ORACLE = [
+  { company: "JPMorgan Chase", host: "jpmc.fa.oraclecloud.com", site: "CX_1001" },
 ];
 const GREENHOUSE = [];
 const LEVER = [];
@@ -149,8 +158,8 @@ function companyFor(name) {
 
 function areaFor(location, company) {
   const l = (location || "").toLowerCase();
-  if (l.includes("gachibowli") || l.includes("puppalaguda")) return { area: "gachibowli", areaFrom: "posting" };
-  if (l.includes("nanakramguda") || l.includes("financial district") || l.includes("waverock")) return { area: "nanakramguda", areaFrom: "posting" };
+  const named = DATA.areas.find((a) => a.match.some((m) => l.includes(m)));
+  if (named) return { area: named.id, areaFrom: "posting" };
   if (company) return { area: company.area, areaFrom: "company" };
   return { area: "hyderabad", areaFrom: "none" };
 }
@@ -399,6 +408,31 @@ async function capgemini() {
   return out;
 }
 
+async function oracle(cfg) {
+  const api = `https://${cfg.host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=`;
+  const finder = (f) => f.replace(/ /g, "%20").replace(/"/g, "%22");
+  const facets = await getJSON(api + finder(`findReqs;siteNumber=${cfg.site},facetsList=LOCATIONS,limit=1,keyword="Hyderabad"`));
+  const head = (facets.items || [])[0] || {};
+  const loc = (head.locationsFacet || []).find((l) => /hyderabad/i.test(l.Name || ""));
+  if (!loc) throw new Error(`no Hyderabad location facet (keys: ${Object.keys(head).join(", ").slice(0, 80)})`);
+  const out = [];
+  for (let offset = 0; offset < 500; offset += 100) {
+    const data = await getJSON(api + finder(`findReqs;siteNumber=${cfg.site},limit=100,offset=${offset},locationId=${loc.Id},sortBy=POSTING_DATES_DESC`));
+    const list = (((data.items || [])[0] || {}).requisitionList) || [];
+    for (const j of list) {
+      out.push({
+        id: j.Id, title: j.Title, companyName: cfg.company,
+        location: [j.PrimaryLocation, ...(j.secondaryLocations || []).map((x) => x.Name)].filter(Boolean).join(" · "),
+        posted: toISO(j.PostedDate), url: `https://${cfg.host}/hcmUI/CandidateExperience/en/sites/${cfg.site}/job/${j.Id}`, source: "oracle",
+        text: [j.ShortDescriptionStr, j.ExternalQualificationsStr].join(" "),
+      });
+    }
+    if (list.length < 100) break;
+    await sleep(500);
+  }
+  return out;
+}
+
 async function greenhouse(cfg) {
   const data = await getJSON(`https://boards-api.greenhouse.io/v1/boards/${cfg.token}/jobs`);
   return (data.jobs || []).map((j) => ({
@@ -420,6 +454,7 @@ const SOURCES = [
   ...EIGHTFOLD.map((c) => ({ name: c.company, run: () => eightfold(c) })),
   ...WORKDAY.map((c) => ({ name: c.company, run: () => workday(c) })),
   ...SMARTRECRUITERS.map((c) => ({ name: c.company, run: () => smartrecruiters(c) })),
+  ...ORACLE.map((c) => ({ name: c.company, run: () => oracle(c) })),
   { name: "Google", run: google },
   { name: "Apple", run: apple },
   { name: "Infosys", run: infosys },
@@ -496,7 +531,7 @@ const allFailed = report.every((r) => !r.ok);
 let changed = false;
 if (allFailed) {
   console.log("Every source failed; keeping the previous jobs.json.");
-} else if (sameJobs && Date.now() - lastUpdated < 12 * 3600000) {
+} else if (!FORCE && sameJobs && Date.now() - lastUpdated < 6 * 3600000) {
   console.log("No new or removed jobs; leaving jobs.json as it is.");
 } else {
   await writeFile(new URL("jobs.json", ROOT), JSON.stringify({ updated: new Date().toISOString(), sources: report, jobs }, null, 1) + "\n");

@@ -20,10 +20,10 @@ https://shraddhabiswas2723.github.io/personal-portfolio/
 ## Pages
 
 - **Dashboard:** best match, live jobs in your areas, ATS score, projects, the freshest openings for you, the roles to apply for first, and a 15-day plan.
-- **Live jobs:** real Hyderabad openings that match your roles, refreshed every 3 hours, with your match %, salary range, area and any language the posting needs. Plus one-click LinkedIn, Naukri, Indeed and Amazon searches filtered to recent postings.
+- **Live jobs:** real Hyderabad openings that match your roles, checked every hour, with your match %, salary range, area, years asked and any language the posting needs. Filter by area: Gachibowli, Nanakramguda & Financial District, Knowledge City & Raidurg (Sattva), HITEC City & Raheja Mindspace, or Kondapur. **Refresh** loads the newest list (see below). Plus one-click LinkedIn, Naukri, Indeed and Amazon searches filtered to recent postings.
 - **AI jobs:** every AI-related opening in Hyderabad from the live feed (all areas), each with a **What to do next** checklist: is it genuine, does it suit you (match, salary, years and language asked), the resume to send, the step that strengthens the application most, finding a referral, and applying on the official site. Also your match for the three AI roles, AI openings to check that the feed can't read yet, and how to tell a real job from a scam.
 - **Role matcher:** roles ranked by profile match with expected salary (₹ LPA), a **Path to 90%** list of the exact actions that raise each score, employers in Gachibowli and Nanakramguda, and job titles to search.
-- **Companies:** employers with offices in Gachibowli or Nanakramguda, filterable by area and role, with careers links.
+- **Companies:** employers by area across the west-side IT corridor (your priority areas first), filterable by area and role, with careers links. Areas live in `data.js` (`areas`), and `alsoIn` lists a company's other offices.
 - **Resume & ATS:** ATS score per role, keyword coverage, projects needed with ideas, and **Generate** for a tailored ATS resume (copy, Word, .txt or PDF).
 - **Skills / Learning log / Profile:** skills and what to learn next, every course marked useful or not, experience and application details. Add your languages on the Profile page to hide postings that need a language you don't speak.
 
@@ -31,13 +31,15 @@ Press Ctrl K (⌘ K on Mac) to search roles, companies and skills. The sun/moon 
 
 ## Live jobs: how it works
 
-`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon, Google, Microsoft, Apple, HSBC, DBS, Accenture, Infosys, Capgemini and others) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. A job is marked as AI work when its title says so or its description uses two or more AI terms, and it records the years of experience its minimum qualifications ask for. The workflow in `.github/workflows/jobs.yml` runs it every 3 hours and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
+`scripts/fetch-jobs.mjs` reads the roles in `data.js`, asks company job boards (Amazon, Google, Microsoft, Apple, HSBC, DBS, Accenture, Infosys, Capgemini and others) for Hyderabad openings, drops senior and unrelated job families, merges repeat postings, and writes `jobs.json`. A job is marked as AI work when its title says so or its description uses two or more AI terms, and it records the years of experience its minimum qualifications ask for. The workflow in `.github/workflows/jobs.yml` runs it every hour and commits `jobs.json` when openings change, so the online site shows fresh jobs every time it's opened.
+
+**Refresh button.** Refresh reads the newest `jobs.json` straight from the repository through GitHub's API, so it doesn't wait for GitHub Pages to redeploy. To check every job board right now, either press **Run workflow** on the Actions page (the note under Refresh links to it), or save a GitHub token under **One-click refresh** on the Live jobs page: a fine-grained token for this repository only, with **Actions: Read and write**. Refresh then starts the workflow itself and shows the new openings about 3 minutes later. The token stays in that browser's local storage. A manual run always rewrites `jobs.json`, which is how the page knows it has finished.
 
 To switch it on:
 
 1. Merge this branch into `main` (scheduled workflows only run on the default branch).
 2. Turn on GitHub Pages: Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`.
-3. Optional: Actions → Refresh live jobs → Run workflow, to refresh straight away.
+3. Optional: Actions → Refresh live jobs → Run workflow, to refresh straight away. Refresh's "run the check on GitHub" link and one-click refresh both need the workflow on `main`.
 
 Opened as a local file (double-click), the site can't read `jobs.json`; use the online site, or the job-site search buttons.
 
