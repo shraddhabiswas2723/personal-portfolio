@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T13:31:53.353Z",
+ "updated": "2026-10-23T13:35:18.673Z",
  "sources": [
   {
    "name": "Amazon",
@@ -75,7 +75,7 @@
   {
    "name": "JPMorgan Chase",
    "ok": true,
-   "count": 2
+   "count": 1
   },
   {
    "name": "Google",
@@ -460,24 +460,6 @@
    "url": "https://novartis.wd3.myworkdayjobs.com/en-US/Novartis_Careers/job/Hyderabad-Office/Business-Analyst---AI-Content-Engine_REQ-10089858",
    "roleId": "ops",
    "source": "workday",
-   "years": null,
-   "ai": "title",
-   "openings": 1,
-   "firstSeen": "2026-10-23"
-  },
-  {
-   "id": "oracle:210800119",
-   "title": "Applied AI /ML Associate",
-   "company": "JPMorgan Chase",
-   "companyId": "jpmorgan",
-   "location": "Hyderabad, Telangana, India · Bengaluru, Karnataka, India · Mumbai, Maharashtra, India",
-   "languages": [],
-   "area": "knowledgecity",
-   "areaFrom": "company",
-   "posted": "2026-10-14",
-   "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210800119",
-   "roleId": "aiops",
-   "source": "oracle",
    "years": null,
    "ai": "title",
    "openings": 1,
