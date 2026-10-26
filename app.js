@@ -418,36 +418,57 @@
     return { total: Math.round(total), checks: checks, matched: matched };
   }
 
+  function skillNames(have, group) {
+    return DATA.skills.filter(function (s) { return have[s.id] && s.group === group; }).map(function (s) { return s.resume || s.label; });
+  }
+
   // Builds an ATS resume for one role from real experience only.
   function buildResume(role) {
-    var p = DATA.person;
     var have = ownedSet();
+    var roleTerms = role.keywords.filter(hasKeyword).map(function (k) { return k.term; });
+    var seen = {};
+    var core = roleTerms.filter(function (t) { var k = t.toLowerCase(); if (seen[k]) return false; seen[k] = true; return true; });
+    var tools = skillNames(have, "data");
+    var ai = skillNames(have, "ai");
+    var skills = ["Core: " + core.join(", ")];
+    if (tools.length) skills.push("Tools: " + tools.join(", "));
+    if (ai.length) skills.push("AI: " + ai.join(", "));
+    return resumeText(role.resumeHeadline, role.resumeSummary, skills, role.bulletFocus || []);
+  }
+
+  // One resume for any job: every skill you have, grouped, and bullets in their own order.
+  function buildUniversalResume() {
+    var have = ownedSet();
+    var skills = DATA.skillGroups.map(function (g) {
+      var names = skillNames(have, g.id);
+      return names.length ? g.label + ": " + names.join(", ") : "";
+    }).filter(Boolean);
+    if (state.custom.length) skills.push("Other: " + state.custom.join(", "));
+    var u = DATA.universalResume;
+    return resumeText(u.headline, u.summary, skills, []);
+  }
+
+  // The parts every resume shares. `focus` moves the bullets that mention these words to the top of each job.
+  function resumeText(headline, summary, skills, focus) {
+    var p = DATA.person;
     var lines = [];
     lines.push(p.name.toUpperCase());
-    lines.push(role.resumeHeadline);
+    lines.push(headline);
     lines.push(p.location + " | " + p.phone + " | " + p.email + " | " + p.linkedin.replace(/^https?:\/\//, ""));
     lines.push("");
 
     lines.push("PROFESSIONAL SUMMARY");
-    lines.push(role.resumeSummary);
+    lines.push(summary);
     lines.push("");
 
     lines.push("SKILLS");
-    var roleTerms = role.keywords.filter(hasKeyword).map(function (k) { return k.term; });
-    var seen = {};
-    var core = roleTerms.filter(function (t) { var k = t.toLowerCase(); if (seen[k]) return false; seen[k] = true; return true; });
-    var tools = DATA.skills.filter(function (s) { return have[s.id] && s.group === "data"; }).map(function (s) { return s.resume || s.label; });
-    var ai = DATA.skills.filter(function (s) { return have[s.id] && s.group === "ai"; }).map(function (s) { return s.resume || s.label; });
-    lines.push("Core: " + core.join(", "));
-    if (tools.length) lines.push("Tools: " + tools.join(", "));
-    if (ai.length) lines.push("AI: " + ai.join(", "));
+    skills.forEach(function (s) { lines.push(s); });
     lines.push("");
 
     lines.push("WORK EXPERIENCE");
     DATA.experience.forEach(function (job) {
       lines.push(job.role + " | " + job.company + ", " + job.place + " | " + job.start + " – " + job.end);
       var pts = job.points.slice();
-      var focus = role.bulletFocus || [];
       pts.sort(function (a, b) {
         function hits(t) { var l = t.toLowerCase(); return focus.filter(function (f) { return l.indexOf(f) !== -1; }).length; }
         return hits(b) - hits(a);
@@ -1091,7 +1112,45 @@
     return ranked[0].role.id;
   }
 
+  function atsTier(score) {
+    return score >= 80 ? "now" : score >= 65 ? "prep" : score >= 50 ? "build" : "long";
+  }
+
+  function atsBox(score, title, note) {
+    return '<div class="ats-box tier-' + atsTier(score) + '">' + ring(score, score + " out of 100") +
+      '<div class="ats-box-text"><strong>' + title + '</strong><span class="dimmed">' + note + '</span></div></div>';
+  }
+
+  // The universal resume and how it scores against every role, next to the score of a resume made for that role.
+  function renderUniversal(ctx) {
+    var text = buildUniversalResume();
+    $("universalPreview").textContent = text;
+    var rows = DATA.roles.map(function (r) {
+      return { role: r, score: atsScore(text, r).total, tailored: ctx.ats[r.id].tailored };
+    }).sort(function (a, b) { return b.score - a.score; });
+    var avg = Math.round(rows.reduce(function (s, x) { return s + x.score; }, 0) / rows.length);
+    var best = rows[0], worst = rows[rows.length - 1];
+    $("universalScore").innerHTML = atsBox(avg, "Average across your " + rows.length + " roles",
+      "Highest for " + esc(best.role.short) + " (" + best.score + "), lowest for " + esc(worst.role.short) + " (" + worst.score + ")");
+    $("universalFit").innerHTML = rows.map(function (x) {
+      return '<li class="tier-' + atsTier(x.score) + '">' +
+        '<span class="fit-role">' + esc(x.role.short) + '</span>' +
+        '<span class="progress" role="img" aria-label="Universal resume scores ' + x.score + ' out of 100"><span style="width:' + x.score + '%"></span></span>' +
+        '<strong class="fit-score">' + x.score + '</strong>' +
+        '<a class="fit-tailored" href="#resume" data-ats-role="' + x.role.id + '" title="Make a resume for ' + esc(x.role.title) + '">Tailored: ' + x.tailored + icon("arrow") + '</a>' +
+      '</li>';
+    }).join("");
+  }
+
   function renderResume(ranked, ctx) {
+    var mode = ui.resumeMode === "universal" ? "universal" : "tailored";
+    document.querySelectorAll(".resume-mode [data-resume-mode]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-resume-mode") === mode));
+    });
+    $("universalPane").hidden = mode !== "universal";
+    $("tailoredPane").hidden = mode !== "tailored";
+    renderUniversal(ctx);
+
     var roleId = atsRoleId(ranked);
     var role = roleById[roleId];
     $("atsRole").innerHTML = ranked.map(function (r) {
@@ -1101,14 +1160,9 @@
     var current = atsScore(DATA.resumeText, role);
     var generatedText = buildResume(role);
     var generated = atsScore(generatedText, role);
-    function box(score, title, note) {
-      var tier = score >= 80 ? "now" : score >= 65 ? "prep" : score >= 50 ? "build" : "long";
-      return '<div class="ats-box tier-' + tier + '">' + ring(score, score + " out of 100") +
-        '<div class="ats-box-text"><strong>' + title + '</strong><span class="dimmed">' + note + '</span></div></div>';
-    }
     $("atsCompare").innerHTML =
-      box(current.total, "Current resume", "Your PDF resume as it is today") +
-      box(generated.total, "Generated resume", "After you press Generate below");
+      atsBox(current.total, "Current resume", "Your PDF resume as it is today") +
+      atsBox(generated.total, "Generated resume", "After you press Generate below");
 
     $("atsChecks").innerHTML = current.checks.map(function (c) {
       var ratio = c.pts / c.max;
@@ -1482,11 +1536,17 @@
 
   // ---------- Resume actions ----------
 
-  var lastResume = "";
+  var lastResumeRole = null;
 
-  function resumeFileName(ext) {
-    var role = roleById[ui.atsRole] || DATA.roles[0];
-    return "Shraddha_Biswas_" + role.short.replace(/[^A-Za-z0-9]+/g, "_") + "_Resume." + ext;
+  // The two resumes on Resume & ATS, each with its own preview and message line.
+  var RESUME_OUT = {
+    tailored: { msg: "resumeMsg", preview: "resumePreview" },
+    universal: { msg: "universalMsg", preview: "universalPreview" },
+  };
+
+  function resumeFileName(kind, ext) {
+    var label = kind === "tailored" && lastResumeRole ? lastResumeRole.short.replace(/[^A-Za-z0-9]+/g, "_") + "_" : "";
+    return "Shraddha_Biswas_" + label + "Resume." + ext;
   }
 
   function resumeHtml(text) {
@@ -1501,7 +1561,7 @@
       '<body style="font-family:Calibri,Arial,sans-serif;font-size:10.5pt;line-height:1.35;max-width:7.5in;margin:0.6in auto;color:#000">' + body + '</body></html>';
   }
 
-  function download(name, type, content) {
+  function download(name, type, content, msg) {
     try {
       var blob = new Blob([content], { type: type });
       var a = document.createElement("a");
@@ -1510,44 +1570,58 @@
       document.body.appendChild(a);
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-      flash($("resumeMsg"), "Downloaded " + name + ".");
+      flash(msg, "Downloaded " + name + ".");
     } catch (e) {
-      flash($("resumeMsg"), "This browser blocked the download. Use Copy text instead.", true);
+      flash(msg, "This browser blocked the download. Use Copy text instead.", true);
     }
   }
 
   $("generateBtn").addEventListener("click", function () {
     var role = roleById[$("atsRole").value];
-    lastResume = buildResume(role);
-    $("resumePreview").textContent = lastResume;
+    var text = buildResume(role);
+    lastResumeRole = role;
+    $("resumePreview").textContent = text;
     $("resumeOutput").hidden = false;
-    var score = atsScore(lastResume, role).total;
+    var score = atsScore(text, role).total;
     state.generated[role.id] = true;
     saveState();
     renderScored();
     flash($("resumeMsg"), "Generated for " + role.title + ". Estimated ATS score " + score + "/100, and this role's match is updated. Read it through before sending.");
     $("resumePreview").focus();
   });
-  $("copyResume").addEventListener("click", function () {
-    copyText(lastResume, function (ok) {
-      if (ok) { flash($("resumeMsg"), "Resume copied. Paste it into Word or Google Docs and save as .docx or PDF."); return; }
-      var range = document.createRange();
-      range.selectNodeContents($("resumePreview"));
-      var sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      flash($("resumeMsg"), "Your browser blocked copying. The resume is selected; copy it with Ctrl+C or Cmd+C.", true);
+
+  // Copy, Download Word, Download .txt and Save as PDF, for whichever resume the buttons sit under.
+  document.querySelectorAll("[data-resume]").forEach(function (row) {
+    var kind = row.getAttribute("data-resume");
+    var msg = $(RESUME_OUT[kind].msg), preview = $(RESUME_OUT[kind].preview);
+    row.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-resume-act]");
+      if (!btn) return;
+      var act = btn.getAttribute("data-resume-act");
+      var text = preview.textContent;
+      if (act === "copy") {
+        copyText(text, function (ok) {
+          if (ok) { flash(msg, "Resume copied. Paste it into Word or Google Docs and save as .docx or PDF."); return; }
+          var range = document.createRange();
+          range.selectNodeContents(preview);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          flash(msg, "Your browser blocked copying. The resume is selected; copy it with Ctrl+C or Cmd+C.", true);
+        });
+      } else if (act === "txt") {
+        download(resumeFileName(kind, "txt"), "text/plain;charset=utf-8", text, msg);
+      } else if (act === "doc") {
+        download(resumeFileName(kind, "doc"), "application/msword", resumeHtml(text), msg);
+      } else if (act === "pdf") {
+        var w = window.open("", "_blank");
+        if (!w) { flash(msg, "Pop-ups are blocked. Allow pop-ups for this site, or use Download Word.", true); return; }
+        w.document.write(resumeHtml(text));
+        w.document.close();
+        w.focus();
+        w.print();
+      }
     });
-  });
-  $("downloadTxt").addEventListener("click", function () { download(resumeFileName("txt"), "text/plain;charset=utf-8", lastResume); });
-  $("downloadDoc").addEventListener("click", function () { download(resumeFileName("doc"), "application/msword", resumeHtml(lastResume)); });
-  $("printResume").addEventListener("click", function () {
-    var w = window.open("", "_blank");
-    if (!w) { flash($("resumeMsg"), "Pop-ups are blocked. Allow pop-ups for this site, or use Download Word.", true); return; }
-    w.document.write(resumeHtml(lastResume));
-    w.document.close();
-    w.focus();
-    w.print();
   });
 
   $("atsRole").addEventListener("change", function () {
@@ -1592,8 +1666,20 @@
     var atsLink = e.target.closest("[data-ats-role]");
     if (atsLink) {
       ui.atsRole = atsLink.getAttribute("data-ats-role");
+      ui.resumeMode = "tailored";
+      saveUi();
+      if (!lastResumeRole || lastResumeRole.id !== ui.atsRole) $("resumeOutput").hidden = true;
+      renderScored();
+      if (location.hash === "#resume") window.scrollTo(0, 0);
+      return;
+    }
+    var modeLink = e.target.closest("[data-resume-mode]");
+    if (modeLink) {
+      e.preventDefault();
+      ui.resumeMode = modeLink.getAttribute("data-resume-mode");
       saveUi();
       renderScored();
+      if (modeLink.tagName === "A") window.scrollTo(0, 0);
       return;
     }
 

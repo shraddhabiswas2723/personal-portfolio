@@ -20,6 +20,12 @@ window.PROFILE_DATA = {
 
   careerBreak: "AI governance, Responsible AI, prompt engineering and Claude Code (no-code)",
 
+  // The universal resume on Resume & ATS: one version for any job, not tailored to a role.
+  universalResume: {
+    headline: "Compliance & Risk Professional | Trust & Safety | Investigations | Audit | AI Governance",
+    summary: "Compliance, risk and Trust & Safety professional with nearly 3 years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in AML/KYC. Upskilling in AI governance, Responsible AI, prompt engineering and AI workflow automation with Claude Code.",
+  },
+
   results: [
     { value: "150+", label: "enforcement decisions audited every week at Amazon" },
     { value: "98%", label: "audit-ready outcome rate on high-risk investigations" },

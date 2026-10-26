@@ -219,9 +219,52 @@
     <section class="view" id="view-resume" data-view="resume" aria-labelledby="h-resume" hidden>
       <header class="view-head">
         <h1 id="h-resume">Resume &amp; ATS</h1>
-        <p class="lede">See how well your current resume passes applicant tracking systems for each role, how many projects recruiters expect, and generate a version tailored to one role.</p>
+        <p class="lede">See how well your current resume passes applicant tracking systems for each role, how many projects recruiters expect, and generate a version tailored to one role, or one universal resume you can send for any job.</p>
       </header>
 
+      <div class="segmented resume-mode" role="group" aria-label="Which resume">
+        <button type="button" data-resume-mode="tailored" aria-pressed="true">For one role</button>
+        <button type="button" data-resume-mode="universal" aria-pressed="false">Universal resume</button>
+      </div>
+
+      <div class="resume-pane" id="universalPane" hidden>
+        <div class="ats-grid">
+          <section class="card" aria-labelledby="h-universal">
+            <h2 class="card-title" id="h-universal">One resume for any job</h2>
+            <p class="dimmed">Covers all of your experience and skills without leaning towards one role, so you can send it anywhere. It updates when you add skills, projects or certificates on this site.</p>
+            <h3 class="sub-title">Send this one to</h3>
+            <ul class="use-list">
+              <li>Job portals: your Naukri, LinkedIn, Indeed and foundit profiles</li>
+              <li>Recruiters and consultancies who ask for "your CV"</li>
+              <li>Walk-in drives and job fairs</li>
+              <li>Referral requests when you don't know the exact team yet</li>
+              <li>Jobs that aren't one of your target roles</li>
+            </ul>
+            <p class="dimmed small">Applying for one opening you really want? A resume made for that role scores higher. Use <a href="#resume" data-resume-mode="tailored">For one role</a>.</p>
+          </section>
+          <section class="card" aria-labelledby="h-universal-fit">
+            <h2 class="card-title" id="h-universal-fit">ATS score for each role</h2>
+            <div id="universalScore"></div>
+            <ul class="fit-list" id="universalFit"></ul>
+          </section>
+        </div>
+
+        <section class="card generator" aria-labelledby="h-universal-resume">
+          <h2 class="card-title" id="h-universal-resume">Your universal resume</h2>
+          <div class="resume-output">
+            <div class="button-row" data-resume="universal">
+              <button type="button" class="button button-default" data-resume-act="copy"><span data-icon="copy"></span>Copy text</button>
+              <button type="button" class="button button-default file-only" data-resume-act="doc"><span data-icon="download"></span>Download Word</button>
+              <button type="button" class="button button-default file-only" data-resume-act="txt"><span data-icon="download"></span>Download .txt</button>
+              <button type="button" class="button button-default file-only" data-resume-act="pdf"><span data-icon="printer"></span>Save as PDF</button>
+            </div>
+            <p class="form-msg" id="universalMsg" role="status"></p>
+            <pre class="resume-preview" id="universalPreview" tabindex="0" aria-label="Universal resume"></pre>
+          </div>
+        </section>
+      </div>
+
+      <div class="resume-pane" id="tailoredPane">
       <div class="field role-picker">
         <label class="label" for="atsRole">Target role</label>
         <select class="input select" id="atsRole"></select>
@@ -264,16 +307,17 @@
           <span class="dimmed small" id="generateHint"></span>
         </div>
         <div class="resume-output" id="resumeOutput" hidden>
-          <div class="button-row">
-            <button type="button" class="button button-default" id="copyResume"><span data-icon="copy"></span>Copy text</button>
-            <button type="button" class="button button-default file-only" id="downloadDoc"><span data-icon="download"></span>Download Word</button>
-            <button type="button" class="button button-default file-only" id="downloadTxt"><span data-icon="download"></span>Download .txt</button>
-            <button type="button" class="button button-default file-only" id="printResume"><span data-icon="printer"></span>Save as PDF</button>
+          <div class="button-row" data-resume="tailored">
+            <button type="button" class="button button-default" data-resume-act="copy"><span data-icon="copy"></span>Copy text</button>
+            <button type="button" class="button button-default file-only" data-resume-act="doc"><span data-icon="download"></span>Download Word</button>
+            <button type="button" class="button button-default file-only" data-resume-act="txt"><span data-icon="download"></span>Download .txt</button>
+            <button type="button" class="button button-default file-only" data-resume-act="pdf"><span data-icon="printer"></span>Save as PDF</button>
           </div>
           <p class="form-msg" id="resumeMsg" role="status"></p>
           <pre class="resume-preview" id="resumePreview" tabindex="0" aria-label="Generated resume"></pre>
         </div>
       </section>
+      </div>
     </section>
 
     <!-- Skills -->

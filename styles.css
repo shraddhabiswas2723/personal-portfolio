@@ -555,6 +555,21 @@ a.kpi:hover { border-color: var(--primary); }
 .companies-table .pills { gap: 4px; }
 
 /* ---------- Resume & ATS ---------- */
+.resume-mode { justify-self: start; }
+.resume-mode button { padding: 7px 16px; font-size: var(--fs-md); }
+.resume-pane { display: grid; gap: var(--sp-lg); }
+.use-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 4px; font-size: var(--fs-sm); }
+.fit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fit-list li { display: grid; grid-template-columns: minmax(0, 1fr) 90px 3ch 6.75rem; gap: 4px 10px; align-items: center; font-size: var(--fs-sm); }
+.fit-list .progress { width: 100%; }
+.fit-score { text-align: right; font-variant-numeric: tabular-nums; }
+.fit-tailored { justify-self: end; display: inline-flex; align-items: center; gap: 3px; color: var(--dimmed-strong); font-size: var(--fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; text-decoration: none; }
+.fit-tailored:hover, .fit-tailored:focus-visible { color: var(--primary-light-text); text-decoration: underline; }
+.fit-tailored .icon { width: 12px; height: 12px; }
+@media (max-width: 520px) {
+  .fit-list li { grid-template-columns: minmax(0, 1fr) 3ch 6.75rem; }
+  .fit-role { grid-column: 1 / -1; }
+}
 .role-picker { max-width: 420px; }
 .ats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-lg); align-items: start; }
 .ats-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-md); }
