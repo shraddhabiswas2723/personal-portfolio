@@ -1561,9 +1561,33 @@
       '<body style="font-family:Calibri,Arial,sans-serif;font-size:10.5pt;line-height:1.35;max-width:7.5in;margin:0.6in auto;color:#000">' + body + '</body></html>';
   }
 
+  // In the Claude preview, files are saved through the viewer's `downloads` capability,
+  // which asks the viewer to confirm. Until it answers (or if it can't), save buttons stay hidden there.
+  var downloads = null;
+  if (IS_ARTIFACT && window.claude && window.claude.use) {
+    window.claude.use("downloads").then(function (d) {
+      downloads = d;
+      document.documentElement.classList.toggle("can-save", !!d);
+    }, function () { /* no downloads in this view */ });
+  }
+
+  // Resolves true when the file was handed to the browser.
   function download(name, type, content, msg) {
+    var blob = content instanceof Blob ? content : new Blob([content], { type: type });
+    if (IS_ARTIFACT) {
+      if (!downloads) { flash(msg, "This view can't save files. Use Copy text instead.", true); return Promise.resolve(false); }
+      return downloads.save({ filename: name, data: blob }).then(function () {
+        flash(msg, "Saved " + name + ".");
+        return true;
+      }, function (err) {
+        var code = err && err.code;
+        if (code === "declined") flash(msg, "Not saved. Press the button again when you want the file.");
+        else if (code === "rate_limited") flash(msg, "A save is already waiting for you to confirm.", true);
+        else flash(msg, "This view couldn't save the file. Use Copy text instead.", true);
+        return false;
+      });
+    }
     try {
-      var blob = new Blob([content], { type: type });
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = name;
@@ -1571,14 +1595,194 @@
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
       flash(msg, "Downloaded " + name + ".");
+      return Promise.resolve(true);
     } catch (e) {
       flash(msg, "This browser blocked the download. Use Copy text instead.", true);
+      return Promise.resolve(false);
     }
+  }
+
+  // ---------- Resume PDF ----------
+  // A text-based A4 PDF drawn with jsPDF, so ATS tools can read and search every word.
+  // The library (vendor/, MIT licence) loads the first time it's needed.
+
+  var pdfLib = null;
+
+  function loadPdfLib() {
+    if (window.jspdf) return Promise.resolve(window.jspdf.jsPDF);
+    if (!pdfLib) {
+      pdfLib = new Promise(function (resolve, reject) {
+        var s = document.createElement("script");
+        s.src = "vendor/jspdf.umd.min.js";
+        s.onload = function () { if (window.jspdf) resolve(window.jspdf.jsPDF); else reject(new Error("no jsPDF")); };
+        s.onerror = function () { pdfLib = null; reject(new Error("jsPDF failed to load")); };
+        document.head.appendChild(s);
+      });
+    }
+    return pdfLib;
+  }
+
+  // PDF's built-in Helvetica covers Latin-1 plus a few typographic marks; swap or drop anything else.
+  var WIN_ANSI_EXTRA = "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
+  function pdfSafe(s) {
+    return s.replace(/₹\s?/g, "Rs ").replace(/→/g, "->").replace(/[^\u0000-ÿ]/g, function (c) {
+      return WIN_ANSI_EXTRA.indexOf(c) !== -1 ? c : "";
+    });
+  }
+
+  // Lays out the resume text: name, headline, contact links, then each section with a rule under its heading.
+  function drawResumePdf(JsPDF, text, pt) {
+    var p = DATA.person;
+    var doc = new JsPDF({ unit: "pt", format: "a4", compress: true });
+    var pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
+    var margin = 40, width = pageW - 2 * margin, right = pageW - margin;
+    var lead = pt * 1.3;
+    var ink = "#111111", soft = "#4a4a4a";
+    var lines = pdfSafe(text).split("\n");
+    var y = margin + pt * 2;
+    var section = "";
+
+    function setFont(style, size, color) {
+      doc.setFont("helvetica", style);
+      doc.setFontSize(size || pt);
+      doc.setTextColor(color || ink);
+    }
+    function room(h) { if (y + h > pageH - margin) { doc.addPage(); y = margin + pt; } }
+    function wrap(str, firstW, w) {
+      var out = [], cur = "", limit = firstW;
+      str.split(/\s+/).filter(Boolean).forEach(function (word) {
+        var test = cur ? cur + " " + word : word;
+        if (cur && doc.getTextWidth(test) > limit) { out.push(cur); cur = word; limit = w; } else cur = test;
+      });
+      if (cur) out.push(cur);
+      return out;
+    }
+    // A bold lead-in, then normal text wrapped under it; `date` sits on the right of the first line.
+    function row(bold, rest, date, x) {
+      x = x || margin;
+      var w = right - x;
+      setFont("normal");
+      var dateW = date ? doc.getTextWidth(date) + 14 : 0;
+      setFont("bold");
+      var boldW = bold ? doc.getTextWidth(bold + " ") : 0;
+      setFont("normal");
+      var parts = rest ? wrap(rest, w - dateW - boldW, w) : [];
+      room(lead * (1 + (section === "WORK EXPERIENCE" && date ? 1 : 0)));
+      if (bold) { setFont("bold"); doc.text(bold, x, y); setFont("normal"); }
+      if (parts.length) doc.text(parts[0], x + boldW, y);
+      if (date) { setFont("normal", pt, soft); doc.text(date, right, y, { align: "right" }); setFont("normal"); }
+      y += lead;
+      parts.slice(1).forEach(function (l) { room(lead); doc.text(l, x, y); y += lead; });
+    }
+    function bullet(str) {
+      var indent = pt * 1.1;
+      setFont("normal");
+      wrap(str, width - indent, width - indent).forEach(function (l, i) {
+        room(lead);
+        if (i === 0) doc.text("•", margin + 2, y);
+        doc.text(l, margin + indent, y);
+        y += lead;
+      });
+    }
+    function heading(str) {
+      room(lead * 3);
+      y += pt * 0.55;
+      setFont("bold", pt + 1.5);
+      doc.text(str, margin, y, { charSpace: 0.6 });
+      doc.setDrawColor("#9a9a9a");
+      doc.setLineWidth(0.6);
+      doc.line(margin, y + 4, right, y + 4);
+      y += 4 + lead;
+      setFont("normal");
+    }
+
+    // Name, headline and contact line.
+    setFont("bold", pt * 2.1);
+    doc.text(lines[0], margin, y);
+    y += pt * 1.7;
+    setFont("normal", pt + 1.5, soft);
+    wrap(lines[1], width, width).forEach(function (l) { doc.text(l, margin, y); y += lead * 1.05; });
+    setFont("normal", pt - 0.5);
+    var sep = "  |  ", x = margin;
+    lines[2].split(" | ").forEach(function (item, i) {
+      item = item.replace(/^www\./, "");
+      var label = (i ? sep : "") + item;
+      if (x + doc.getTextWidth(label) > right) { x = margin; y += lead; label = item; }
+      var url = item.indexOf("@") !== -1 ? "mailto:" + item : /linkedin\.com/.test(item) ? p.linkedin : null;
+      if (url) {
+        var lead0 = label.slice(0, label.length - item.length);
+        doc.text(lead0, x, y);
+        doc.setTextColor("#1a4fa0");
+        doc.textWithLink(item, x + doc.getTextWidth(lead0), y, { url: url });
+        doc.setTextColor(ink);
+      } else {
+        doc.text(label, x, y);
+      }
+      x += doc.getTextWidth(label);
+    });
+    y += lead * 0.9;
+
+    lines.slice(3).forEach(function (l) {
+      if (!l.trim()) { y += pt * 0.3; return; }
+      if (/^[A-Z][A-Z &]{3,}$/.test(l.trim())) { section = l.trim(); heading(section); return; }
+      if (/^• /.test(l)) { bullet(l.slice(2)); return; }
+      var parts = l.split(" | ");
+      var colon = l.indexOf(": ");
+      if (section === "SKILLS" && colon > 0) { row(l.slice(0, colon + 1), l.slice(colon + 2)); return; }
+      if (section === "WORK EXPERIENCE" && parts.length === 3) { row(parts[0], "| " + parts[1], parts[2]); y += pt * 0.1; return; }
+      if (section === "WORK EXPERIENCE" && parts.length === 2) {
+        var c = parts[0].indexOf(": ");
+        if (c > 0) row(parts[0].slice(0, c + 1), parts[0].slice(c + 2), parts[1]); else row(parts[0], "", parts[1]);
+        return;
+      }
+      if (section === "EDUCATION" && parts.length === 3) { row(parts[0], "| " + parts[1], parts[2]); return; }
+      if (section === "PROJECTS" && parts.length >= 2) { row(parts[0], "| " + parts.slice(1).join(" | ")); return; }
+      row("", l);
+    });
+
+    var pages = doc.getNumberOfPages();
+    if (pages > 1) {
+      for (var n = 1; n <= pages; n++) {
+        doc.setPage(n);
+        setFont("normal", pt - 1.5, soft);
+        doc.text(p.name + "  ·  Page " + n + " of " + pages, pageW / 2, pageH - margin / 2, { align: "center" });
+      }
+    }
+    doc.setProperties({ title: p.name + " – Resume", subject: lines[1], author: p.name, creator: p.name + " job search site" });
+    doc.setLanguage("en-IN");
+    return doc;
+  }
+
+  // One page when a slightly smaller font fits it; otherwise the full size over two pages.
+  function resumePdf(text) {
+    return loadPdfLib().then(function (JsPDF) {
+      var sizes = [10, 9.5, 9];
+      for (var i = 0; i < sizes.length; i++) {
+        var doc = drawResumePdf(JsPDF, text, sizes[i]);
+        if (doc.getNumberOfPages() === 1) return doc.output("blob");
+      }
+      return drawResumePdf(JsPDF, text, sizes[0]).output("blob");
+    });
+  }
+
+  function savePdf(kind, text, msg, done) {
+    if (IS_ARTIFACT && !downloads) {
+      flash(msg, "This view can't save files, so there's no PDF here. Use Copy text, or open your website to download the PDF.", true);
+      return;
+    }
+    flash(msg, "Making your PDF…");
+    resumePdf(text).then(function (blob) {
+      var name = resumeFileName(kind, "pdf");
+      return download(name, "application/pdf", blob, msg).then(function (ok) { if (ok && done) done(name); });
+    }).catch(function () {
+      flash(msg, "The PDF couldn't be made. Check your connection and try again, or use Download Word.", true);
+    });
   }
 
   $("generateBtn").addEventListener("click", function () {
     var role = roleById[$("atsRole").value];
     var text = buildResume(role);
+    var msg = $("resumeMsg");
     lastResumeRole = role;
     $("resumePreview").textContent = text;
     $("resumeOutput").hidden = false;
@@ -1586,11 +1790,12 @@
     state.generated[role.id] = true;
     saveState();
     renderScored();
-    flash($("resumeMsg"), "Generated for " + role.title + ". Estimated ATS score " + score + "/100, and this role's match is updated. Read it through before sending.");
-    $("resumePreview").focus();
+    savePdf("tailored", text, msg, function (name) {
+      flash(msg, (IS_ARTIFACT ? "Saved " : "Downloaded ") + name + ". Estimated ATS score " + score + "/100, and this role's match is updated. Read it through before sending.");
+    });
   });
 
-  // Copy, Download Word, Download .txt and Save as PDF, for whichever resume the buttons sit under.
+  // Generate PDF, Copy, Download Word and Download .txt, for whichever resume the buttons sit under.
   document.querySelectorAll("[data-resume]").forEach(function (row) {
     var kind = row.getAttribute("data-resume");
     var msg = $(RESUME_OUT[kind].msg), preview = $(RESUME_OUT[kind].preview);
@@ -1614,12 +1819,7 @@
       } else if (act === "doc") {
         download(resumeFileName(kind, "doc"), "application/msword", resumeHtml(text), msg);
       } else if (act === "pdf") {
-        var w = window.open("", "_blank");
-        if (!w) { flash(msg, "Pop-ups are blocked. Allow pop-ups for this site, or use Download Word.", true); return; }
-        w.document.write(resumeHtml(text));
-        w.document.close();
-        w.focus();
-        w.print();
+        savePdf(kind, text, msg);
       }
     });
   });

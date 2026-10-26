@@ -644,6 +644,7 @@ a.kpi:hover { border-color: var(--primary); }
   overflow-wrap: anywhere;
 }
 .is-artifact .file-only, .is-artifact .site-only { display: none; }
+.is-artifact:not(.can-save) .save-only { display: none; }
 
 /* ---------- Skills ---------- */
 .inline-form { display: grid; gap: 4px; max-width: 620px; }
