@@ -12,18 +12,29 @@ window.PROFILE_DATA = {
     phone: "+91 8639627073",
     linkedin: "https://www.linkedin.com/in/shraddha-biswas-20b2a324a",
     summary:
-      "Compliance and operations professional with nearly 3 years at Amazon and in technical support, all in Hyderabad. " +
+      "Compliance and operations professional with 3+ years at Amazon and in technical support, all in Hyderabad. " +
       "I audit enforcement decisions against SOPs, investigate account-level risk and policy violations, run root cause " +
       "analysis and resolve escalations within tight SLAs. Since March 2026 I've been upskilling in AI governance, " +
       "Responsible AI, prompt engineering and Claude Code.",
   },
 
-  careerBreak: "AI governance, Responsible AI, prompt engineering and Claude Code (no-code)",
+  // The break since March 2026, shown on every resume under PROFESSIONAL DEVELOPMENT.
+  development: {
+    title: "Independent Upskilling (Career Break)",
+    place: "Hyderabad",
+    start: "Mar 2026",
+    end: "Present",
+    points: [
+      "Developed skills in AI safety, Responsible AI and prompt engineering, and built AI workflows and websites with Claude Code (no-code).",
+      "Studied emerging digital regulation, including India's DPDP Act and the EU AI Act, and completed the Lean Six Sigma Yellow Belt (AIGPE).",
+    ],
+  },
 
-  // The universal resume on Resume & ATS: one version for any job, not tailored to a role.
+  // The universal resume on Resume & ATS: one complete version for any job, not tailored to a role.
+  // It lists every certificate in the learning log, including ones the role resumes leave out.
   universalResume: {
-    headline: "Compliance & Risk Professional | Trust & Safety | Investigations | Audit | AI Governance",
-    summary: "Compliance, risk and Trust & Safety professional with nearly 3 years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in AML/KYC. Upskilling in AI governance, Responsible AI, prompt engineering and AI workflow automation with Claude Code.",
+    headline: "Compliance & Risk Professional | Trust & Safety | Investigations | Audit | Process Improvement",
+    summary: "Compliance, risk and Trust & Safety professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in AML/KYC and Lean Six Sigma. Upskilling in Responsible AI, AI safety, prompt engineering and AI workflow automation with Claude Code.",
   },
 
   results: [
@@ -33,10 +44,10 @@ window.PROFILE_DATA = {
     { value: "24h", label: "SLA met on critical seller escalations" },
   ],
 
-  // Only roles relevant to the job search. The 4-month SDS CAP Associate stint (2022) is left out.
+  // Every job, newest first. All of them appear on every resume.
   experience: [
     {
-      company: "Amazon Development Centre (India)",
+      company: "Amazon Development Centre (India) Pvt. Ltd.",
       place: "Hyderabad",
       role: "AIT Auditor",
       start: "Jul 2025",
@@ -49,7 +60,7 @@ window.PROFILE_DATA = {
       ],
     },
     {
-      company: "Amazon Development Centre (India)",
+      company: "Amazon Development Centre (India) Pvt. Ltd.",
       place: "Hyderabad",
       role: "Account Health Specialist",
       start: "Aug 2024",
@@ -71,10 +82,22 @@ window.PROFILE_DATA = {
         "Documented recurring faults in the internal knowledge base, reducing repeat escalations by 15%.",
       ],
     },
+    {
+      company: "Amazon Development Centre (India) Pvt. Ltd.",
+      place: "Hyderabad",
+      role: "SDS CAP Associate (L2)",
+      start: "Sep 2022",
+      end: "Dec 2022",
+      points: [
+        "Supported high-volume logistics and operational compliance workflows, ensuring strict adherence to standard process metrics.",
+      ],
+    },
   ],
 
   education: [
     { title: "Bachelor of Computer Applications (BCA)", place: "Jaipur National University", year: "2021" },
+    { title: "Intermediate (MPC)", place: "Narayana Junior College", year: "2015" },
+    { title: "High School", place: "Sri Vyshnavi Concept School", year: "2013" },
   ],
 
   projects: [
@@ -123,7 +146,8 @@ window.PROFILE_DATA = {
     { id: "prompt", label: "Prompt engineering", group: "ai", have: true, aliases: ["prompt engineering", "prompting", "prompts"] },
     { id: "claude", label: "Claude & Claude Code (no-code)", group: "ai", have: true, aliases: ["claude", "claude code", "llm", "genai"] },
     { id: "automation", label: "AI agents & automations", resume: "AI agents, skills & workflow automation", group: "ai", have: true, aliases: ["automation", "agents", "ai automation"] },
-    { id: "aigov", label: "AI governance frameworks", group: "ai", have: true, aliases: ["ai governance", "governance"] },
+    // resumeOnlyFor: shown on the resume for these roles only (here, the AI Governance role).
+    { id: "aigov", label: "AI governance frameworks", group: "ai", have: true, aliases: ["ai governance", "governance"], resumeOnlyFor: ["aigov"] },
     { id: "rai", label: "Responsible AI & AI safety", group: "ai", have: true, aliases: ["responsible ai", "ai safety", "ai ethics"] },
     { id: "llmeval", label: "LLM evaluation & red-teaming", group: "ai", have: false, aliases: ["llm evaluation", "red teaming", "rlhf", "rubric", "evaluation"], time: "3–4 days", how: "Build a 50-prompt evaluation set and score two models" },
     { id: "nist", label: "NIST AI RMF & ISO 42001", group: "ai", have: false, aliases: ["nist", "ai rmf", "iso 42001", "42001"], time: "1 week", how: "Free NIST documents, or ISO 42001 Foundation" },
@@ -156,7 +180,7 @@ window.PROFILE_DATA = {
       jobTitles: ["trust and safety", "trust & safety", "investigation specialist", "investigations specialist", "investigator, trust", "policy enforcement", "content policy", "content moderation", "content moderator", "policy specialist", "content review", "integrity", "abuse", "brand protection", "safety specialist"],
       certSuggestion: "Prompt Engineering certificate (you have it)",
       resumeHeadline: "Trust & Safety Analyst | Policy Enforcement | Risk Investigations",
-      resumeSummary: "Trust & Safety and policy enforcement professional with nearly 3 years at Amazon and in technical support in Hyderabad. Audited 150+ enforcement decisions a week against SOPs, investigated policy violations and account-level risk signals, and resolved critical seller escalations within 24-hour SLAs. Uses SQL and Excel for trend analysis and root cause analysis, and is building skills in AI safety, Responsible AI and prompt engineering.",
+      resumeSummary: "Trust & Safety and policy enforcement professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ enforcement decisions a week against SOPs, investigated policy violations and account-level risk signals, and resolved critical seller escalations within 24-hour SLAs. Uses SQL and Excel for trend analysis and root cause analysis, and is building skills in AI safety, Responsible AI and prompt engineering.",
       titleTerms: ["trust & safety", "policy enforcement", "investigation"],
       bulletFocus: ["policy", "investigat", "violation", "enforcement", "risk"],
       certTerms: ["Prompt Engineering", "TSPA", "Green Belt"],
@@ -197,7 +221,7 @@ window.PROFILE_DATA = {
       jobTitles: ["risk investigator", "risk specialist", "fraud", "transaction risk", "risk operations", "payment risk", "seller risk", "account risk", "risk analyst, payments"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "Risk Investigation Specialist | Account Risk | Fraud Prevention",
-      resumeSummary: "Risk investigation professional with nearly 3 years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals, documented defensible evidence for a 98% audit-ready outcome rate, and identified 5+ critical control gaps through risk-based reviews. Uses SQL and Advanced Excel for case analysis and root cause analysis.",
+      resumeSummary: "Risk investigation professional with 3+ years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals, documented defensible evidence for a 98% audit-ready outcome rate, and identified 5+ critical control gaps through risk-based reviews. Uses SQL and Advanced Excel for case analysis and root cause analysis.",
       titleTerms: ["risk", "investigat", "fraud"],
       bulletFocus: ["risk", "investigat", "evidence", "control"],
       certTerms: ["Anti-Money Laundering", "AML", "IIBF", "CAMS", "Data Literacy"],
@@ -238,7 +262,7 @@ window.PROFILE_DATA = {
       jobTitles: ["program specialist", "escalation specialist", "process specialist", "seller support", "selling partner", "account health", "operations specialist", "program associate"],
       certSuggestion: "Lean Six Sigma Green Belt",
       resumeHeadline: "Program & Escalation Specialist | Seller Operations | Process Improvement",
-      resumeSummary: "Seller operations professional with nearly 3 years at Amazon and in technical support in Hyderabad. Resolved critical seller escalations within 24-hour SLAs, wrote decisions that updated regional SOPs, and ran root cause analysis with cross-functional stakeholders to fix recurring failures. Turns metrics into leadership reports using SQL, Advanced Excel and Power BI.",
+      resumeSummary: "Seller operations professional with 3+ years at Amazon and in technical support in Hyderabad. Resolved critical seller escalations within 24-hour SLAs, wrote decisions that updated regional SOPs, and ran root cause analysis with cross-functional stakeholders to fix recurring failures. Turns metrics into leadership reports using SQL, Advanced Excel and Power BI.",
       titleTerms: ["program", "escalation", "process"],
       bulletFocus: ["escalation", "sop", "process", "stakeholder", "report"],
       certTerms: ["Green Belt", "Data Literacy", "PL-300"],
@@ -278,7 +302,7 @@ window.PROFILE_DATA = {
       jobTitles: ["compliance analyst", "compliance associate", "compliance specialist", "compliance operations", "regulatory compliance", "compliance officer", "compliance"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "Compliance Operations Analyst | Audit | Risk Assessment",
-      resumeSummary: "Compliance operations professional with nearly 3 years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling, with working knowledge of AML/KYC, the DPDP Act and the EU AI Act.",
+      resumeSummary: "Compliance operations professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling, with working knowledge of AML/KYC, the DPDP Act and the EU AI Act.",
       titleTerms: ["compliance", "audit"],
       bulletFocus: ["compliance", "sop", "audit", "evidence", "control"],
       certTerms: ["Anti-Money Laundering", "AML", "IIBF", "CAMS", "ISO"],
@@ -318,7 +342,7 @@ window.PROFILE_DATA = {
       jobTitles: ["kyc", "aml", "anti-money", "anti money", "financial crime", "fincrime", "due diligence", "transaction monitoring", "sanctions", "cdd", "edd", "client onboarding"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "AML / KYC Analyst | Risk Investigations | Compliance",
-      resumeSummary: "Compliance and risk investigation professional with nearly 3 years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals with a 98% audit-ready evidence rate, and audited 150+ decisions weekly against SOPs. Trained in AML and KYC fundamentals, with strong case documentation, risk assessment and escalation skills.",
+      resumeSummary: "Compliance and risk investigation professional with 3+ years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals with a 98% audit-ready evidence rate, and audited 150+ decisions weekly against SOPs. Trained in AML and KYC fundamentals, with strong case documentation, risk assessment and escalation skills.",
       titleTerms: ["aml", "kyc", "financial crime"],
       bulletFocus: ["risk", "investigat", "evidence", "compliance"],
       certTerms: ["IIBF", "CAMS", "ICA", "Anti-Money Laundering"],
@@ -358,7 +382,7 @@ window.PROFILE_DATA = {
       jobTitles: ["data associate", "annotation", "annotator", "ai trainer", "llm", "data quality", "rater", "evaluation", "agi", "language data", "ai data", "quality specialist, ai"],
       certSuggestion: "Prompt Engineering certificate (you have it)",
       resumeHeadline: "AI Data Quality Specialist | LLM Evaluation | Prompt Engineering",
-      resumeSummary: "Quality and compliance auditor with nearly 3 years at Amazon and in technical support in Hyderabad, now focused on AI data quality. Audited 150+ decisions a week against detailed guidelines with a 98% audit-ready rate and used root cause analysis to fix recurring errors. Skilled in prompt engineering and Claude Code, with training in Responsible AI and AI safety.",
+      resumeSummary: "Quality and compliance auditor with 3+ years at Amazon and in technical support in Hyderabad, now focused on AI data quality. Audited 150+ decisions a week against detailed guidelines with a 98% audit-ready rate and used root cause analysis to fix recurring errors. Skilled in prompt engineering and Claude Code, with training in Responsible AI and AI safety.",
       titleTerms: ["ai data", "llm", "evaluation", "prompt"],
       bulletFocus: ["audit", "quality", "defect", "root cause"],
       certTerms: ["Prompt Engineering", "Claude"],
@@ -398,7 +422,7 @@ window.PROFILE_DATA = {
       jobTitles: ["grc", "operational risk", "risk and control", "risk & control", "controls", "internal audit", "audit associate", "control testing", "sox", "risk analyst", "governance, risk"],
       certSuggestion: "ISO 27001 Foundation (2–3 days)",
       resumeHeadline: "Risk & Controls Analyst | Control Testing | Audit",
-      resumeSummary: "Audit and risk professional with nearly 3 years at Amazon and in technical support in Hyderabad. Identified 5+ critical control gaps while auditing 150+ decisions weekly, documented audit-ready evidence at a 98% rate, and drove remediation through root cause analysis with cross-functional stakeholders.",
+      resumeSummary: "Audit and risk professional with 3+ years at Amazon and in technical support in Hyderabad. Identified 5+ critical control gaps while auditing 150+ decisions weekly, documented audit-ready evidence at a 98% rate, and drove remediation through root cause analysis with cross-functional stakeholders.",
       titleTerms: ["risk", "control", "audit"],
       bulletFocus: ["control", "audit", "risk", "evidence"],
       certTerms: ["ISO 27001", "ISO", "Green Belt", "CISA"],
@@ -438,7 +462,7 @@ window.PROFILE_DATA = {
       jobTitles: ["operations analyst", "mis analyst", "mis executive", "business analyst", "reporting analyst", "data analyst", "business operations", "operations associate"],
       certSuggestion: "Microsoft PL-300 (Power BI)",
       resumeHeadline: "Operations Analyst | SQL | Power BI | MIS Reporting",
-      resumeSummary: "Operations and data professional with nearly 3 years at Amazon and in technical support in Hyderabad. Turned compliance metrics into reports for operations leadership, detected defect trends with data-driven reviews and used root cause analysis to close recurring issues. Works in SQL, Advanced Excel (VLOOKUP, pivot tables) and Power BI.",
+      resumeSummary: "Operations and data professional with 3+ years at Amazon and in technical support in Hyderabad. Turned compliance metrics into reports for operations leadership, detected defect trends with data-driven reviews and used root cause analysis to close recurring issues. Works in SQL, Advanced Excel (VLOOKUP, pivot tables) and Power BI.",
       titleTerms: ["operations analyst", "mis", "analyst", "sql"],
       bulletFocus: ["data", "report", "metric", "trend"],
       certTerms: ["Data Literacy", "PL-300", "Power BI", "Green Belt"],
@@ -478,7 +502,7 @@ window.PROFILE_DATA = {
       jobTitles: ["ai operations", "automation analyst", "automation specialist", "generative ai", "genai", "prompt engineer", "ai associate", "ai specialist", "rpa"],
       certSuggestion: "Claude Code course (you have it)",
       resumeHeadline: "AI Operations Associate | Workflow Automation | Prompt Engineering",
-      resumeSummary: "Operations professional with nearly 3 years at Amazon and in technical support in Hyderabad, now building AI workflows with Claude and Claude Code (no-code). Wrote and maintained SOPs, ran root cause analysis on recurring failures and documented fixes in knowledge bases. Skilled in prompt engineering, AI agents and workflow automation.",
+      resumeSummary: "Operations professional with 3+ years at Amazon and in technical support in Hyderabad, now building AI workflows with Claude and Claude Code (no-code). Wrote and maintained SOPs, ran root cause analysis on recurring failures and documented fixes in knowledge bases. Skilled in prompt engineering, AI agents and workflow automation.",
       titleTerms: ["ai operations", "automation", "prompt"],
       bulletFocus: ["sop", "process", "knowledge base", "documented"],
       certTerms: ["Claude", "Prompt Engineering", "AI-900"],
@@ -517,7 +541,7 @@ window.PROFILE_DATA = {
       jobTitles: ["ai governance", "responsible ai", "ai risk", "ai compliance", "ai policy", "ai ethics", "ai assurance"],
       certSuggestion: "ISO 42001 Foundation or IAPP AIGP",
       resumeHeadline: "AI Governance Analyst | Responsible AI | Compliance Audit",
-      resumeSummary: "Compliance auditor with nearly 3 years at Amazon and in technical support in Hyderabad, specialising in AI governance and Responsible AI. Audited 150+ decisions weekly against SOPs with audit-ready documentation at a 98% rate and ran risk-based reviews. Studying the EU AI Act, India's DPDP Act and AI governance frameworks, with hands-on prompt engineering and Claude Code.",
+      resumeSummary: "Compliance auditor with 3+ years at Amazon and in technical support in Hyderabad, specialising in AI governance and Responsible AI. Audited 150+ decisions weekly against SOPs with audit-ready documentation at a 98% rate and ran risk-based reviews. Studying the EU AI Act, India's DPDP Act and AI governance frameworks, with hands-on prompt engineering and Claude Code.",
       titleTerms: ["ai governance", "responsible ai", "ai risk"],
       bulletFocus: ["audit", "risk", "evidence", "compliance"],
       certTerms: ["AIGP", "ISO 42001", "AI Governance"],
@@ -685,6 +709,7 @@ window.PROFILE_DATA = {
     },
     {
       title: "AI Governance Frameworks & Safety Compliance",
+      resumeOnlyFor: ["aigov"],
       source: "Self-study",
       date: "Mar 2026 – present",
       useful: "yes",
@@ -712,7 +737,7 @@ window.PROFILE_DATA = {
     },
     {
       title: "Six Sigma White Belt",
-      source: "Certification",
+      source: "",
       useful: "no",
       why: "Your Lean Six Sigma Yellow Belt covers the same ground and more.",
       action: "Leave it off your resume and list the Yellow Belt instead.",

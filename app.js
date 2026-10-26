@@ -418,38 +418,55 @@
     return { total: Math.round(total), checks: checks, matched: matched };
   }
 
-  function skillNames(have, group) {
-    return DATA.skills.filter(function (s) { return have[s.id] && s.group === group; }).map(function (s) { return s.resume || s.label; });
+  // Some items (AI governance) go only on the resume for the roles named in their `resumeOnlyFor`.
+  function onResumeFor(item, roleId) {
+    return !item.resumeOnlyFor || item.resumeOnlyFor.indexOf(roleId) !== -1;
+  }
+
+  function skillNames(have, group, roleId) {
+    return DATA.skills.filter(function (s) { return have[s.id] && s.group === group && onResumeFor(s, roleId); })
+      .map(function (s) { return s.resume || s.label; });
+  }
+
+  function languagesLine() {
+    var v = (state.personal.languages || "").trim();
+    return v ? "Languages: " + v : "";
   }
 
   // Builds an ATS resume for one role from real experience only.
   function buildResume(role) {
     var have = ownedSet();
-    var roleTerms = role.keywords.filter(hasKeyword).map(function (k) { return k.term; });
+    var roleTerms = role.keywords.filter(function (k) {
+      return hasKeyword(k) && (!k.skill || !skillById[k.skill] || onResumeFor(skillById[k.skill], role.id));
+    }).map(function (k) { return k.term; });
     var seen = {};
     var core = roleTerms.filter(function (t) { var k = t.toLowerCase(); if (seen[k]) return false; seen[k] = true; return true; });
-    var tools = skillNames(have, "data");
-    var ai = skillNames(have, "ai");
+    var tools = skillNames(have, "data", role.id);
+    var ai = skillNames(have, "ai", role.id);
     var skills = ["Core: " + core.join(", ")];
     if (tools.length) skills.push("Tools: " + tools.join(", "));
     if (ai.length) skills.push("AI: " + ai.join(", "));
-    return resumeText(role.resumeHeadline, role.resumeSummary, skills, role.bulletFocus || []);
+    if (languagesLine()) skills.push(languagesLine());
+    return resumeText(role.resumeHeadline, role.resumeSummary, skills, role.bulletFocus || [], { roleId: role.id });
   }
 
-  // One resume for any job: every skill you have, grouped, and bullets in their own order.
+  // One complete resume for any job: every skill you have, grouped, bullets in their own order,
+  // and every certificate in the learning log.
   function buildUniversalResume() {
     var have = ownedSet();
     var skills = DATA.skillGroups.map(function (g) {
-      var names = skillNames(have, g.id);
+      var names = skillNames(have, g.id, null);
       return names.length ? g.label + ": " + names.join(", ") : "";
     }).filter(Boolean);
     if (state.custom.length) skills.push("Other: " + state.custom.join(", "));
+    if (languagesLine()) skills.push(languagesLine());
     var u = DATA.universalResume;
-    return resumeText(u.headline, u.summary, skills, []);
+    return resumeText(u.headline, u.summary, skills, [], { roleId: null, allCerts: true });
   }
 
   // The parts every resume shares. `focus` moves the bullets that mention these words to the top of each job.
-  function resumeText(headline, summary, skills, focus) {
+  // opts.roleId: the role it's for (null for the universal resume); opts.allCerts: list every certificate.
+  function resumeText(headline, summary, skills, focus, opts) {
     var p = DATA.person;
     var lines = [];
     lines.push(p.name.toUpperCase());
@@ -476,7 +493,11 @@
       pts.forEach(function (pt) { lines.push("• " + pt); });
       lines.push("");
     });
-    lines.push("Career break: Upskilling in " + DATA.careerBreak + " | Mar 2026 – Present");
+
+    var dev = DATA.development;
+    lines.push("PROFESSIONAL DEVELOPMENT");
+    lines.push(dev.title + " | " + dev.place + " | " + dev.start + " – " + dev.end);
+    dev.points.forEach(function (pt) { lines.push("• " + pt); });
     lines.push("");
 
     var projects = allProjects();
@@ -489,7 +510,11 @@
       lines.push("");
     }
 
-    var certs = DATA.learning.filter(function (l) { return l.useful === "yes" && l.onResume; }).map(function (l) { return l.title + " – " + l.source; });
+    var certs = DATA.learning.filter(function (l) {
+      return (opts.allCerts || (l.useful === "yes" && l.onResume)) && onResumeFor(l, opts.roleId);
+    }).map(function (l) {
+      return l.title + (l.source ? " – " + l.source : "") + (/present/i.test(l.date || "") ? " (in progress)" : "");
+    });
     state.learning.forEach(function (l) { certs.push(l.title + (l.source ? " – " + l.source : "")); });
     if (certs.length) {
       lines.push("CERTIFICATIONS");
@@ -1667,7 +1692,7 @@
       var boldW = bold ? doc.getTextWidth(bold + " ") : 0;
       setFont("normal");
       var parts = rest ? wrap(rest, w - dateW - boldW, w) : [];
-      room(lead * (1 + (section === "WORK EXPERIENCE" && date ? 1 : 0)));
+      room(lead * (date ? 2 : 1));
       if (bold) { setFont("bold"); doc.text(bold, x, y); setFont("normal"); }
       if (parts.length) doc.text(parts[0], x + boldW, y);
       if (date) { setFont("normal", pt, soft); doc.text(date, right, y, { align: "right" }); setFont("normal"); }
@@ -1677,15 +1702,28 @@
     function bullet(str) {
       var indent = pt * 1.1;
       setFont("normal");
-      wrap(str, width - indent, width - indent).forEach(function (l, i) {
-        room(lead);
+      var parts = wrap(str, width - indent, width - indent);
+      room(lead * parts.length);
+      parts.forEach(function (l, i) {
         if (i === 0) doc.text("•", margin + 2, y);
         doc.text(l, margin + indent, y);
         y += lead;
       });
     }
-    function heading(str) {
+    // Title and dates on one line, the employer under it.
+    function stackedRow(title, where, date) {
       room(lead * 3);
+      setFont("bold");
+      doc.text(title, margin, y);
+      setFont("normal", pt, soft);
+      doc.text(date, right, y, { align: "right" });
+      y += lead;
+      doc.text(where, margin, y);
+      setFont("normal");
+      y += lead;
+    }
+    function heading(str) {
+      room(lead * 4);
       y += pt * 0.55;
       setFont("bold", pt + 1.5);
       doc.text(str, margin, y, { charSpace: 0.6 });
@@ -1722,6 +1760,18 @@
     });
     y += lead * 0.9;
 
+    // If any job line is too long to share a line with its dates, stack every job's employer under its title.
+    var stacked = false, inJobs = false;
+    lines.slice(3).forEach(function (l) {
+      if (/^[A-Z][A-Z &]{3,}$/.test(l.trim())) inJobs = l.trim() === "WORK EXPERIENCE" || l.trim() === "PROFESSIONAL DEVELOPMENT";
+      var parts = l.split(" | ");
+      if (!inJobs || parts.length !== 3) return;
+      setFont("bold");
+      var w = doc.getTextWidth(parts[0] + " ");
+      setFont("normal");
+      if (w + doc.getTextWidth("| " + parts[1]) + doc.getTextWidth(parts[2]) + 14 > width) stacked = true;
+    });
+
     lines.slice(3).forEach(function (l) {
       if (!l.trim()) { y += pt * 0.3; return; }
       if (/^[A-Z][A-Z &]{3,}$/.test(l.trim())) { section = l.trim(); heading(section); return; }
@@ -1729,14 +1779,9 @@
       var parts = l.split(" | ");
       var colon = l.indexOf(": ");
       if (section === "SKILLS" && colon > 0) { row(l.slice(0, colon + 1), l.slice(colon + 2)); return; }
-      if (section === "WORK EXPERIENCE" && parts.length === 3) { row(parts[0], "| " + parts[1], parts[2]); y += pt * 0.1; return; }
-      if (section === "WORK EXPERIENCE" && parts.length === 2) {
-        var c = parts[0].indexOf(": ");
-        if (c > 0) row(parts[0].slice(0, c + 1), parts[0].slice(c + 2), parts[1]); else row(parts[0], "", parts[1]);
-        return;
-      }
-      if (section === "EDUCATION" && parts.length === 3) { row(parts[0], "| " + parts[1], parts[2]); return; }
-      if (section === "PROJECTS" && parts.length >= 2) { row(parts[0], "| " + parts.slice(1).join(" | ")); return; }
+      if (parts.length === 3 && stacked && section !== "EDUCATION") { stackedRow(parts[0], parts[1], parts[2]); return; }
+      if (parts.length === 3) { row(parts[0], "| " + parts[1], parts[2]); if (section !== "EDUCATION") y += pt * 0.1; return; }
+      if (section === "PROJECTS" && parts.length === 2) { row(parts[0], "| " + parts[1]); return; }
       row("", l);
     });
 
@@ -1753,7 +1798,7 @@
     return doc;
   }
 
-  // One page when a slightly smaller font fits it; otherwise the full size over two pages.
+  // One page when a slightly smaller font fits it; otherwise a comfortable size over two pages.
   function resumePdf(text) {
     return loadPdfLib().then(function (JsPDF) {
       var sizes = [10, 9.5, 9];
@@ -1761,7 +1806,9 @@
         var doc = drawResumePdf(JsPDF, text, sizes[i]);
         if (doc.getNumberOfPages() === 1) return doc.output("blob");
       }
-      return drawResumePdf(JsPDF, text, sizes[0]).output("blob");
+      // Two pages anyway: use the roomier size unless that spills onto a third.
+      var roomy = drawResumePdf(JsPDF, text, 10.5);
+      return (roomy.getNumberOfPages() <= 2 ? roomy : drawResumePdf(JsPDF, text, 10)).output("blob");
     });
   }
 
