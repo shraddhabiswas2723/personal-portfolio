@@ -5,7 +5,13 @@ A small web app for Amazon sellers whose account health has slipped. It answers 
 1. **When will my account be healthy again?** Amazon measures sellers over rolling windows (60 days for Order Defect Rate, 30 for Late Shipment Rate, 7 for Pre-fulfilment Cancel Rate), so old problems drop off one day at a time. The **recovery planner** shows the exact day each problem leaves the window, the date the rate goes back under the limit, and what happens if more goes wrong (what-if slider).
 2. **What do I write in my Plan of Action?** The **Plan of Action builder** walks through a 5 Whys root-cause analysis (Lean Six Sigma), the fixes already made and the prevention steps, writes a structured draft, and scores it out of 100 for the things a reviewer looks for: numbers and dates, a specific root cause, dated fixes, owners and frequencies, and no blame.
 
-It opens with **sample data** for Kalamkari Kraft, a made-up Hyderabad saree seller whose Order Defect Rate went over 1% after monsoon courier delays. Paste your own daily numbers as CSV under **Your data**; they stay in your browser.
+It opens with **sample data** (all made up). Pick one of three sellers, each with a different problem:
+
+- **Kalamkari Kraft** (hand-painted sarees, Hyderabad): Order Defect Rate over 1% after monsoon courier delays.
+- **Deccan Spice Co.** (spices and pickles, Secunderabad): Late Shipment Rate over 4% after the festive rush outgrew its packing team.
+- **Pearl & Thread** (pearl jewellery and bangles, Old City): Pre-fulfilment Cancel Rate over 2.5% from stock mix-ups between the shop counter and online store.
+
+The **Your data** box shows the daily numbers behind the page. Paste your own and press **Use this as my data**; they stay in your browser, and you can switch back to the samples at any time.
 
 ## Run it
 

@@ -37,11 +37,14 @@
       <p class="lede">Amazon judges sellers on rolling windows: 60 days for order defects, 30 for late shipments, 7 for cancellations. Old problems drop off one day at a time. This kit shows the exact day each one leaves, when you'll be back under the limit, and helps you write a Plan of Action that names a real root cause.</p>
     </div>
     <div class="sample-note" id="sampleNote">
-      <span class="chip chip-sample">Sample data</span>
-      <p><strong id="sellerName">Kalamkari Kraft</strong> <span id="sellerBlurb">is a made-up Hyderabad seller of hand-painted sarees. Monsoon courier delays in September pushed its Order Defect Rate over 1%.</span></p>
+      <div class="sample-top">
+        <span class="chip chip-sample" id="sourceChip">Sample data</span>
+        <select id="sourcePick" aria-label="Choose a sample seller or your own data"></select>
+      </div>
+      <p><strong id="sellerName">Kalamkari Kraft</strong> is <span id="sellerBlurb">a made-up Hyderabad seller of hand-painted sarees.</span></p>
       <div class="row-actions">
         <a class="btn btn-quiet" href="#data">Use my own data</a>
-        <button type="button" class="btn btn-quiet" id="loadSample">Reload sample</button>
+        <button type="button" class="btn btn-quiet" id="resetSample">Reset this sample</button>
       </div>
     </div>
   </section>
@@ -177,15 +180,15 @@
   <section class="panel" id="data" aria-labelledby="h-data">
     <header class="panel-head">
       <h2 id="h-data">Your data</h2>
-      <p class="muted">Paste one row per day as CSV, oldest first. Use the numbers from Seller Central's Account Health and order reports. Everything stays in this browser.</p>
+      <p class="muted">One row per day as CSV, oldest first. The box shows the data behind the page right now. Paste your own numbers from Seller Central's Account Health and order reports to replace it; everything stays in this browser.</p>
     </header>
     <div class="data-grid">
       <div class="field">
-        <label for="csv">Daily numbers</label>
-        <textarea id="csv" rows="10" spellcheck="false"></textarea>
+        <label for="csv">Daily numbers <span class="muted" id="csvHint"></span></label>
+        <textarea id="csv" rows="12" spellcheck="false"></textarea>
         <div class="row-actions">
-          <button type="button" class="btn" id="applyCsv">Use this data</button>
-          <button type="button" class="btn btn-quiet" id="sampleCsv">Fill in the sample</button>
+          <button type="button" class="btn" id="applyCsv">Use this as my data</button>
+          <button type="button" class="btn btn-quiet" id="clearCsv">Clear the box</button>
           <span class="form-msg" id="csvMsg" role="status"></span>
         </div>
       </div>

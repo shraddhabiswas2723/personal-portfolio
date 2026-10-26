@@ -79,6 +79,7 @@
   function fmtLong(d) { return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }); }
   function fmtMonthDay(d) { return d.toLocaleDateString("en-IN", { day: "numeric", month: "long" }); }
   function pct(rate, dp) { return (rate * 100).toFixed(dp) + "%"; }
+  function limitText(m) { return parseFloat((m.limit * 100).toFixed(1)) + "%"; }
   function num(n) { return Math.round(n).toLocaleString("en-IN"); }
   function plural(n, one, many) { return num(n) + " " + (Math.round(n) === 1 ? one : many || one + "s"); }
 
@@ -87,9 +88,9 @@
   }
   function $(id) { return document.getElementById(id); }
 
-  // ---------- Sample seller (made up) ----------
+  // ---------- Sample sellers (all made up) ----------
 
-  // Small seeded generator so the sample looks the same on every visit.
+  // Small seeded generator so each sample looks the same on every visit.
   function seeded(seed) {
     return function () {
       seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -104,50 +105,139 @@
     return k - 1;
   }
 
-  // 120 days ending today. Courier trouble 55–36 days ago made shipments late;
-  // the late, damaged parcels brought negative feedback and A-to-z claims 52–38 days ago.
-  function sampleRows(today) {
-    var rand = seeded(2723);
+  // Each sample is 120 days ending today. `day(d)` gives the expected orders and problem rates d days from today.
+  var SAMPLES = {
+    kalamkari: {
+      name: "Kalamkari Kraft",
+      metric: "odr",
+      blurb: "a made-up Hyderabad seller of hand-painted sarees. Monsoon courier delays in September pushed its Order Defect Rate over 1%.",
+      seed: 2723,
+      day: function (d) {
+        var defects = d >= -52 && d <= -38, lateSpell = d >= -55 && d <= -36;
+        return { orders: 27, spread: 9, weekend: 5, neg: defects ? 1.3 : 0.07, atoz: defects ? 0.6 : 0.03, cb: 0.015, late: lateSpell ? 0.075 : 0.014, cancel: 0.011, untracked: 0.022 };
+      },
+    },
+    deccan: {
+      name: "Deccan Spice Co.",
+      metric: "lsr",
+      blurb: "a made-up Secunderabad seller of spices and pickles. The festive-season rush nearly doubled its orders, its 3 packers fell behind, and late shipments went over 4%.",
+      seed: 1711,
+      day: function (d) {
+        var rush = d >= -21, behind = d >= -18;
+        return { orders: rush ? 78 : 44, spread: 12, weekend: 7, neg: behind ? 0.12 : 0.08, atoz: 0.03, cb: 0.02, late: behind ? 0.085 : 0.013, cancel: 0.01, untracked: 0.018 };
+      },
+    },
+    pearl: {
+      name: "Pearl & Thread",
+      metric: "cr",
+      blurb: "a made-up Old City seller of pearl jewellery and bangles. Its shop counter and online store share stock, and this week's mix-ups pushed cancellations over 2.5%.",
+      seed: 909,
+      day: function (d) {
+        var mixups = d >= -6;
+        return { orders: 21, spread: 7, weekend: 5, neg: 0.05, atoz: 0.02, cb: 0.01, late: 0.012, cancel: mixups ? 0.032 : 0.007, untracked: 0.02 };
+      },
+    },
+  };
+
+  function sampleRows(today, id) {
+    var s = SAMPLES[id];
+    var rand = seeded(s.seed);
     var rows = [];
     for (var d = -119; d <= 0; d++) {
       var date = addDays(today, d);
+      var p = s.day(d);
       var weekend = date.getDay() === 0 || date.getDay() === 6;
-      var orders = Math.round(27 + rand() * 9 + (weekend ? 5 : 0));
-      var defects = d >= -52 && d <= -38;
-      var lateSpell = d >= -55 && d <= -36;
-      var cancelled = poisson(rand, orders * 0.011);
+      var orders = Math.round(p.orders + rand() * p.spread + (weekend ? p.weekend : 0));
+      var cancelled = poisson(rand, orders * p.cancel);
       var shipped = orders - cancelled;
       rows.push({
         date: iso(date),
         orders: orders,
-        negative_feedback: poisson(rand, defects ? 1.3 : 0.07),
-        a_to_z: poisson(rand, defects ? 0.6 : 0.03),
-        chargebacks: poisson(rand, 0.015),
-        late: poisson(rand, shipped * (lateSpell ? 0.075 : 0.014)),
+        negative_feedback: poisson(rand, p.neg),
+        a_to_z: poisson(rand, p.atoz),
+        chargebacks: poisson(rand, p.cb),
+        late: poisson(rand, shipped * p.late),
         cancelled: cancelled,
-        tracked: shipped - poisson(rand, shipped * 0.022),
+        tracked: shipped - poisson(rand, shipped * p.untracked),
       });
     }
     return rows;
   }
 
-  // The plan's facts are worked out from the sample rows, so its numbers match the charts.
-  function samplePlan(today) {
-    var rows = sampleRows(today);
-    var from = addDays(today, -52), to = addDays(today, -38);
-    var spell = rows.slice(rows.length - 53, rows.length - 37);
-    var defects = spell.reduce(function (t, r) { return t + r.negative_feedback + r.a_to_z + r.chargebacks; }, 0);
-    var orders = spell.reduce(function (t, r) { return t + r.orders; }, 0);
+  // Totals and the highest rolling rate over the sample rows, so each plan's facts match its charts.
+  function spellTotals(rows, fromOff, toOff, metric) {
+    var m = METRICS[metric];
+    var spell = rows.slice(rows.length - 1 + fromOff, rows.length + toOff);
+    var list = rows.map(function (r) { return { num: m.num(r), den: m.den(r) }; });
     var peak = 0;
-    for (var i = 59; i < rows.length; i++) {
-      var n = 0, d = 0;
-      for (var k = i - 59; k <= i; k++) { n += rows[k].negative_feedback + rows[k].a_to_z + rows[k].chargebacks; d += rows[k].orders; }
-      peak = Math.max(peak, n / d);
+    for (var i = m.window - 1; i < list.length; i++) peak = Math.max(peak, windowAt(list, i, m.window).rate);
+    return {
+      num: spell.reduce(function (t, r) { return t + m.num(r); }, 0),
+      den: spell.reduce(function (t, r) { return t + m.den(r); }, 0),
+      peak: peak,
+    };
+  }
+
+  function samplePlan(today, id) {
+    var rows = sampleRows(today, id);
+    var on = function (off) { return fmtMonthDay(addDays(today, off)); };
+    var done = function (off) { return iso(addDays(today, off)); };
+    if (id === "deccan") {
+      var late = spellTotals(rows, -18, 0, "lsr");
+      return {
+        seller: "Deccan Spice Co.",
+        issue: "lsr",
+        facts: "Between " + on(-18) + " and " + on(0) + ", " + num(late.num) + " of our " + num(late.den) + " shipments were confirmed after the expected ship date, and our Late Shipment Rate rose to " + pct(late.peak, 1) + ". Festive orders went from about 45 to 80 a day while our packing team stayed at 3 people.",
+        whys: [
+          "Orders shipped late because packing fell 1–2 days behind during the festive rush.",
+          "Daily orders jumped from about 45 to over 80, but only 3 packers were working.",
+          "We didn't add staff or a longer handling time for the festive season.",
+          "We had no forecast of festive orders based on last year's sales.",
+          "There was no seasonal capacity plan linking expected orders to packing staff, materials and handling time.",
+        ],
+        kinds: ["Process", "People"],
+        fixes: [
+          { text: "Hired 3 temporary packers and added an evening packing shift", date: done(-10) },
+          { text: "Raised handling time from 1 to 2 days on festive gift boxes", date: done(-9) },
+          { text: "Started confirming shipment in Seller Central at courier pickup instead of at the end of the day", date: done(-8) },
+        ],
+        prevents: [
+          { text: "Seasonal capacity plan: forecast festive orders from last year's sales and book temporary packers 4 weeks ahead", owner: "Owner", freq: "Before each peak season" },
+          { text: "Backlog check at 2 pm: orders at risk of missing their ship date are packed first", owner: "Packing supervisor", freq: "Daily" },
+          { text: "Review Late Shipment Rate against an internal target of 2%", owner: "Owner", freq: "Weekly" },
+        ],
+      };
     }
+    if (id === "pearl") {
+      var cx = spellTotals(rows, -6, 0, "cr");
+      return {
+        seller: "Pearl & Thread",
+        issue: "cr",
+        facts: "Between " + on(-6) + " and " + on(0) + " we cancelled " + num(cx.num) + " of our " + num(cx.den) + " orders before shipping, and our Pre-fulfilment Cancel Rate rose to " + pct(cx.peak, 1) + ". Every cancelled item showed as in stock online but had already sold at our shop counter.",
+        whys: [
+          "We cancelled orders because the items weren't on the shelf.",
+          "Our listings showed stock that had already sold at our own shop counter.",
+          "Online stock was updated by hand once a day, in the evening.",
+          "Counter sales and online sales were tracked in two separate registers.",
+          "We had no single stock record that updates the online quantity when an item sells in the shop.",
+        ],
+        kinds: ["Process", "Systems"],
+        fixes: [
+          { text: "Moved counter sales and online stock into one shared stock sheet", date: done(-3) },
+          { text: "Set online quantities 1 below the shelf count for our 20 best-selling bangle sets", date: done(-2) },
+        ],
+        prevents: [
+          { text: "Count the top 50 items every morning before the shop opens and correct online stock", owner: "Shop manager", freq: "Daily" },
+          { text: "Update the online quantity within an hour of every counter sale", owner: "Counter staff", freq: "Every order" },
+          { text: "Review Cancel Rate and every stock mismatch", owner: "Owner", freq: "Weekly" },
+        ],
+      };
+    }
+    var odr = spellTotals(rows, -52, -38, "odr");
     return {
       seller: "Kalamkari Kraft",
       issue: "odr",
-      facts: "Between " + fmtMonthDay(from) + " and " + fmtMonthDay(to) + ", " + defects + " of our " + orders + " orders received 1–2 star feedback or an A-to-z claim, and our Order Defect Rate rose to " + pct(peak, 1) + ". Most buyers said their saree arrived 3–6 days late or in a torn package.",
+      facts: "Between " + on(-52) + " and " + on(-38) + ", " + num(odr.num) + " of our " + num(odr.den) + " orders received 1–2 star feedback or an A-to-z claim, and our Order Defect Rate rose to " + pct(odr.peak, 1) + ". Most buyers said their saree arrived 3–6 days late or in a torn package.",
       whys: [
         "Buyers left negative feedback and filed claims because parcels arrived late or damaged.",
         "Our courier for Tier-3 PIN codes held parcels at a flooded hub for up to 6 days during the monsoon.",
@@ -157,9 +247,9 @@
       ],
       kinds: ["Process", "Delivery partner"],
       fixes: [
-        { text: "Contacted all " + defects + " affected buyers and refunded or replaced their orders", date: iso(addDays(today, -34)) },
-        { text: "Moved Tier-3 PIN codes to a second courier with a weather-delay SLA", date: iso(addDays(today, -31)) },
-        { text: "Switched to waterproof mailers with double-sealed tape for all sarees", date: iso(addDays(today, -29)) },
+        { text: "Contacted all " + odr.num + " affected buyers and refunded or replaced their orders", date: done(-34) },
+        { text: "Moved Tier-3 PIN codes to a second courier with a weather-delay SLA", date: done(-31) },
+        { text: "Switched to waterproof mailers with double-sealed tape for all sarees", date: done(-29) },
       ],
       prevents: [
         { text: "Daily delayed-shipment report: any parcel 2 days past its promised date is escalated to the courier and the buyer is updated", owner: "Operations lead", freq: "Daily" },
@@ -170,25 +260,53 @@
     };
   }
 
+  function blankPlan() {
+    return { seller: "", issue: "odr", facts: "", whys: ["", "", "", "", ""], kinds: [], fixes: [{ text: "", date: "" }], prevents: [{ text: "", owner: "", freq: "" }] };
+  }
+
   // ---------- State ----------
 
+  // `source` is a sample id or "own". Each source keeps its own plan, so switching samples never loses an edit.
   var TODAY = startOfDay(new Date());
   var state = {
-    rows: sampleRows(TODAY),
-    sample: true,
-    plan: samplePlan(TODAY),
+    source: "kalamkari",
+    rows: null,
+    plan: null,
+    own: null,   // { rows } once the user has pasted data
+    plans: {},
     metric: "odr",
     whatIf: 0,
     perDay: null,
   };
 
+  function useSource(id) {
+    state.source = id;
+    if (id === "own") {
+      state.rows = state.own.rows;
+      state.plan = state.plans.own || (state.plans.own = blankPlan());
+    } else {
+      state.rows = sampleRows(TODAY, id);
+      state.plan = state.plans[id] || (state.plans[id] = samplePlan(TODAY, id));
+      state.metric = SAMPLES[id].metric;
+    }
+    state.perDay = null;
+    state.whatIf = 0;
+    $("whatIf").value = 0;
+  }
+
   function load() {
     try {
       var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
       if (!saved) return;
-      if (Array.isArray(saved.rows) && saved.rows.length >= 8) { state.rows = saved.rows; state.sample = false; }
-      if (saved.plan && typeof saved.plan === "object") state.plan = Object.assign(samplePlan(TODAY), saved.plan);
-      if (METRICS[saved.metric] && PLANNABLE.indexOf(saved.metric) !== -1) state.metric = saved.metric;
+      if (saved.own && Array.isArray(saved.own.rows) && saved.own.rows.length >= 8) state.own = { rows: saved.own.rows };
+      if (saved.plans && typeof saved.plans === "object") {
+        Object.keys(saved.plans).forEach(function (k) {
+          var p = saved.plans[k];
+          if (p && typeof p === "object" && (SAMPLES[k] || k === "own")) state.plans[k] = Object.assign(k === "own" ? blankPlan() : samplePlan(TODAY, k), p);
+        });
+      }
+      if (saved.source === "own" ? state.own : SAMPLES[saved.source]) state.source = saved.source;
+      if (PLANNABLE.indexOf(saved.metric) !== -1) state.metric = saved.metric;
     } catch (e) { /* storage unavailable: keep the sample */ }
   }
 
@@ -197,7 +315,7 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({ rows: state.sample ? null : state.rows, plan: state.plan, metric: state.metric }));
+        localStorage.setItem(STORE_KEY, JSON.stringify({ source: state.source, own: state.own, plans: state.plans, metric: state.metric }));
       } catch (e) { /* not saved; the page still works */ }
     }, 300);
   }
@@ -298,7 +416,7 @@
       var list = state.rows.map(function (r) { return { num: m.num(r), den: m.den(r) }; });
       var w = windowAt(list, list.length - 1, m.window);
       var st = stateOf(m, w.rate);
-      var target = (m.dir === "max" ? "Target under " : "Target over ") + pct(m.limit, m.limit < 0.02 ? 0 : 1) + " · last " + m.window + " days";
+      var target = (m.dir === "max" ? "Target under " : "Target over ") + limitText(m) + " · last " + m.window + " days";
       var detail = num(w.num) + " " + m.unit + " of " + num(w.den) + " " + m.base;
       var plan = PLANNABLE.indexOf(id) !== -1 ? '<button type="button" data-plan-metric="' + id + '">' + (isBad(m, w.rate) ? "Plan the recovery" : "See the trend") + '</button>' : "";
       return '<li class="tile ' + st.cls + '"><span class="tile-name">' + esc(m.name) + '</span>' +
@@ -343,7 +461,7 @@
     var facts = [];
     facts.push({ hero: true, label: "Today", value: now ? pct(now.rate, m.dp) : "–", note: now ? num(now.num) + " " + m.unit + " in " + num(now.den) + " " + m.base + " (" + m.window + " days)" : "" });
     if (over) {
-      facts.push({ hero: true, label: "Back under " + pct(m.limit, m.limit < 0.02 ? 0 : 1), value: rec.first ? fmtLong(rec.first.date) : "Not within " + HORIZON + " days",
+      facts.push({ hero: true, label: "Back under " + limitText(m), value: rec.first ? fmtLong(rec.first.date) : "Not within " + HORIZON + " days",
         note: rec.first ? "in " + plural(rec.first.offset, "day") + (state.whatIf ? ", with " + plural(state.whatIf, "new problem") : ", if nothing new goes wrong") : "Raise orders per day or cut new problems" });
     } else {
       facts.push({ hero: true, label: "Status", value: "Under the limit", note: rec.backOver ? "but this forecast goes back over on " + fmtShort(rec.backOver.date) : "and stays there in this forecast" });
@@ -358,7 +476,7 @@
     }).join("");
 
     $("chartTitle").textContent = m.name + ", rolling " + m.window + " days";
-    $("limitLegend").textContent = "Limit " + pct(m.limit, m.limit < 0.02 ? 0 : 1);
+    $("limitLegend").textContent = "Limit " + limitText(m);
     drawChart(s, rec);
 
     // Drop-off list
@@ -426,7 +544,7 @@
     svg.setAttribute("role", "img");
     svg.setAttribute("tabindex", "0");
     var nowPt = pts.filter(function (p) { return p.offset === 0; })[0];
-    svg.setAttribute("aria-label", m.name + " chart. Today " + (nowPt ? pct(nowPt.rate, m.dp) : "") + "; limit " + pct(m.limit, 1) + (rec.first && nowPt && isBad(m, nowPt.rate) ? "; back under on " + fmtLong(rec.first.date) : "") + ". Use the left and right arrow keys to read each day.");
+    svg.setAttribute("aria-label", m.name + " chart. Today " + (nowPt ? pct(nowPt.rate, m.dp) : "") + "; limit " + limitText(m) + (rec.first && nowPt && isBad(m, nowPt.rate) ? "; back under on " + fmtLong(rec.first.date) : "") + ". Use the left and right arrow keys to read each day.");
 
     function el(tag, attrs, parent) {
       var e = document.createElementNS(NS, tag);
@@ -463,7 +581,7 @@
 
     // Limit line and label
     el("line", { class: "limit", x1: pad.l, x2: W - pad.r, y1: Y(m.limit), y2: Y(m.limit) });
-    text(W - pad.r, Y(m.limit) - 6, "Limit " + pct(m.limit, m.limit < 0.02 ? 0 : 1), "limit-label", "end");
+    text(W - pad.r, Y(m.limit) - 6, "Limit " + limitText(m), "limit-label", "end");
 
     // Today marker
     if (x0 < 0) {
@@ -694,22 +812,32 @@
     return rows;
   }
 
-  function renderSampleNote() {
-    if (state.sample) {
-      $("sampleNote").querySelector(".chip").textContent = "Sample data";
-      $("sellerName").textContent = "Kalamkari Kraft";
-      $("sellerBlurb").textContent = "is a made-up Hyderabad seller of hand-painted sarees. Monsoon courier delays pushed its Order Defect Rate over 1%.";
-    } else {
-      $("sampleNote").querySelector(".chip").textContent = "Your data";
+  var SOURCE_LABELS = { kalamkari: "Kalamkari Kraft · order defects", deccan: "Deccan Spice Co. · late shipments", pearl: "Pearl & Thread · cancellations", own: "My data" };
+
+  function renderSource() {
+    var own = state.source === "own";
+    var chip = $("sourceChip");
+    chip.textContent = own ? "Your data" : "Sample data";
+    chip.className = "chip " + (own ? "chip-own" : "chip-sample");
+    $("sourcePick").innerHTML = Object.keys(SAMPLES).concat(state.own ? ["own"] : []).map(function (id) {
+      return '<option value="' + id + '"' + (id === state.source ? " selected" : "") + '>' + esc(SOURCE_LABELS[id]) + '</option>';
+    }).join("");
+    if (own) {
       $("sellerName").textContent = state.plan.seller || "Your account";
-      $("sellerBlurb").textContent = "has " + state.rows.length + " days of data, " + fmtLong(parseIso(state.rows[0].date)) + " to " + fmtLong(lastDate()) + ". Saved in this browser only.";
+      $("sellerBlurb").textContent = "using your " + state.rows.length + " days of data, " + fmtLong(parseIso(state.rows[0].date)) + " to " + fmtLong(lastDate()) + ". Saved in this browser only.";
+    } else {
+      $("sellerName").textContent = SAMPLES[state.source].name;
+      $("sellerBlurb").textContent = SAMPLES[state.source].blurb;
     }
+    $("resetSample").hidden = own;
+    $("csv").value = toCsv(state.rows);
+    $("csvHint").textContent = own ? "(your data)" : "(" + SAMPLES[state.source].name + "'s made-up numbers)";
   }
 
   // ---------- Render & events ----------
 
   function renderAll() {
-    renderSampleNote();
+    renderSource();
     renderTiles();
     renderMetricPick();
     renderRecovery();
@@ -760,7 +888,7 @@
     else if (t.dataset.prevent !== undefined) p.prevents[+t.dataset.prevent][t.dataset.field] = t.value;
     else return;
     renderPlanOutput();
-    if (!state.sample && t.id === "pSeller") renderSampleNote();
+    if (state.source === "own" && t.id === "pSeller") renderSource();
     save();
   }
 
@@ -784,37 +912,42 @@
     try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (err) { done(false); }
   });
 
-  var confirmTimer = null;
-  $("loadSample").addEventListener("click", function () {
-    var btn = this;
-    if (!btn.dataset.armed) {
-      btn.dataset.armed = "1";
-      btn.textContent = "Click again to replace your data and plan";
-      clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(function () { delete btn.dataset.armed; btn.textContent = "Reload sample"; }, 4000);
-      return;
-    }
-    delete btn.dataset.armed;
-    btn.textContent = "Reload sample";
-    state.rows = sampleRows(TODAY); state.sample = true; state.plan = samplePlan(TODAY);
-    state.perDay = null; state.whatIf = 0; $("whatIf").value = 0;
+  $("sourcePick").addEventListener("change", function () {
+    useSource(this.value);
     $("csvMsg").textContent = "";
     renderAll(); save();
   });
 
-  $("sampleCsv").addEventListener("click", function () {
-    $("csv").value = toCsv(sampleRows(TODAY));
-    $("csvMsg").classList.remove("is-error");
-    $("csvMsg").textContent = "Sample filled in. Edit it or replace it with your own numbers.";
+  var confirmTimer = null;
+  $("resetSample").addEventListener("click", function () {
+    var btn = this;
+    if (!btn.dataset.armed) {
+      btn.dataset.armed = "1";
+      btn.textContent = "Click again to undo your edits";
+      clearTimeout(confirmTimer);
+      confirmTimer = setTimeout(function () { delete btn.dataset.armed; btn.textContent = "Reset this sample"; }, 4000);
+      return;
+    }
+    delete btn.dataset.armed;
+    btn.textContent = "Reset this sample";
+    delete state.plans[state.source];
+    useSource(state.source);
+    renderAll(); save();
+  });
+
+  $("clearCsv").addEventListener("click", function () {
+    $("csv").value = "";
+    $("csvMsg").textContent = "";
+    $("csv").focus();
   });
 
   $("applyCsv").addEventListener("click", function () {
     var msg = $("csvMsg");
     try {
-      var rows = parseCsv($("csv").value);
-      state.rows = rows; state.sample = false; state.perDay = null; state.whatIf = 0; $("whatIf").value = 0;
+      state.own = { rows: parseCsv($("csv").value) };
+      useSource("own");
       msg.classList.remove("is-error");
-      msg.textContent = "Using " + rows.length + " days of your data.";
+      msg.textContent = "Using " + state.rows.length + " days of your data.";
       renderAll(); save();
       $("health").scrollIntoView({ block: "start" });
     } catch (err) {
@@ -830,7 +963,9 @@
   });
 
   load();
-  $("csv").value = state.sample ? "" : toCsv(state.rows);
+  var savedMetric = state.metric;
+  useSource(state.source);
+  if (state.source === "own") state.metric = savedMetric;
   $("csv").placeholder = COLUMNS.join(",") + "\n2026-10-01,32,0,0,0,1,0,31\n…";
   renderAll();
 })();

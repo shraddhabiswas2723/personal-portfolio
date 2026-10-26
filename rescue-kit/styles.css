@@ -141,6 +141,10 @@ a { color: var(--accent); }
 .sample-note strong { color: var(--ink); }
 .chip { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 2px 10px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .chip-sample { background: var(--accent-soft); color: var(--accent); }
+.chip-own { background: var(--good-soft); color: var(--good); }
+.sample-top { display: grid; gap: 8px; justify-items: start; }
+.sample-top select { width: 100%; font-weight: 600; }
+#csvHint { font-weight: 400; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 .panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); min-width: 0; }
