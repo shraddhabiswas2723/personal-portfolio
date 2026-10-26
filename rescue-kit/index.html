@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--HEAD-START-->
+<title>Seller Rescue Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="See when your Amazon seller performance metrics recover, test what-if scenarios, and build a specific Plan of Action.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<!--HEAD-END-->
+</head>
+<body>
+<!--PAGE-START-->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#health">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="8"/><path d="M9 17.5l4.5 4.5L23 10.5"/></svg>
+      <span>Seller Rescue Kit</span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#health">Health</a>
+      <a href="#recovery">Recovery</a>
+      <a href="#plan">Plan of Action</a>
+      <a href="#data">Your data</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <section class="intro" aria-labelledby="h-intro">
+    <div class="intro-text">
+      <h1 id="h-intro">Get a seller account back to healthy, with dates and a plan.</h1>
+      <p class="lede">Amazon judges sellers on rolling windows: 60 days for order defects, 30 for late shipments, 7 for cancellations. Old problems drop off one day at a time. This kit shows the exact day each one leaves, when you'll be back under the limit, and helps you write a Plan of Action that names a real root cause.</p>
+    </div>
+    <div class="sample-note" id="sampleNote">
+      <span class="chip chip-sample">Sample data</span>
+      <p><strong id="sellerName">Kalamkari Kraft</strong> <span id="sellerBlurb">is a made-up Hyderabad seller of hand-painted sarees. Monsoon courier delays in September pushed its Order Defect Rate over 1%.</span></p>
+      <div class="row-actions">
+        <a class="btn btn-quiet" href="#data">Use my own data</a>
+        <button type="button" class="btn btn-quiet" id="loadSample">Reload sample</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Health -->
+  <section class="panel" id="health" aria-labelledby="h-health">
+    <header class="panel-head">
+      <h2 id="h-health">Account health today</h2>
+      <p class="muted" id="healthAsOf"></p>
+    </header>
+    <ul class="tiles" id="tiles"></ul>
+  </section>
+
+  <!-- Recovery -->
+  <section class="panel" id="recovery" aria-labelledby="h-recovery">
+    <header class="panel-head">
+      <h2 id="h-recovery">Recovery planner</h2>
+      <p class="muted">The rate on each day counts only the orders inside its window. Past days use your data; future days use the numbers you set here.</p>
+    </header>
+
+    <div class="controls" role="group" aria-label="Recovery settings">
+      <div class="segmented" id="metricPick" role="radiogroup" aria-label="Metric"></div>
+      <label class="control">
+        <span class="control-label">Orders per day from now</span>
+        <input type="number" id="ordersPerDay" min="1" max="100000" step="1" inputmode="numeric">
+      </label>
+      <label class="control control-range">
+        <span class="control-label">New problems in the next 30 days: <strong id="whatIfValue">0</strong></span>
+        <input type="range" id="whatIf" min="0" max="30" step="1" value="0">
+      </label>
+    </div>
+
+    <div class="recovery-grid">
+      <dl class="facts" id="facts"></dl>
+      <figure class="chart-card">
+        <figcaption>
+          <span class="chart-title" id="chartTitle"></span>
+          <span class="chart-legend"><span class="key key-solid"></span>Your data <span class="key key-dash"></span>Forecast <span class="key key-limit"></span><span id="limitLegend">Limit</span></span>
+        </figcaption>
+        <div class="chart" id="chart"></div>
+        <div class="tooltip" id="tooltip" role="status" hidden></div>
+      </figure>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h3>When problems leave your window</h3>
+        <p class="muted small" id="dropNote"></p>
+        <ol class="drops" id="drops"></ol>
+      </div>
+      <div class="card">
+        <h3>What this means</h3>
+        <ul class="advice" id="advice"></ul>
+      </div>
+    </div>
+
+    <details class="numbers">
+      <summary>Show the numbers behind the chart</summary>
+      <div class="table-wrap"><table id="numbersTable"></table></div>
+    </details>
+  </section>
+
+  <!-- Plan of Action -->
+  <section class="panel" id="plan" aria-labelledby="h-plan">
+    <header class="panel-head">
+      <h2 id="h-plan">Plan of Action builder</h2>
+      <p class="muted">Amazon asks for three things: the root cause, what you've already fixed, and how you'll stop it happening again. Answer the questions; the draft and its strength score update as you type.</p>
+    </header>
+
+    <div class="plan-grid">
+      <form class="plan-form" id="planForm" novalidate>
+        <fieldset>
+          <legend><span class="step">1</span>The problem</legend>
+          <label class="field"><span>Seller name</span><input type="text" id="pSeller" autocomplete="organization"></label>
+          <label class="field"><span>What Amazon flagged</span>
+            <select id="pIssue">
+              <option value="odr">Order Defect Rate above 1%</option>
+              <option value="lsr">Late Shipment Rate above 4%</option>
+              <option value="cr">Pre-fulfilment Cancel Rate above 2.5%</option>
+              <option value="vtr">Valid Tracking Rate below 95%</option>
+              <option value="condition">Product condition complaints</option>
+              <option value="inauthentic">Inauthentic item complaints</option>
+              <option value="listing">Listing policy violation</option>
+            </select>
+          </label>
+          <label class="field"><span>What happened, with numbers and dates</span><textarea id="pFacts" rows="3"></textarea></label>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="step">2</span>Find the root cause: 5 Whys</legend>
+          <p class="hint">Start with the problem and keep asking why until you reach something you control: a process, a check or a partner. Your last answer is the root cause.</p>
+          <ol class="whys" id="whys"></ol>
+          <div class="field">
+            <span>Where the root cause sits</span>
+            <div class="chips" id="causeKinds" role="group" aria-label="Root cause category"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="step">3</span>What you've already fixed</legend>
+          <div class="rows" id="fixes"></div>
+          <button type="button" class="btn btn-quiet btn-sm" id="addFix">Add a fix</button>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="step">4</span>How you'll stop it happening again</legend>
+          <div class="rows" id="prevents"></div>
+          <button type="button" class="btn btn-quiet btn-sm" id="addPrevent">Add a step</button>
+        </fieldset>
+      </form>
+
+      <aside class="plan-side">
+        <div class="card strength">
+          <div class="strength-head">
+            <div class="meter" id="meter" role="img" aria-label="Plan strength"><span id="meterFill"></span></div>
+            <div><strong class="score" id="score">0</strong><span class="muted">/100 strength</span></div>
+          </div>
+          <ul class="checks" id="checks"></ul>
+        </div>
+        <div class="card draft">
+          <div class="draft-head">
+            <h3>Your draft</h3>
+            <button type="button" class="btn btn-sm" id="copyPlan">Copy plan</button>
+          </div>
+          <pre class="draft-text" id="draft" tabindex="0"></pre>
+          <p class="muted small">A starting point, not a form letter. Read it through, put it in your own words and check every fact before you send it in Seller Central.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Data -->
+  <section class="panel" id="data" aria-labelledby="h-data">
+    <header class="panel-head">
+      <h2 id="h-data">Your data</h2>
+      <p class="muted">Paste one row per day as CSV, oldest first. Use the numbers from Seller Central's Account Health and order reports. Everything stays in this browser.</p>
+    </header>
+    <div class="data-grid">
+      <div class="field">
+        <label for="csv">Daily numbers</label>
+        <textarea id="csv" rows="10" spellcheck="false"></textarea>
+        <div class="row-actions">
+          <button type="button" class="btn" id="applyCsv">Use this data</button>
+          <button type="button" class="btn btn-quiet" id="sampleCsv">Fill in the sample</button>
+          <span class="form-msg" id="csvMsg" role="status"></span>
+        </div>
+      </div>
+      <div class="card columns-help">
+        <h3>Columns</h3>
+        <dl>
+          <dt>date</dt><dd>Order date, YYYY-MM-DD</dd>
+          <dt>orders</dt><dd>Orders placed that day</dd>
+          <dt>negative_feedback</dt><dd>Orders with 1–2 star seller feedback</dd>
+          <dt>a_to_z</dt><dd>A-to-z Guarantee claims</dd>
+          <dt>chargebacks</dt><dd>Service chargebacks</dd>
+          <dt>late</dt><dd>Orders shipped after the expected date</dd>
+          <dt>cancelled</dt><dd>Orders you cancelled before shipping</dd>
+          <dt>tracked</dt><dd>Shipments with valid tracking</dd>
+        </dl>
+        <p class="muted small">Each defect is counted as one defective order. If one order has two defects, Amazon counts it once, so subtract it from one column.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Not affiliated with or endorsed by Amazon. Uses the performance targets Amazon publishes for sellers: Order Defect Rate under 1% (60 days), Late Shipment Rate under 4% (30 days), Pre-fulfilment Cancel Rate under 2.5% (7 days), Valid Tracking Rate over 95% (30 days). Amazon counts some orders after a short delay, so Seller Central may differ by a few days and is the official source.</p>
+    <p>Built by Shraddha Biswas with Claude Code.</p>
+  </footer>
+</main>
+<script src="app.js"></script>
+<!--PAGE-END-->
+</body>
+</html>
