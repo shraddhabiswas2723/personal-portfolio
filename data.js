@@ -25,16 +25,16 @@ window.PROFILE_DATA = {
     start: "Mar 2026",
     end: "Present",
     points: [
-      "Developed skills in AI safety, Responsible AI and prompt engineering, and built AI workflows and websites with Claude Code (no-code).",
-      "Studied emerging digital regulation, including India's DPDP Act and the EU AI Act, and completed the Lean Six Sigma Yellow Belt (AIGPE).",
+      "Developed skills in AI safety, Responsible AI and prompt engineering, built AI workflows and websites with Claude Code (no-code), and completed the Lean Six Sigma Yellow Belt (AIGPE).",
     ],
   },
 
   // The universal resume on Resume & ATS: one complete version for any job, not tailored to a role.
-  // It lists every certificate in the learning log, including ones the role resumes leave out.
+  // It lists every certificate in the learning log, including ones the role resumes leave out,
+  // except those kept for one role's resume (`resumeOnlyFor`).
   universalResume: {
     headline: "Compliance & Risk Professional | Trust & Safety | Investigations | Audit | Process Improvement",
-    summary: "Compliance, risk and Trust & Safety professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in AML/KYC and Lean Six Sigma. Upskilling in Responsible AI, AI safety, prompt engineering and AI workflow automation with Claude Code.",
+    summary: "Compliance, risk and Trust & Safety professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in Lean Six Sigma. Upskilling in Responsible AI, AI safety, prompt engineering and AI workflow automation with Claude Code.",
   },
 
   results: [
@@ -120,6 +120,7 @@ window.PROFILE_DATA = {
 
   // `have: true` = on your profile today. `have: false` = a gap the role matcher looks for.
   // `how` = the quickest way to close the gap.
+  // `resumeOnlyFor` = put it on the resume only for these roles.
   skills: [
     { id: "policy", label: "Policy enforcement", group: "compliance", have: true, aliases: ["policy", "enforcement", "trust and safety"] },
     { id: "investigations", label: "Risk investigations", group: "compliance", have: true, aliases: ["investigation", "investigations"] },
@@ -128,7 +129,7 @@ window.PROFILE_DATA = {
     { id: "sop", label: "SOP & process compliance", group: "compliance", have: true, aliases: ["sop", "process"] },
     { id: "risk", label: "Risk assessment", group: "compliance", have: true, aliases: ["risk assessment", "risk"] },
     { id: "amlkyc", label: "AML / KYC fundamentals", group: "compliance", have: true, aliases: ["aml", "kyc", "anti money laundering"] },
-    { id: "regs", label: "DPDP Act & EU AI Act", group: "compliance", have: true, aliases: ["dpdp", "eu ai act", "regulation"] },
+    { id: "regs", label: "DPDP Act & EU AI Act", group: "compliance", have: true, resumeOnlyFor: ["aigov"], aliases: ["dpdp", "eu ai act", "regulation"] },
     { id: "cdd", label: "CDD / EDD & sanctions screening", group: "compliance", have: false, aliases: ["cdd", "edd", "due diligence", "sanctions", "screening", "transaction monitoring", "pep"], time: "1 week", how: "Mock CDD file project, or the IIBF AML/KYC course" },
     { id: "cams", label: "AML certificate (IIBF, later CAMS)", group: "compliance", have: false, aliases: ["cams", "iibf", "ica"], time: "3–6 weeks", how: "IIBF Certificate in AML/KYC, about 3–6 weeks" },
     { id: "moderation", label: "Content policy & moderation", group: "compliance", have: false, aliases: ["content moderation", "content policy", "moderation"], time: "2–3 days", how: "Free TSPA Trust & Safety curriculum, plus a casebook project" },
@@ -146,7 +147,6 @@ window.PROFILE_DATA = {
     { id: "prompt", label: "Prompt engineering", group: "ai", have: true, aliases: ["prompt engineering", "prompting", "prompts"] },
     { id: "claude", label: "Claude & Claude Code (no-code)", group: "ai", have: true, aliases: ["claude", "claude code", "llm", "genai"] },
     { id: "automation", label: "AI agents & automations", resume: "AI agents, skills & workflow automation", group: "ai", have: true, aliases: ["automation", "agents", "ai automation"] },
-    // resumeOnlyFor: shown on the resume for these roles only (here, the AI Governance role).
     { id: "aigov", label: "AI governance frameworks", group: "ai", have: true, aliases: ["ai governance", "governance"], resumeOnlyFor: ["aigov"] },
     { id: "rai", label: "Responsible AI & AI safety", group: "ai", have: true, aliases: ["responsible ai", "ai safety", "ai ethics"] },
     { id: "llmeval", label: "LLM evaluation & red-teaming", group: "ai", have: false, aliases: ["llm evaluation", "red teaming", "rlhf", "rubric", "evaluation"], time: "3–4 days", how: "Build a 50-prompt evaluation set and score two models" },
@@ -302,7 +302,7 @@ window.PROFILE_DATA = {
       jobTitles: ["compliance analyst", "compliance associate", "compliance specialist", "compliance operations", "regulatory compliance", "compliance officer", "compliance"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "Compliance Operations Analyst | Audit | Risk Assessment",
-      resumeSummary: "Compliance operations professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling, with working knowledge of AML/KYC, the DPDP Act and the EU AI Act.",
+      resumeSummary: "Compliance operations professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling, with working knowledge of AML/KYC.",
       titleTerms: ["compliance", "audit"],
       bulletFocus: ["compliance", "sop", "audit", "evidence", "control"],
       certTerms: ["Anti-Money Laundering", "AML", "IIBF", "CAMS", "ISO"],
@@ -691,6 +691,7 @@ window.PROFILE_DATA = {
     },
     {
       title: "Anti-Money Laundering (AML) & Compliance Certification",
+      resumeOnlyFor: ["aml"],
       source: "Udemy",
       useful: "yes",
       onResume: true,
