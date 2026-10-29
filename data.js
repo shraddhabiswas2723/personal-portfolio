@@ -31,7 +31,7 @@ window.PROFILE_DATA = {
 
   // The universal resume on Resume & ATS: one complete version for any job, not tailored to a role.
   // It lists every certificate in the learning log, including ones the role resumes leave out,
-  // except those kept for one role's resume (`resumeOnlyFor`).
+  // except those kept for one role's resume (`resumeOnlyFor`) or kept off every resume (`onResume: false`).
   universalResume: {
     headline: "Compliance & Risk Professional | Trust & Safety | Investigations | Audit | Process Improvement",
     summary: "Compliance, risk and Trust & Safety professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and policy enforcement decisions a week against SOPs, investigated high-risk violations and account-level risk signals with a 98% audit-ready evidence rate, and resolved critical seller escalations within 24-hour SLAs. Finds control gaps and fixes processes through root cause analysis, reports metrics to operations leadership using SQL, Advanced Excel and Power BI, and is trained in Lean Six Sigma. Upskilling in Responsible AI, AI safety, prompt engineering and AI workflow automation with Claude Code.",
@@ -120,7 +120,7 @@ window.PROFILE_DATA = {
 
   // `have: true` = on your profile today. `have: false` = a gap the role matcher looks for.
   // `how` = the quickest way to close the gap.
-  // `resumeOnlyFor` = put it on the resume only for these roles.
+  // `resumeOnlyFor` = put it on the resume only for these roles. `onResume: false` = keep it off every resume.
   skills: [
     { id: "policy", label: "Policy enforcement", group: "compliance", have: true, aliases: ["policy", "enforcement", "trust and safety"] },
     { id: "investigations", label: "Risk investigations", group: "compliance", have: true, aliases: ["investigation", "investigations"] },
@@ -128,7 +128,7 @@ window.PROFILE_DATA = {
     { id: "rca", label: "Root cause analysis (RCA)", group: "compliance", have: true, aliases: ["rca", "root cause"] },
     { id: "sop", label: "SOP & process compliance", group: "compliance", have: true, aliases: ["sop", "process"] },
     { id: "risk", label: "Risk assessment", group: "compliance", have: true, aliases: ["risk assessment", "risk"] },
-    { id: "amlkyc", label: "AML / KYC fundamentals", group: "compliance", have: true, aliases: ["aml", "kyc", "anti money laundering"] },
+    { id: "amlkyc", label: "AML / KYC fundamentals", group: "compliance", have: true, onResume: false, aliases: ["aml", "kyc", "anti money laundering"] },
     { id: "regs", label: "DPDP Act & EU AI Act", group: "compliance", have: true, resumeOnlyFor: ["aigov"], aliases: ["dpdp", "eu ai act", "regulation"] },
     { id: "cdd", label: "CDD / EDD & sanctions screening", group: "compliance", have: false, aliases: ["cdd", "edd", "due diligence", "sanctions", "screening", "transaction monitoring", "pep"], time: "1 week", how: "Mock CDD file project, or the IIBF AML/KYC course" },
     { id: "cams", label: "AML certificate (IIBF, later CAMS)", group: "compliance", have: false, aliases: ["cams", "iibf", "ica"], time: "3–6 weeks", how: "IIBF Certificate in AML/KYC, about 3–6 weeks" },
@@ -302,7 +302,7 @@ window.PROFILE_DATA = {
       jobTitles: ["compliance analyst", "compliance associate", "compliance specialist", "compliance operations", "regulatory compliance", "compliance officer", "compliance"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "Compliance Operations Analyst | Audit | Risk Assessment",
-      resumeSummary: "Compliance operations professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling, with working knowledge of AML/KYC.",
+      resumeSummary: "Compliance operations professional with 3+ years at Amazon and in technical support in Hyderabad. Audited 150+ transactions and enforcement decisions weekly against SOP compliance standards, found 5+ critical control gaps and kept a 98% audit-ready documentation rate. Experienced in risk assessment, root cause analysis and escalation handling.",
       titleTerms: ["compliance", "audit"],
       bulletFocus: ["compliance", "sop", "audit", "evidence", "control"],
       certTerms: ["Anti-Money Laundering", "AML", "IIBF", "CAMS", "ISO"],
@@ -342,7 +342,7 @@ window.PROFILE_DATA = {
       jobTitles: ["kyc", "aml", "anti-money", "anti money", "financial crime", "fincrime", "due diligence", "transaction monitoring", "sanctions", "cdd", "edd", "client onboarding"],
       certSuggestion: "IIBF AML/KYC certificate",
       resumeHeadline: "AML / KYC Analyst | Risk Investigations | Compliance",
-      resumeSummary: "Compliance and risk investigation professional with 3+ years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals with a 98% audit-ready evidence rate, and audited 150+ decisions weekly against SOPs. Trained in AML and KYC fundamentals, with strong case documentation, risk assessment and escalation skills.",
+      resumeSummary: "Compliance and risk investigation professional with 3+ years at Amazon and in technical support in Hyderabad. Investigated high-risk compliance exceptions and account-level risk signals with a 98% audit-ready evidence rate, and audited 150+ decisions weekly against SOPs. Strong in case documentation, risk assessment and escalation handling.",
       titleTerms: ["aml", "kyc", "financial crime"],
       bulletFocus: ["risk", "investigat", "evidence", "compliance"],
       certTerms: ["IIBF", "CAMS", "ICA", "Anti-Money Laundering"],
@@ -691,12 +691,11 @@ window.PROFILE_DATA = {
     },
     {
       title: "Anti-Money Laundering (AML) & Compliance Certification",
-      resumeOnlyFor: ["aml"],
       source: "Udemy",
       useful: "yes",
-      onResume: true,
+      onResume: false,
       why: "It gets you past AML and compliance keyword filters, but bank GCCs don't treat a Udemy certificate as experience.",
-      action: "Add the IIBF Certificate in AML/KYC (low cost, recognised in India) before applying to bank roles.",
+      action: "Kept off your resumes. Add the IIBF Certificate in AML/KYC (low cost, recognised in India) before applying to bank roles.",
       skills: ["amlkyc"],
     },
     {

@@ -418,8 +418,10 @@
     return { total: Math.round(total), checks: checks, matched: matched };
   }
 
-  // Some items (AI governance) go only on the resume for the roles named in their `resumeOnlyFor`.
+  // `onResume: false` keeps an item off every resume (AML/KYC); `resumeOnlyFor` puts it only on
+  // the resumes of the roles it names (AI governance).
   function onResumeFor(item, roleId) {
+    if (item.onResume === false) return false;
     return !item.resumeOnlyFor || item.resumeOnlyFor.indexOf(roleId) !== -1;
   }
 
